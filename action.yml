@@ -1,0 +1,60 @@
+name: Build and push docker images
+description: Builds and pushes docker images and will log in to a docker registry if required
+author: Docker
+runs:
+  using: docker
+  image: docker://docker/github-actions:v0.0.1
+  args:
+    - build-push
+inputs:
+  username:
+    description: Username used to log in to a docker registry. If not set then no login will occur
+    required: false
+  password:
+    description: Password used to log in to a docker registry. If not set then no login will occur
+    required: false
+  registry:
+    description: Server address of docker registry. If not set then will default to Docker Hub
+    required: false
+  repository:
+    description: Docker repository to tag the image with
+    required: true
+  tags:
+    description: Comma-delimited list of tags. These will be added to the server/repository to form the image's tags
+    required: false
+  tag_with_ref:
+    description: Automatically tags the built image with the git reference as per the readme
+    required: false
+    default: false
+  tag_with_sha:
+    description: Automatically tags the built image with the git short sha as per the readme
+    required: false
+    default: false
+  path:
+    description: Path to run docker build from
+    required: false
+    default: "."
+  dockerfile:
+    description: Name of the Dockerfile (Default is 'path/Dockerfile')
+    required: false
+  target:
+    description: Sets the target build stage to build
+    required: false
+  always_pull:
+    description: Always attempt to pull a newer version of the image
+    required: false
+    default: false
+  build_args:
+    description: Comma-delmited list of build-time variables
+    required: false
+  labels:
+    description: Comma-delimited list of labels to add to the built image. E.g. `label_name_1=label_value_1,label_name_2=label_value_2`
+    required: false
+  add_git_labels:
+    description: Adds labels with git repo info to the built image
+    required: false
+    default: false
+  push:
+    description: Whether to push the image
+    required: false
+    default: true
