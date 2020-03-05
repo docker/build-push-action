@@ -20,7 +20,7 @@ inputs:
     description: Docker repository to tag the image with
     required: true
   tags:
-    description: Comma-delimited list of tags. These will be added to the server/repository to form the image's tags
+    description: Comma-delimited list of tags. These will be added to the registry/repository to form the image's tags
     required: false
   tag_with_ref:
     description: Automatically tags the built image with the git reference as per the readme
@@ -48,7 +48,7 @@ inputs:
     description: Comma-delmited list of build-time variables
     required: false
   labels:
-    description: Comma-delimited list of labels to add to the built image. E.g. `label_name_1=label_value_1,label_name_2=label_value_2`
+    description: Comma-delimited list of labels to add to the built image
     required: false
   add_git_labels:
     description: Adds labels with git repo info to the built image
