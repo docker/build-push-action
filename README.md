@@ -102,7 +102,7 @@ Always attempt to pull a newer version of the image.
 
 ### `build_args`
 
-Comma-delmited list of build-time variables.
+Comma-delimited list of build-time variables.
 
 Example:
 

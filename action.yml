@@ -45,7 +45,7 @@ inputs:
     required: false
     default: false
   build_args:
-    description: Comma-delmited list of build-time variables
+    description: Comma-delimited list of build-time variables
     required: false
   labels:
     description: Comma-delimited list of labels to add to the built image
