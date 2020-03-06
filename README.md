@@ -1,6 +1,6 @@
 # build-push-action
 
-Builds and pushes docker images and will log in to a docker registry if required
+Builds and pushes Docker images and will log in to a Docker registry if required
 
 [Inputs](#Inputs)
 * [repository](#repository)
@@ -29,15 +29,15 @@ Builds and pushes docker images and will log in to a docker registry if required
 
 ### `username`
 
-Username used to log in to a docker registry. If not set then no login will occur.
+Username used to log in to a Docker registry. If not set then no login will occur.
 
 ### `password`
 
-Password used to log in to a docker registry. If not set then no login will occur.
+Password used to log in to a Docker registry. If not set then no login will occur.
 
 ### `registry`
 
-Server address of docker registry. If not set then will default to Docker Hub.
+Server address of Docker registry. If not set then will default to Docker Hub.
 
 ### `tags`
 
@@ -74,11 +74,11 @@ Examples:
 
 Boolean value. Defaults to `false`.
 
-Automatically tags the built image with the git short sha prefixed with `sha-`.
+Automatically tags the built image with the git short SHA prefixed with `sha-`.
 
 Example:
 
-|Git sha|Image tag|
+|Git SHA|Image tag|
 |---|---|
 |`676cae2f85471aeff6776463c72881ebd902dcf9`|`sha-676cae2`|
 
@@ -88,11 +88,11 @@ Path to run the docker build from. Defaults to `.`.
 
 ### `dockerfile`
 
-Name of the Dockerfile (Default is 'path/Dockerfile'). Defaults to `{path}/Dockerfile`.
+Name of the Dockerfile. Defaults to `{path}/Dockerfile`.
 
 ### `target`
 
-Sets the target build stage to build.
+Sets the target stage to build.
 
 ### `always_pull`
 
@@ -124,14 +124,14 @@ labels: label_name_1=label_value_1,label_name_2=label_value_2
 
 Boolean value. Defaults to `false`.
 
-Adds labels with git repo info to the built image.
+Adds labels with git repository information to the built image.
 
 The labels are:
 
 |Label key|Example value|Description|
 |---|---|---|
 |`com.docker.github-actions-actor`|`my-username`|The actor that kicked off the workflow. For example this could be the username of the user that did the git push.|
-|`com.docker.github-actions-sha`|`676cae2f85471aeff6776463c72881ebd902dcf9`|Full git sha of the current commit.|
+|`com.docker.github-actions-sha`|`676cae2f85471aeff6776463c72881ebd902dcf9`|Full git SHA of the current commit.|
 
 
 ### `push`
@@ -142,7 +142,7 @@ Whether to push the built image.
 
 ## Example usage
 
-The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, logs in to docker hub using GitHub secrets, and pushes the image to the docker hub repository `myorg/myrepository`:
+The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
 
 ```yaml
 uses: docker/build-push-action@v1
@@ -153,7 +153,7 @@ with:
   tags: latest
 ```
 
-The following will build the root Dockerfile, tag the image with the git reference and sha as described above, logs in to docker hub using GitHub secrets, and pushes the image to the docker hub repository `myorg/myrepository`:
+The following will build the root Dockerfile, tag the image with the git reference and SHA as described above, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
 
 ```yaml
 uses: docker/build-push-action@v1
