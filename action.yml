@@ -11,7 +11,7 @@ inputs:
     description: Username used to log in to a Docker registry. If not set then no login will occur
     required: false
   password:
-    description: Password used to log in to a Docker registry. If not set then no login will occur
+    description: Password or personal access token used to log in to a Docker registry. If not set then no login will occur
     required: false
   registry:
     description: Server address of Docker registry. If not set then will default to Docker Hub
@@ -27,7 +27,7 @@ inputs:
     required: false
     default: false
   tag_with_sha:
-    description: Automatically tags the built image with the git short sha as per the readme
+    description: Automatically tags the built image with the git short SHA as per the readme
     required: false
     default: false
   path:

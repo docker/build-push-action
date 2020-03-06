@@ -33,7 +33,7 @@ Username used to log in to a Docker registry. If not set then no login will occu
 
 ### `password`
 
-Password used to log in to a Docker registry. If not set then no login will occur.
+Password or personal access token used to log in to a Docker registry. If not set then no login will occur.
 
 ### `registry`
 
@@ -131,8 +131,8 @@ The labels are:
 |Label key|Example value|Description|
 |---|---|---|
 |`org.opencontainers.image.created`|`2020-03-06T23:00:00Z`|Date and time on which the image was built (string, date-time as defined by RFC 3339).|
-|`org.opencontainers.image.source`|`https://github.com/myorg/myrepository`|URL to this repository.|
-|`org.opencontainers.image.revision`|`676cae2f85471aeff6776463c72881ebd902dcf9`|The full git sha of this commit.|
+|`org.opencontainers.image.source`|`https://github.com/myorg/myrepository`|URL to the GitHub repository.|
+|`org.opencontainers.image.revision`|`676cae2f85471aeff6776463c72881ebd902dcf9`|The full git SHA of this commit.|
 
 
 ### `push`
