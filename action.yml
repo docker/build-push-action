@@ -1,5 +1,5 @@
-name: Build and push docker images
-description: Builds and pushes docker images and will log in to a docker registry if required
+name: Build and push Docker images
+description: Builds and pushes Docker images and will log in to a Docker registry if required
 author: Docker
 runs:
   using: docker
@@ -8,13 +8,13 @@ runs:
     - build-push
 inputs:
   username:
-    description: Username used to log in to a docker registry. If not set then no login will occur
+    description: Username used to log in to a Docker registry. If not set then no login will occur
     required: false
   password:
-    description: Password used to log in to a docker registry. If not set then no login will occur
+    description: Password used to log in to a Docker registry. If not set then no login will occur
     required: false
   registry:
-    description: Server address of docker registry. If not set then will default to Docker Hub
+    description: Server address of Docker registry. If not set then will default to Docker Hub
     required: false
   repository:
     description: Docker repository to tag the image with
@@ -38,7 +38,7 @@ inputs:
     description: Name of the Dockerfile (Default is 'path/Dockerfile')
     required: false
   target:
-    description: Sets the target build stage to build
+    description: Sets the target stage to build
     required: false
   always_pull:
     description: Always attempt to pull a newer version of the image
