@@ -3,7 +3,7 @@ description: Builds and pushes Docker images and will log in to a Docker registr
 author: Docker
 runs:
   using: docker
-  image: docker://docker/github-actions:v0.0.1
+  image: docker://docker/github-actions:v0.1
   args:
     - build-push
 inputs:
@@ -51,7 +51,7 @@ inputs:
     description: Comma-delimited list of labels to add to the built image
     required: false
   add_git_labels:
-    description: Adds labels with git repo info to the built image
+    description: Adds labels with git repository information to the built image
     required: false
     default: false
   push:
