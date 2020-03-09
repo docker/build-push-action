@@ -33,7 +33,7 @@ Username used to log in to a Docker registry. If not set then no login will occu
 
 ### `password`
 
-Password used to log in to a Docker registry. If not set then no login will occur.
+Password or personal access token used to log in to a Docker registry. If not set then no login will occur.
 
 ### `registry`
 
@@ -102,7 +102,7 @@ Always attempt to pull a newer version of the image.
 
 ### `build_args`
 
-Comma-delmited list of build-time variables.
+Comma-delimited list of build-time variables.
 
 Example:
 
@@ -124,14 +124,15 @@ labels: label_name_1=label_value_1,label_name_2=label_value_2
 
 Boolean value. Defaults to `false`.
 
-Adds labels with git repository information to the built image.
+Adds labels with git repository information to the built image based on the standards set out in https://github.com/opencontainers/image-spec/blob/master/annotations.md.
 
 The labels are:
 
 |Label key|Example value|Description|
 |---|---|---|
-|`com.docker.github-actions-actor`|`my-username`|The actor that kicked off the workflow. For example this could be the username of the user that did the git push.|
-|`com.docker.github-actions-sha`|`676cae2f85471aeff6776463c72881ebd902dcf9`|Full git SHA of the current commit.|
+|`org.opencontainers.image.created`|`2020-03-06T23:00:00Z`|Date and time on which the image was built (string, date-time as defined by RFC 3339).|
+|`org.opencontainers.image.source`|`https://github.com/myorg/myrepository`|URL to the GitHub repository.|
+|`org.opencontainers.image.revision`|`676cae2f85471aeff6776463c72881ebd902dcf9`|The full git SHA of this commit.|
 
 
 ### `push`

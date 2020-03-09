@@ -3,7 +3,7 @@ description: Builds and pushes Docker images and will log in to a Docker registr
 author: Docker
 runs:
   using: docker
-  image: docker://docker/github-actions:v0.0.1
+  image: docker://docker/github-actions:v0.1
   args:
     - build-push
 inputs:
@@ -11,7 +11,7 @@ inputs:
     description: Username used to log in to a Docker registry. If not set then no login will occur
     required: false
   password:
-    description: Password used to log in to a Docker registry. If not set then no login will occur
+    description: Password or personal access token used to log in to a Docker registry. If not set then no login will occur
     required: false
   registry:
     description: Server address of Docker registry. If not set then will default to Docker Hub
@@ -27,7 +27,7 @@ inputs:
     required: false
     default: false
   tag_with_sha:
-    description: Automatically tags the built image with the git short sha as per the readme
+    description: Automatically tags the built image with the git short SHA as per the readme
     required: false
     default: false
   path:
@@ -45,13 +45,13 @@ inputs:
     required: false
     default: false
   build_args:
-    description: Comma-delmited list of build-time variables
+    description: Comma-delimited list of build-time variables
     required: false
   labels:
     description: Comma-delimited list of labels to add to the built image
     required: false
   add_git_labels:
-    description: Adds labels with git repo info to the built image
+    description: Adds labels with git repository information to the built image
     required: false
     default: false
   push:
