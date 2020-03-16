@@ -1,6 +1,9 @@
 name: Build and push Docker images
 description: Builds and pushes Docker images and will log in to a Docker registry if required
 author: Docker
+branding:
+  icon: 'anchor'
+  color: 'blue'
 runs:
   using: docker
   image: docker://docker/github-actions:v1.0
