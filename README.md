@@ -1,6 +1,8 @@
 # build-push-action
 
-Builds and pushes Docker images and will log in to a Docker registry if required
+Builds and pushes Docker images and will log in to a Docker registry if required.
+
+Suggestions and issues can be posted on the repositories [issues page](https://github.com/docker/build-push-action/issues).
 
 [Inputs](#Inputs)
 * [repository](#repository)
