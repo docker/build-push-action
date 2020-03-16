@@ -3,7 +3,7 @@ description: Builds and pushes Docker images and will log in to a Docker registr
 author: Docker
 runs:
   using: docker
-  image: docker://docker/github-actions:v0.1
+  image: docker://docker/github-actions:v1.0
   args:
     - build-push
 inputs:
