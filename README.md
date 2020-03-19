@@ -22,6 +22,11 @@ Suggestions and issues can be posted on the repositories [issues page](https://g
 * [push](#push)
 
 [Example usage](#Example-usage)
+* [Simple](#Simple-example)
+* [Auto-tagging](#Auto-tagging-example)
+* [Push filter](#Push-filter-example)
+* [Chain build](#Chain-build-example)
+* [GitHub package registry](#GitHub-package-registry-example)
 
 ## Inputs
 
@@ -145,6 +150,8 @@ Whether to push the built image.
 
 ## Example usage
 
+### Simple example
+
 The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
 
 ```yaml
@@ -155,6 +162,8 @@ with:
   repository: myorg/myrepository
   tags: latest
 ```
+
+### Auto-tagging example
 
 The following will build the root Dockerfile, tag the image with the git reference and SHA as described above, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
 
@@ -168,6 +177,8 @@ with:
   tag_with_sha: true
 ```
 
+### Push filter example
+
 The following will only push the image when the event that kicked off the workflow was a push of a git tag:
 
 ```yaml
@@ -180,6 +191,8 @@ with:
   push: ${{ startsWith(github.ref, 'refs/tags/') }}
 ```
 
+### Chain build example
+
 The following builds the `mytarget` stage and pushes that:
  
 ```yaml
@@ -190,4 +203,18 @@ with:
   repository: myorg/myrepository
   tag_with_ref: true
   target: mytarget
+```
+
+### GitHub package registry example
+
+The following pushes the image to the [GitHub package registry](https://help.github.com/en/packages/publishing-and-managing-packages/about-github-packages) using your GitHub username and token as credentials:
+
+```yaml
+uses: docker/build-push-action@v1
+with:
+  username: ${{ github.actor }}
+  password: ${{ github.token }}
+  registry: docker.pkg.github.com
+  repository: myorg/myrepository
+  tag_with_ref: true
 ```
