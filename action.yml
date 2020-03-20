@@ -34,11 +34,11 @@ inputs:
     required: false
     default: false
   path:
-    description: Path to run docker build from
+    description: Path to the build context
     required: false
     default: "."
   dockerfile:
-    description: Name of the Dockerfile (Default is 'path/Dockerfile')
+    description: Path to the Dockerfile (Default is '{path}/Dockerfile')
     required: false
   target:
     description: Sets the target stage to build
