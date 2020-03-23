@@ -86,11 +86,13 @@ Example:
 
 ### `path`
 
-Path to run the docker build from. Defaults to `.`.
+Path to the build context. Defaults to `.`
 
 ### `dockerfile`
 
-Name of the Dockerfile. Defaults to `{path}/Dockerfile`.
+Path to the Dockerfile. Defaults to `{path}/Dockerfile`
+
+Note when set this path is **not** relative to the `path` input but is instead relative to the current working directory.
 
 ### `target`
 
