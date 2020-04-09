@@ -193,3 +193,23 @@ with:
   tag_with_ref: true
   target: mytarget
 ```
+
+### Minimal complete working github actions yaml file
+
+```yaml
+name: Build Docker images
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout git repo'
+        uses: actions/checkout@v1
+
+      - name: Build Docker images
+        uses: docker/build-push-action@v1.0.1
+        with:
+          repository: myorg/myrepository
+          push: false
+```
