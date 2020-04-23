@@ -17,6 +17,7 @@ Suggestions and issues can be posted on the repositories [issues page](https://g
 * [target](#target)
 * [always_pull](#always_pull)
 * [build_args](#build_args)
+* [cache_froms](#cache_froms)
 * [labels](#labels)
 * [add_git_labels](#add_git_labels)
 * [push](#push)
@@ -112,6 +113,15 @@ Example:
 
 ```yaml
 build_args: arg1=value1,arg2=value2
+```
+
+### `cache_froms`
+
+Comma-delimited list of images to consider as cache sources.
+
+Example:
+```yaml
+cache_froms: myorg/baseimage:latest
 ```
 
 ### `labels`
