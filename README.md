@@ -203,4 +203,5 @@ with:
   password: ${{ secrets.DOCKER_PASSWORD }}
   registry: gcr.io
   repository: myorg/myrepository
+  tags: latest
 ```
