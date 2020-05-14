@@ -208,7 +208,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build Docker images
-        uses: docker/build-push-action@v1.0.1
+        uses: docker/build-push-action@v1
         with:
           repository: myorg/myrepository
           push: false
