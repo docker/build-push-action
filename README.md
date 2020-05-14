@@ -197,6 +197,7 @@ with:
 ### Minimal complete working github actions yaml file
 
 This minimal workflow clones the repo in question with the `actions/checkout@v1` step, and then runs `docker build -t myorg/myrepository .` with the `Dockerfile` present in the parent directory. In this case, it only builds it and does not push it (`push: false`). This can be useful for testing if the `Dockerfile` is valid in the first place and making sure there are no version conflicts.
+
 ```yaml
 name: Build Docker images
 on: [push, pull_request]
