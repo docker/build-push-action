@@ -204,7 +204,7 @@ with:
   target: mytarget
 ```
 
-The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Google Container Registry using GitHub secrets (where `DOCKER_PASSWORD` is a [JSON key](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)), and push the image to the CGR repository `myorg/myrepository`:
+The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Google Container Registry using GitHub secrets (where `DOCKER_PASSWORD` is a [JSON key](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)), and push the image to the GCR repository `myorg/myrepository`:
  
 ```yaml
 uses: docker/build-push-action@v1
