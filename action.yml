@@ -24,7 +24,7 @@ inputs:
     required: true
   tags:
     description: Comma-delimited list of tags. These will be added to the registry/repository to form the image's tags
-    required: false
+    required: true
   tag_with_ref:
     description: Automatically tags the built image with the git reference as per the readme
     required: false
