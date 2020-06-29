@@ -50,6 +50,9 @@ inputs:
   build_args:
     description: Comma-delimited list of build-time variables
     required: false
+  cache_froms:
+    description: Comma-delimited list of images to consider as cache sources
+    required: false
   labels:
     description: Comma-delimited list of labels to add to the built image
     required: false

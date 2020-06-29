@@ -17,6 +17,7 @@ Suggestions and issues can be posted on the repositories [issues page](https://g
 * [target](#target)
 * [always_pull](#always_pull)
 * [build_args](#build_args)
+* [cache_froms](#cache_froms)
 * [labels](#labels)
 * [add_git_labels](#add_git_labels)
 * [push](#push)
@@ -114,6 +115,15 @@ Example:
 build_args: arg1=value1,arg2=value2
 ```
 
+### `cache_froms`
+
+Comma-delimited list of images to consider as cache sources.
+
+Example:
+```yaml
+cache_froms: myorg/baseimage:latest
+```
+
 ### `labels`
 
 Comma-delimited list of labels to add to the built image.
@@ -192,6 +202,18 @@ with:
   repository: myorg/myrepository
   tag_with_ref: true
   target: mytarget
+```
+
+The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Google Container Registry using GitHub secrets (where `DOCKER_PASSWORD` is a [JSON key](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)), and push the image to the GCR repository `myorg/myrepository`:
+ 
+```yaml
+uses: docker/build-push-action@v1
+with:
+  username: _json_key
+  password: ${{ secrets.DOCKER_PASSWORD }}
+  registry: gcr.io
+  repository: myorg/myrepository
+  tags: latest
 ```
 
 ### Minimal complete working github actions yaml file
