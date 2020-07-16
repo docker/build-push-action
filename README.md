@@ -69,6 +69,7 @@ Examples:
 |Git Reference|Image tag|
 |---|---|
 |`refs/heads/master`|`latest`|
+|`refs/heads/mybranch`|`mybranch`|
 |`refs/heads/my/branch`|`my-branch`|
 |`refs/pull/2/merge`|`pr-2-merge`|
 |`refs/tags/v1.0.0`|`v1.0.0`|
