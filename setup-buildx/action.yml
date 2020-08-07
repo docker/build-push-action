@@ -1,0 +1,22 @@
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+name: 'Docker - Setup Buildx'
+description: 'GitHub Action to set up Docker Buildx'
+author: 'crazy-max'
+branding:
+  color: 'blue'
+  icon: 'truck'
+
+inputs:
+  buildx-version:
+    description: 'Buildx version. Example: v0.3.0'
+    default: 'latest'
+    required: false
+
+outputs:
+  platforms:
+    description: 'Available platforms (comma separated)'
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+  post: 'dist/index.js'

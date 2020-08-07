@@ -1,0 +1,40 @@
+name: setup-buildx-ci
+
+on:
+  push:
+    paths:
+      - .github/workflows/setup-buildx-ci.yml
+      - setup-buildx/**
+  pull_request:
+    paths:
+      - .github/workflows/setup-buildx-ci.yml
+      - setup-buildx/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx-version:
+          - latest
+          - v0.2.2
+    steps:
+      -
+        name: Runner info
+        run: |
+          sudo apt-get install -y hwinfo
+          sudo hwinfo --short
+          sudo mount
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/
+        with:
+          buildx-version: ${{ matrix.buildx-version }}
+      -
+        name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
