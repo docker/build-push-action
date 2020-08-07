@@ -1,0 +1,36 @@
+name: setup-qemu-ci
+
+on:
+  push:
+    paths:
+      - .github/workflows/setup-qemu-ci.yml
+      - setup-qemu/**
+  pull_request:
+    paths:
+      - .github/workflows/setup-qemu-ci.yml
+      - setup-qemu/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        qemu-version:
+          - latest
+          - 4.2.0-7
+    steps:
+      -
+        name: Runner info
+        run: |
+          sudo apt-get install -y hwinfo
+          sudo hwinfo --short
+          sudo mount
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up QEMU
+        uses: ./setup-qemu/
+        with:
+          qemu-version: ${{ matrix.qemu-version }}

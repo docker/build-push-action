@@ -1,0 +1,32 @@
+name: setup-qemu-precheckin
+
+on:
+  push:
+    paths:
+      - .github/workflows/setup-qemu-precheckin.yml
+      - setup-qemu/**
+  pull_request:
+    paths:
+      - .github/workflows/setup-qemu-precheckin.yml
+      - setup-qemu/**
+
+jobs:
+  pre-checkin:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Install
+        run: yarn --cwd ./setup-qemu/ install
+      -
+        name: Pre-checkin
+        run: yarn --cwd ./setup-qemu/ run pre-checkin
+      -
+        name: Check for uncommitted changes
+        run: |
+          if [[ `git status --porcelain` ]]; then
+            git status --porcelain
+            echo "::warning::Found changes. Please run 'yarn --cwd ./setup-qemu/ run pre-checkin' and push"
+          fi

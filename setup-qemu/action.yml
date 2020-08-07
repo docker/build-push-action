@@ -1,0 +1,17 @@
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+name: 'Docker - Setup QEMU'
+description: 'GitHub Action to install QEMU static binaries'
+author: 'crazy-max'
+branding:
+  color: 'blue'
+  icon: 'truck'
+
+inputs:
+  qemu-version:
+    description: 'QEMU static binaries Docker image version. Example: 4.2.0-7'
+    default: 'latest'
+    required: false
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

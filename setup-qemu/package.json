@@ -1,0 +1,41 @@
+{
+  "name": "docker-setup-qemu",
+  "description": "GitHub Action to install QEMU static binaries",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc && ncc build",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "test": "jest --coverage",
+    "pre-checkin": "yarn run format && yarn run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docker/action.git",
+    "directory": "setup-qemu"
+  },
+  "keywords": [
+    "actions",
+    "docker",
+    "qemu"
+  ],
+  "author": "CrazyMax",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.3",
+    "@types/node": "^14.0.14",
+    "@zeit/ncc": "^0.22.3",
+    "dotenv": "^8.2.0",
+    "jest": "^26.1.0",
+    "jest-circus": "^26.1.0",
+    "jest-runtime": "^26.1.0",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.5",
+    "typescript-formatter": "^7.2.2"
+  }
+}
