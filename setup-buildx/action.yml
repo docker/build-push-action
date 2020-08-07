@@ -11,6 +11,10 @@ inputs:
     description: 'Buildx version. Example: v0.3.0'
     default: 'latest'
     required: false
+  install:
+    description: 'Sets up docker build command as an alias to docker buildx'
+    default: 'false'
+    required: false
 
 outputs:
   platforms:

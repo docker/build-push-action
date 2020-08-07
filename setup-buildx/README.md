@@ -91,6 +91,7 @@ Following inputs can be used as `step.with` keys
 | Name             | Type    | Default   | Description                        |
 |------------------|---------|-----------|------------------------------------|
 | `buildx-version` | String  | `latest`  | [Buildx](https://github.com/docker/buildx) version. Example: `v0.3.0` |
+| `install`        | Bool    | `false`   | Sets up `docker build` command as an alias to `docker buildx` |
 
 ### outputs
 

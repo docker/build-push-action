@@ -2492,6 +2492,7 @@ function run() {
                 return;
             }
             const buildxVer = core.getInput('buildx-version') || 'latest';
+            const install = /true/i.test(core.getInput('install'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
             yield installer.buildx(buildxVer, dockerConfigHome);
             core.info('📣 Buildx info');
@@ -2508,6 +2509,10 @@ function run() {
             ]);
             core.info('🏃 Booting builder...');
             yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
+            if (install) {
+                core.info('🤝 Setting buildx as default builder...');
+                yield exec.exec('docker', ['buildx', 'install']);
+            }
             core.info('🐳 Docker info');
             yield exec.exec('docker', ['info']);
             core.info('🛒 Extracting available platforms...');

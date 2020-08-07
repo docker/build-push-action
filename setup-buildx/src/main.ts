@@ -14,6 +14,7 @@ async function run(): Promise<void> {
     }
 
     const buildxVer: string = core.getInput('buildx-version') || 'latest';
+    const install: boolean = /true/i.test(core.getInput('install'));
     const dockerConfigHome: string = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
     await installer.buildx(buildxVer, dockerConfigHome);
 
@@ -33,6 +34,11 @@ async function run(): Promise<void> {
 
     core.info('🏃 Booting builder...');
     await exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
+
+    if (install) {
+      core.info('🤝 Setting buildx as default builder...');
+      await exec.exec('docker', ['buildx', 'install']);
+    }
 
     core.info('🐳 Docker info');
     await exec.exec('docker', ['info']);

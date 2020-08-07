@@ -39,6 +39,22 @@ jobs:
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
 
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx
+        uses: ./setup-buildx/
+        with:
+          install: true
+      -
+        name: Check cmd
+        run: |
+          docker build --help
+
   with-qemu:
     runs-on: ubuntu-latest
     strategy:
@@ -51,12 +67,6 @@ jobs:
           - latest
           - 4.2.0-7
     steps:
-      -
-        name: Runner info
-        run: |
-          sudo apt-get install -y hwinfo
-          sudo hwinfo --short
-          sudo mount
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
