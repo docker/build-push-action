@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/docker/action.git",
+    "url": "git+https://github.com/docker/actions.git",
     "directory": "setup-buildx"
   },
   "keywords": [

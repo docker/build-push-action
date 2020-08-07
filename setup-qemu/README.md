@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/action/setup-qemu@v2
+        uses: docker/actions/setup-qemu@v2
         with:
           qemu-version: latest
 ```
