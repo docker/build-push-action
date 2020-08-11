@@ -36,5 +36,5 @@ jobs:
         name: Set up QEMU
         uses: ./setup-qemu/
         with:
-          image: ${ matrix.image }
-          platforms: ${ matrix.platforms }
+          image: ${{ matrix.image }}
+          platforms: ${{ matrix.platforms }}
