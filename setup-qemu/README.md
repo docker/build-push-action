@@ -5,7 +5,6 @@ GitHub Action to install [QEMU static binaries](https://github.com/multiarch/qem
 ___
 
 * [Usage](#usage)
-  * [Quick start](#quick-start)
 * [Customizing](#customizing)
   * [inputs](#inputs)
 * [Limitation](#limitation)
