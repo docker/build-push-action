@@ -1003,7 +1003,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
 const core = __importStar(__webpack_require__(470));
-const exec = __importStar(__webpack_require__(986));
+const exec = __importStar(__webpack_require__(807));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -1014,7 +1014,14 @@ function run() {
             const image = core.getInput('image') || 'tonistiigi/binfmt:latest';
             const platforms = core.getInput('platforms') || 'all';
             core.info(`💎 Installing QEMU static binaries...`);
-            yield exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms]);
+            yield exec.exec(`docker`, ['run', '--rm', '--privileged', image, '--install', platforms], false).then(res => {
+                if (res.stderr != '' && !res.success) {
+                    throw new Error(res.stderr);
+                }
+                core.info('🛒 Extracting available platforms...');
+                const platforms = JSON.parse(res.stdout.trim());
+                core.setOutput('platforms', platforms.supported.join(','));
+            });
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1588,6 +1595,68 @@ function isUnixExecutable(stats) {
 /***/ (function(module) {
 
 module.exports = require("fs");
+
+/***/ }),
+
+/***/ 807:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.exec = void 0;
+const actionsExec = __importStar(__webpack_require__(986));
+exports.exec = (command, args = [], silent) => __awaiter(void 0, void 0, void 0, function* () {
+    let stdout = '';
+    let stderr = '';
+    const options = {
+        silent: silent,
+        ignoreReturnCode: true
+    };
+    options.listeners = {
+        stdout: (data) => {
+            stdout += data.toString();
+        },
+        stderr: (data) => {
+            stderr += data.toString();
+        }
+    };
+    const returnCode = yield actionsExec.exec(command, args, options);
+    return {
+        success: returnCode === 0,
+        stdout: stdout.trim(),
+        stderr: stderr.trim()
+    };
+});
+//# sourceMappingURL=exec.js.map
 
 /***/ }),
 
