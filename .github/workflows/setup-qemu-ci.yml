@@ -16,9 +16,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        qemu-version:
-          - latest
-          - 4.2.0-7
+        image:
+          - tonistiigi/binfmt:latest
+          - tonistiigi/binfmt:buildkit
+        platforms:
+          - all
+          - arm64,riscv64,arm
     steps:
       -
         name: Runner info
@@ -33,4 +36,5 @@ jobs:
         name: Set up QEMU
         uses: ./setup-qemu/
         with:
-          qemu-version: ${{ matrix.qemu-version }}
+          image: ${ matrix.image }
+          platforms: ${ matrix.platforms }

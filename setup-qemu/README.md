@@ -32,7 +32,8 @@ jobs:
         name: Set up QEMU
         uses: docker/actions/setup-qemu@v2
         with:
-          qemu-version: latest
+          image: tonistiigi/binfmt:latest
+          platforms: all
 ```
 
 ## Customizing
@@ -41,9 +42,10 @@ jobs:
 
 Following inputs can be used as `step.with` keys
 
-| Name             | Type    | Default   | Description                        |
-|------------------|---------|-----------|------------------------------------|
-| `qemu-version`   | String  | `latest`  | [qemu-user-static](https://github.com/multiarch/qemu-user-static) version (Docker tag). Example: `4.2.0-7` |
+| Name             | Type    | Default                     | Description                        |
+|------------------|---------|-----------------------------|------------------------------------|
+| `image`          | String  | `tonistiigi/binfmt:latest`  | QEMU static binaries Docker image. Example: [`tonistiigi/binfmt:latest`](https://hub.docker.com/r/tonistiigi/binfmt/tags) |
+| `platforms`      | String  | `all`                       | Platforms to install. Example: `arm64,riscv64,arm` |
 
 ## Limitation
 

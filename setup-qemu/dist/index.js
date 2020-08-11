@@ -1011,19 +1011,10 @@ function run() {
                 core.setFailed('Only supported on linux platform');
                 return;
             }
-            const qemuVer = core.getInput('qemu-version') || 'latest';
+            const image = core.getInput('image') || 'tonistiigi/binfmt:latest';
+            const platforms = core.getInput('platforms') || 'all';
             core.info(`💎 Installing QEMU static binaries...`);
-            yield exec.exec('docker', [
-                'run',
-                '--rm',
-                '--privileged',
-                `multiarch/qemu-user-static:${qemuVer}`,
-                '--reset',
-                '-p',
-                'yes',
-                '--credential',
-                'yes'
-            ]);
+            yield exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms]);
         }
         catch (error) {
             core.setFailed(error.message);
