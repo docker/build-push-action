@@ -18,7 +18,7 @@ jobs:
       matrix:
         image:
           - tonistiigi/binfmt:latest
-          - tonistiigi/binfmt:buildkit
+          - tonistiigi/binfmt:master
         platforms:
           - all
           - arm64,riscv64,arm
