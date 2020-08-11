@@ -2,10 +2,14 @@ name: setup-qemu-precheckin
 
 on:
   push:
+    branches:
+      - master
     paths:
       - .github/workflows/setup-qemu-precheckin.yml
       - setup-qemu/**
   pull_request:
+    branches:
+      - master
     paths:
       - .github/workflows/setup-qemu-precheckin.yml
       - setup-qemu/**
