@@ -16,6 +16,10 @@ inputs:
     default: 'all'
     required: false
 
+outputs:
+  platforms:
+    description: 'Available platforms (comma separated)'
+
 runs:
   using: 'node12'
   main: 'dist/index.js'

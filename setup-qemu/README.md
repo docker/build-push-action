@@ -30,10 +30,14 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
+        id: qemu
         uses: docker/actions/setup-qemu@v1
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
+      -
+        name: Available platforms
+        run: echo ${{ steps.qemu.outputs.platforms }}
 ```
 
 ## Customizing
@@ -46,6 +50,14 @@ Following inputs can be used as `step.with` keys
 |------------------|---------|-----------------------------|------------------------------------|
 | `image`          | String  | `tonistiigi/binfmt:latest`  | QEMU static binaries Docker image. Example: [`tonistiigi/binfmt:latest`](https://hub.docker.com/r/tonistiigi/binfmt/tags) |
 | `platforms`      | String  | `all`                       | Platforms to install. Example: `arm64,riscv64,arm` |
+
+### outputs
+
+Following outputs are available
+
+| Name          | Type    | Description                           |
+|---------------|---------|---------------------------------------|
+| `platforms`   | String  | Available platforms (comma separated) |
 
 ## Limitation
 
