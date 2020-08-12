@@ -46,3 +46,6 @@ jobs:
       -
         name: Available platforms
         run: echo ${{ steps.qemu.outputs.platforms }}
+      -
+        name: Dump context
+        uses: crazy-max/ghaction-dump-context@v1
