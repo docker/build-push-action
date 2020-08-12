@@ -2501,15 +2501,11 @@ function run() {
             }
             core.info('📣 Buildx info');
             yield exec.exec('docker', ['buildx', 'version'], false);
+            const builderName = `builder-${(yield buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
+            core.saveState('builderName', builderName);
+            core.setOutput('name', builderName);
             core.info('🔨 Creating a new builder instance...');
-            let createArgs = [
-                'buildx',
-                'create',
-                '--name',
-                `builder-${process.env.GITHUB_SHA}`,
-                '--driver',
-                driver
-            ];
+            let createArgs = ['buildx', 'create', '--name', builderName, '--driver', driver];
             if (driverOpt) {
                 createArgs.push('--driver-opt', driverOpt);
             }
@@ -2547,7 +2543,7 @@ function cleanup() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.info('🚿 Removing builder instance...');
-            yield exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`], false);
+            yield exec.exec('docker', ['buildx', 'rm', `${process.env.STATE_builderName}`], false);
         }
         catch (error) {
             core.warning(error.message);
@@ -7243,7 +7239,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.install = exports.isAvailable = void 0;
+exports.install = exports.countBuilders = exports.isAvailable = void 0;
 const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
@@ -7265,6 +7261,17 @@ function isAvailable() {
     });
 }
 exports.isAvailable = isAvailable;
+function countBuilders() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield exec.exec(`docker`, ['buildx', 'ls'], true).then(res => {
+            if (res.stderr != '' && !res.success) {
+                throw new Error(`Cannot list builders: ${res.stderr}`);
+            }
+            return (res.stdout.trim().split(`\n`).length - 1) / 2;
+        });
+    });
+}
+exports.countBuilders = countBuilders;
 function install(inputVersion, dockerConfigHome) {
     return __awaiter(this, void 0, void 0, function* () {
         const release = yield github.getRelease(inputVersion);

@@ -78,6 +78,9 @@ jobs:
         with:
           buildx-version: latest
       -
+        name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
+      -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
 ```
@@ -102,6 +105,7 @@ Following outputs are available
 
 | Name          | Type    | Description                           |
 |---------------|---------|---------------------------------------|
+| `name`        | String  | Builder instance name |
 | `platforms`   | String  | Available platforms (comma separated) |
 
 ### environment variables

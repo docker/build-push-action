@@ -27,15 +27,12 @@ async function run(): Promise<void> {
     core.info('📣 Buildx info');
     await exec.exec('docker', ['buildx', 'version'], false);
 
+    const builderName: string = `builder-${(await buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
+    core.saveState('builderName', builderName);
+    core.setOutput('name', builderName);
+
     core.info('🔨 Creating a new builder instance...');
-    let createArgs: Array<string> = [
-      'buildx',
-      'create',
-      '--name',
-      `builder-${process.env.GITHUB_SHA}`,
-      '--driver',
-      driver
-    ];
+    let createArgs: Array<string> = ['buildx', 'create', '--name', builderName, '--driver', driver];
     if (driverOpt) {
       createArgs.push('--driver-opt', driverOpt);
     }
@@ -76,7 +73,7 @@ async function run(): Promise<void> {
 async function cleanup(): Promise<void> {
   try {
     core.info('🚿 Removing builder instance...');
-    await exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`], false);
+    await exec.exec('docker', ['buildx', 'rm', `${process.env.STATE_builderName}`], false);
   } catch (error) {
     core.warning(error.message);
   }

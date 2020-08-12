@@ -27,6 +27,8 @@ inputs:
     required: false
 
 outputs:
+  name:
+    description: 'Builder instance name'
   platforms:
     description: 'Available platforms (comma separated)'
 

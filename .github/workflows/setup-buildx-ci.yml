@@ -41,11 +41,35 @@ jobs:
         with:
           buildx-version: ${{ matrix.buildx-version }}
       -
+        name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
+      -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
       -
         name: Dump context
         uses: crazy-max/ghaction-dump-context@v1
+
+  multi:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx 1
+        id: buildx1
+        uses: ./setup-buildx/
+      -
+        name: Builder 1 instance name
+        run: echo ${{ steps.buildx1.outputs.name }}
+      -
+        name: Set up Docker Buildx 2
+        id: buildx2
+        uses: ./setup-buildx/
+      -
+        name: Builder 2 instance name
+        run: echo ${{ steps.buildx2.outputs.name }}
 
   install:
     runs-on: ubuntu-latest
@@ -135,3 +159,6 @@ jobs:
       -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
+      -
+        name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
