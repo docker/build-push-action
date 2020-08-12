@@ -23,6 +23,7 @@ jobs:
         buildx-version:
           - latest
           - v0.2.2
+          - ""
     steps:
       -
         name: Runner info
