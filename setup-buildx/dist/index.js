@@ -2163,7 +2163,6 @@ exports.debug = debug; // for test
 
 "use strict";
 
-// From https://github.com/actions/checkout/blob/master/src/state-helper.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -2184,16 +2183,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IsPost = void 0;
-const coreCommand = __importStar(__webpack_require__(804));
-/**
- * Indicates whether the POST action is running
- */
+exports.setBuilderName = exports.builderName = exports.IsPost = void 0;
+const core = __importStar(__webpack_require__(470));
 exports.IsPost = !!process.env['STATE_isPost'];
-// Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
-// This is necessary since we don't have a separate entry point.
+exports.builderName = !!process.env['STATE_builderName'];
+function setBuilderName(builderName) {
+    core.saveState('builderName', builderName);
+}
+exports.setBuilderName = setBuilderName;
 if (!exports.IsPost) {
-    coreCommand.issueCommand('save-state', { name: 'isPost' }, 'true');
+    core.saveState('isPost', 'true');
 }
 //# sourceMappingURL=state-helper.js.map
 
@@ -2502,8 +2501,8 @@ function run() {
             core.info('📣 Buildx info');
             yield exec.exec('docker', ['buildx', 'version'], false);
             const builderName = `builder-${(yield buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
-            core.saveState('builderName', builderName);
             core.setOutput('name', builderName);
+            stateHelper.setBuilderName(builderName);
             core.info('🔨 Creating a new builder instance...');
             let createArgs = ['buildx', 'create', '--name', builderName, '--driver', driver];
             if (driverOpt) {
@@ -2538,11 +2537,9 @@ function cleanup() {
         }
     });
 }
-// Main
 if (!stateHelper.IsPost) {
     run();
 }
-// Post
 else {
     cleanup();
 }

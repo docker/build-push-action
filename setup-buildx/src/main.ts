@@ -28,8 +28,8 @@ async function run(): Promise<void> {
     await exec.exec('docker', ['buildx', 'version'], false);
 
     const builderName: string = `builder-${(await buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
-    core.saveState('builderName', builderName);
     core.setOutput('name', builderName);
+    stateHelper.setBuilderName(builderName);
 
     core.info('🔨 Creating a new builder instance...');
     let createArgs: Array<string> = ['buildx', 'create', '--name', builderName, '--driver', driver];
@@ -66,11 +66,8 @@ async function cleanup(): Promise<void> {
   }
 }
 
-// Main
 if (!stateHelper.IsPost) {
   run();
-}
-// Post
-else {
+} else {
   cleanup();
 }
