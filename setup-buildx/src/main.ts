@@ -1,10 +1,9 @@
-import * as child_process from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
-import * as installer from './installer';
+import * as buildx from './buildx';
+import * as exec from './exec';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
 
 async function run(): Promise<void> {
   try {
@@ -13,17 +12,20 @@ async function run(): Promise<void> {
       return;
     }
 
-    const buildxVer: string = core.getInput('buildx-version') || 'latest';
+    const buildxVer: string = core.getInput('buildx-version');
     const driver: string = core.getInput('driver') || 'docker-container';
     const driverOpt: string = core.getInput('driver-opt');
     const install: boolean = /true/i.test(core.getInput('install'));
     const use: boolean = /true/i.test(core.getInput('use'));
 
     const dockerConfigHome: string = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
-    await installer.buildx(buildxVer, dockerConfigHome);
+
+    if (!(await buildx.isAvailable()) || buildxVer) {
+      await buildx.install(buildxVer || 'latest', dockerConfigHome);
+    }
 
     core.info('📣 Buildx info');
-    await exec.exec('docker', ['buildx', 'version']);
+    await exec.exec('docker', ['buildx', 'version'], false);
 
     core.info('🔨 Creating a new builder instance...');
     let createArgs: Array<string> = [
@@ -41,29 +43,31 @@ async function run(): Promise<void> {
       createArgs.push('--use');
     }
 
-    await exec.exec('docker', createArgs);
+    await exec.exec('docker', createArgs, false);
 
     core.info('🏃 Booting builder...');
-    await exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
+    await exec.exec('docker', ['buildx', 'inspect', '--bootstrap'], false);
 
     if (install) {
       core.info('🤝 Setting buildx as default builder...');
-      await exec.exec('docker', ['buildx', 'install']);
+      await exec.exec('docker', ['buildx', 'install'], false);
     }
 
     core.info('🐳 Docker info');
-    await exec.exec('docker', ['info']);
+    await exec.exec('docker', ['info'], false);
 
     core.info('🛒 Extracting available platforms...');
-    const inspect = child_process.execSync('docker buildx inspect', {
-      encoding: 'utf8'
-    });
-    for (const line of inspect.split(os.EOL)) {
-      if (line.startsWith('Platforms')) {
-        core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
-        break;
+    await exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
+      if (res.stderr != '' && !res.success) {
+        throw new Error(res.stderr);
       }
-    }
+      for (const line of res.stdout.trim().split(os.EOL)) {
+        if (line.startsWith('Platforms')) {
+          core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
+          break;
+        }
+      }
+    });
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -72,7 +76,7 @@ async function run(): Promise<void> {
 async function cleanup(): Promise<void> {
   try {
     core.info('🚿 Removing builder instance...');
-    await exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`]);
+    await exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`], false);
   } catch (error) {
     core.warning(error.message);
   }

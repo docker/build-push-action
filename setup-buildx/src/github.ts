@@ -7,6 +7,6 @@ export interface GitHubRelease {
 
 export const getRelease = async (version: string): Promise<GitHubRelease | null> => {
   const url: string = `https://github.com/docker/buildx/releases/${version}`;
-  const http: httpm.HttpClient = new httpm.HttpClient('ghaction-docker-buildx');
+  const http: httpm.HttpClient = new httpm.HttpClient('setup-buildx');
   return (await http.getJson<GitHubRelease>(url)).result;
 };

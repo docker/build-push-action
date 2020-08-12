@@ -3,13 +3,23 @@ import * as os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as util from 'util';
+import * as exec from './exec';
 import * as github from './github';
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 
 const osPlat: string = os.platform();
 
-export async function buildx(inputVersion: string, dockerConfigHome: string): Promise<string> {
+export async function isAvailable(): Promise<Boolean> {
+  return await exec.exec(`docker`, ['buildx'], true).then(res => {
+    if (res.stderr != '' && !res.success) {
+      return false;
+    }
+    return res.success;
+  });
+}
+
+export async function install(inputVersion: string, dockerConfigHome: string): Promise<string> {
   const release: github.GitHubRelease | null = await github.getRelease(inputVersion);
   if (!release) {
     throw new Error(`Cannot find buildx ${inputVersion} release`);
@@ -24,7 +34,7 @@ export async function buildx(inputVersion: string, dockerConfigHome: string): Pr
     if (!semver.valid(c)) {
       throw new Error(`Invalid Buildx version "${version}".`);
     }
-    toolPath = await installBuildx(version);
+    toolPath = await download(version);
   }
 
   const pluginsDir: string = path.join(dockerConfigHome, 'cli-plugins');
@@ -44,7 +54,7 @@ export async function buildx(inputVersion: string, dockerConfigHome: string): Pr
   return pluginPath;
 }
 
-async function installBuildx(version: string): Promise<string> {
+async function download(version: string): Promise<string> {
   version = semver.clean(version) || '';
   const platform: string = osPlat == 'win32' ? 'windows' : osPlat;
   const ext: string = osPlat == 'win32' ? '.exe' : '';

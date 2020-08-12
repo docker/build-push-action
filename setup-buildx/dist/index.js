@@ -2477,13 +2477,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process = __importStar(__webpack_require__(129));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
-const installer = __importStar(__webpack_require__(749));
+const buildx = __importStar(__webpack_require__(982));
+const exec = __importStar(__webpack_require__(807));
 const stateHelper = __importStar(__webpack_require__(153));
 const core = __importStar(__webpack_require__(470));
-const exec = __importStar(__webpack_require__(986));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2491,15 +2490,17 @@ function run() {
                 core.setFailed('Only supported on linux platform');
                 return;
             }
-            const buildxVer = core.getInput('buildx-version') || 'latest';
+            const buildxVer = core.getInput('buildx-version');
             const driver = core.getInput('driver') || 'docker-container';
             const driverOpt = core.getInput('driver-opt');
             const install = /true/i.test(core.getInput('install'));
             const use = /true/i.test(core.getInput('use'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
-            yield installer.buildx(buildxVer, dockerConfigHome);
+            if (!(yield buildx.isAvailable()) || buildxVer) {
+                yield buildx.install(buildxVer || 'latest', dockerConfigHome);
+            }
             core.info('📣 Buildx info');
-            yield exec.exec('docker', ['buildx', 'version']);
+            yield exec.exec('docker', ['buildx', 'version'], false);
             core.info('🔨 Creating a new builder instance...');
             let createArgs = [
                 'buildx',
@@ -2515,25 +2516,27 @@ function run() {
             if (use) {
                 createArgs.push('--use');
             }
-            yield exec.exec('docker', createArgs);
+            yield exec.exec('docker', createArgs, false);
             core.info('🏃 Booting builder...');
-            yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
+            yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap'], false);
             if (install) {
                 core.info('🤝 Setting buildx as default builder...');
-                yield exec.exec('docker', ['buildx', 'install']);
+                yield exec.exec('docker', ['buildx', 'install'], false);
             }
             core.info('🐳 Docker info');
-            yield exec.exec('docker', ['info']);
+            yield exec.exec('docker', ['info'], false);
             core.info('🛒 Extracting available platforms...');
-            const inspect = child_process.execSync('docker buildx inspect', {
-                encoding: 'utf8'
-            });
-            for (const line of inspect.split(os.EOL)) {
-                if (line.startsWith('Platforms')) {
-                    core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
-                    break;
+            yield exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
+                if (res.stderr != '' && !res.success) {
+                    throw new Error(res.stderr);
                 }
-            }
+                for (const line of res.stdout.trim().split(os.EOL)) {
+                    if (line.startsWith('Platforms')) {
+                        core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
+                        break;
+                    }
+                }
+            });
         }
         catch (error) {
             core.setFailed(error.message);
@@ -2544,7 +2547,7 @@ function cleanup() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.info('🚿 Removing builder instance...');
-            yield exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`]);
+            yield exec.exec('docker', ['buildx', 'rm', `builder-${process.env.GITHUB_SHA}`], false);
         }
         catch (error) {
             core.warning(error.message);
@@ -6259,106 +6262,6 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 749:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildx = void 0;
-const fs = __importStar(__webpack_require__(747));
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
-const semver = __importStar(__webpack_require__(876));
-const util = __importStar(__webpack_require__(669));
-const github = __importStar(__webpack_require__(824));
-const core = __importStar(__webpack_require__(470));
-const tc = __importStar(__webpack_require__(533));
-const osPlat = os.platform();
-function buildx(inputVersion, dockerConfigHome) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const release = yield github.getRelease(inputVersion);
-        if (!release) {
-            throw new Error(`Cannot find buildx ${inputVersion} release`);
-        }
-        core.debug(`Release found: ${release.tag_name}`);
-        const version = release.tag_name.replace(/^v+|v+$/g, '');
-        let toolPath;
-        toolPath = tc.find('buildx', version);
-        if (!toolPath) {
-            const c = semver.clean(version) || '';
-            if (!semver.valid(c)) {
-                throw new Error(`Invalid Buildx version "${version}".`);
-            }
-            toolPath = yield installBuildx(version);
-        }
-        const pluginsDir = path.join(dockerConfigHome, 'cli-plugins');
-        core.debug(`Plugins dir is ${pluginsDir}`);
-        if (!fs.existsSync(pluginsDir)) {
-            fs.mkdirSync(pluginsDir, { recursive: true });
-        }
-        const filename = osPlat == 'win32' ? 'docker-buildx.exe' : 'docker-buildx';
-        const pluginPath = path.join(pluginsDir, filename);
-        core.debug(`Plugin path is ${pluginPath}`);
-        fs.copyFileSync(path.join(toolPath, filename), pluginPath);
-        core.info('🔨 Fixing perms...');
-        fs.chmodSync(pluginPath, '0755');
-        return pluginPath;
-    });
-}
-exports.buildx = buildx;
-function installBuildx(version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        version = semver.clean(version) || '';
-        const platform = osPlat == 'win32' ? 'windows' : osPlat;
-        const ext = osPlat == 'win32' ? '.exe' : '';
-        const filename = util.format('buildx-v%s.%s-amd64%s', version, platform, ext);
-        const targetFile = osPlat == 'win32' ? 'docker-buildx.exe' : 'docker-buildx';
-        const downloadUrl = util.format('https://github.com/docker/buildx/releases/download/v%s/%s', version, filename);
-        let downloadPath;
-        try {
-            core.info(`⬇️ Downloading ${downloadUrl}...`);
-            downloadPath = yield tc.downloadTool(downloadUrl);
-            core.debug(`Downloaded to ${downloadPath}`);
-        }
-        catch (error) {
-            throw error;
-        }
-        return yield tc.cacheFile(downloadPath, targetFile, 'buildx', version);
-    });
-}
-//# sourceMappingURL=installer.js.map
-
-/***/ }),
-
 /***/ 752:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -6560,6 +6463,68 @@ function escapeProperty(s) {
 
 /***/ }),
 
+/***/ 807:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.exec = void 0;
+const actionsExec = __importStar(__webpack_require__(986));
+exports.exec = (command, args = [], silent) => __awaiter(void 0, void 0, void 0, function* () {
+    let stdout = '';
+    let stderr = '';
+    const options = {
+        silent: silent,
+        ignoreReturnCode: true
+    };
+    options.listeners = {
+        stdout: (data) => {
+            stdout += data.toString();
+        },
+        stderr: (data) => {
+            stderr += data.toString();
+        }
+    };
+    const returnCode = yield actionsExec.exec(command, args, options);
+    return {
+        success: returnCode === 0,
+        stdout: stdout.trim(),
+        stderr: stderr.trim()
+    };
+});
+//# sourceMappingURL=exec.js.map
+
+/***/ }),
+
 /***/ 811:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -6667,7 +6632,7 @@ exports.getRelease = void 0;
 const httpm = __importStar(__webpack_require__(539));
 exports.getRelease = (version) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `https://github.com/docker/buildx/releases/${version}`;
-    const http = new httpm.HttpClient('ghaction-docker-buildx');
+    const http = new httpm.HttpClient('setup-buildx');
     return (yield http.getJson(url)).result;
 });
 //# sourceMappingURL=github.js.map
@@ -7241,6 +7206,118 @@ class RetryHelper {
 }
 exports.RetryHelper = RetryHelper;
 //# sourceMappingURL=retry-helper.js.map
+
+/***/ }),
+
+/***/ 982:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.install = exports.isAvailable = void 0;
+const fs = __importStar(__webpack_require__(747));
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+const semver = __importStar(__webpack_require__(876));
+const util = __importStar(__webpack_require__(669));
+const exec = __importStar(__webpack_require__(807));
+const github = __importStar(__webpack_require__(824));
+const core = __importStar(__webpack_require__(470));
+const tc = __importStar(__webpack_require__(533));
+const osPlat = os.platform();
+function isAvailable() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield exec.exec(`docker`, ['buildx'], true).then(res => {
+            if (res.stderr != '' && !res.success) {
+                return false;
+            }
+            return res.success;
+        });
+    });
+}
+exports.isAvailable = isAvailable;
+function install(inputVersion, dockerConfigHome) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const release = yield github.getRelease(inputVersion);
+        if (!release) {
+            throw new Error(`Cannot find buildx ${inputVersion} release`);
+        }
+        core.debug(`Release found: ${release.tag_name}`);
+        const version = release.tag_name.replace(/^v+|v+$/g, '');
+        let toolPath;
+        toolPath = tc.find('buildx', version);
+        if (!toolPath) {
+            const c = semver.clean(version) || '';
+            if (!semver.valid(c)) {
+                throw new Error(`Invalid Buildx version "${version}".`);
+            }
+            toolPath = yield download(version);
+        }
+        const pluginsDir = path.join(dockerConfigHome, 'cli-plugins');
+        core.debug(`Plugins dir is ${pluginsDir}`);
+        if (!fs.existsSync(pluginsDir)) {
+            fs.mkdirSync(pluginsDir, { recursive: true });
+        }
+        const filename = osPlat == 'win32' ? 'docker-buildx.exe' : 'docker-buildx';
+        const pluginPath = path.join(pluginsDir, filename);
+        core.debug(`Plugin path is ${pluginPath}`);
+        fs.copyFileSync(path.join(toolPath, filename), pluginPath);
+        core.info('🔨 Fixing perms...');
+        fs.chmodSync(pluginPath, '0755');
+        return pluginPath;
+    });
+}
+exports.install = install;
+function download(version) {
+    return __awaiter(this, void 0, void 0, function* () {
+        version = semver.clean(version) || '';
+        const platform = osPlat == 'win32' ? 'windows' : osPlat;
+        const ext = osPlat == 'win32' ? '.exe' : '';
+        const filename = util.format('buildx-v%s.%s-amd64%s', version, platform, ext);
+        const targetFile = osPlat == 'win32' ? 'docker-buildx.exe' : 'docker-buildx';
+        const downloadUrl = util.format('https://github.com/docker/buildx/releases/download/v%s/%s', version, filename);
+        let downloadPath;
+        try {
+            core.info(`⬇️ Downloading ${downloadUrl}...`);
+            downloadPath = yield tc.downloadTool(downloadUrl);
+            core.debug(`Downloaded to ${downloadPath}`);
+        }
+        catch (error) {
+            throw error;
+        }
+        return yield tc.cacheFile(downloadPath, targetFile, 'buildx', version);
+    });
+}
+//# sourceMappingURL=buildx.js.map
 
 /***/ }),
 
