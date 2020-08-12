@@ -1014,11 +1014,12 @@ function run() {
             const image = core.getInput('image') || 'tonistiigi/binfmt:latest';
             const platforms = core.getInput('platforms') || 'all';
             core.info(`💎 Installing QEMU static binaries...`);
-            yield exec.exec(`docker`, ['run', '--rm', '--privileged', image, '--install', platforms], false).then(res => {
+            yield exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms], false);
+            core.info('🛒 Extracting available platforms...');
+            yield exec.exec(`docker`, ['run', '--rm', '--privileged', image], false).then(res => {
                 if (res.stderr != '' && !res.success) {
                     throw new Error(res.stderr);
                 }
-                core.info('🛒 Extracting available platforms...');
                 const platforms = JSON.parse(res.stdout.trim());
                 core.setOutput('platforms', platforms.supported.join(','));
             });

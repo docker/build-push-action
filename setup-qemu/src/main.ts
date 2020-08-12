@@ -18,12 +18,13 @@ async function run(): Promise<void> {
     const platforms: string = core.getInput('platforms') || 'all';
 
     core.info(`💎 Installing QEMU static binaries...`);
-    await exec.exec(`docker`, ['run', '--rm', '--privileged', image, '--install', platforms], false).then(res => {
+    await exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms], false);
+
+    core.info('🛒 Extracting available platforms...');
+    await exec.exec(`docker`, ['run', '--rm', '--privileged', image], false).then(res => {
       if (res.stderr != '' && !res.success) {
         throw new Error(res.stderr);
       }
-
-      core.info('🛒 Extracting available platforms...');
       const platforms: Platforms = JSON.parse(res.stdout.trim());
       core.setOutput('platforms', platforms.supported.join(','));
     });
