@@ -28,6 +28,19 @@ export async function countBuilders(): Promise<number> {
   });
 }
 
+export async function platforms(): Promise<String | undefined> {
+  return await exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
+    if (res.stderr != '' && !res.success) {
+      throw new Error(res.stderr);
+    }
+    for (const line of res.stdout.trim().split(`\n`)) {
+      if (line.startsWith('Platforms')) {
+        return line.replace('Platforms: ', '').replace(/\s/g, '').trim();
+      }
+    }
+  });
+}
+
 export async function install(inputVersion: string, dockerConfigHome: string): Promise<string> {
   const release: github.GitHubRelease | null = await github.getRelease(inputVersion);
   if (!release) {

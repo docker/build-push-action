@@ -50,21 +50,8 @@ async function run(): Promise<void> {
       await exec.exec('docker', ['buildx', 'install'], false);
     }
 
-    core.info('🐳 Docker info');
-    await exec.exec('docker', ['info'], false);
-
     core.info('🛒 Extracting available platforms...');
-    await exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
-      if (res.stderr != '' && !res.success) {
-        throw new Error(res.stderr);
-      }
-      for (const line of res.stdout.trim().split(os.EOL)) {
-        if (line.startsWith('Platforms')) {
-          core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
-          break;
-        }
-      }
-    });
+    core.setOutput('platforms', await buildx.platforms());
   } catch (error) {
     core.setFailed(error.message);
   }

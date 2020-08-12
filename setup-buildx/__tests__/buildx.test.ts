@@ -16,6 +16,13 @@ describe('buildx', () => {
     expect(countBuilders).toBeGreaterThan(0);
   });
 
+  it('platforms', async () => {
+    const platforms = await buildx.platforms();
+    console.log(`platforms: ${platforms}`);
+    expect(platforms).not.toBeUndefined();
+    expect(platforms).not.toEqual('');
+  });
+
   it('acquires v0.2.2 version of buildx', async () => {
     const buildxBin = await buildx.install('v0.2.2', tmpDir);
     console.log(buildxBin);

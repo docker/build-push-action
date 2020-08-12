@@ -2522,17 +2522,7 @@ function run() {
             core.info('🐳 Docker info');
             yield exec.exec('docker', ['info'], false);
             core.info('🛒 Extracting available platforms...');
-            yield exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
-                if (res.stderr != '' && !res.success) {
-                    throw new Error(res.stderr);
-                }
-                for (const line of res.stdout.trim().split(os.EOL)) {
-                    if (line.startsWith('Platforms')) {
-                        core.setOutput('platforms', line.replace('Platforms: ', '').replace(/\s/g, '').trim());
-                        break;
-                    }
-                }
-            });
+            core.setOutput('platforms', yield buildx.platforms());
         }
         catch (error) {
             core.setFailed(error.message);
@@ -7239,7 +7229,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.install = exports.countBuilders = exports.isAvailable = void 0;
+exports.install = exports.platforms = exports.countBuilders = exports.isAvailable = void 0;
 const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
@@ -7272,6 +7262,21 @@ function countBuilders() {
     });
 }
 exports.countBuilders = countBuilders;
+function platforms() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield exec.exec(`docker`, ['buildx', 'inspect'], true).then(res => {
+            if (res.stderr != '' && !res.success) {
+                throw new Error(res.stderr);
+            }
+            for (const line of res.stdout.trim().split(`\n`)) {
+                if (line.startsWith('Platforms')) {
+                    return line.replace('Platforms: ', '').replace(/\s/g, '').trim();
+                }
+            }
+        });
+    });
+}
+exports.platforms = platforms;
 function install(inputVersion, dockerConfigHome) {
     return __awaiter(this, void 0, void 0, function* () {
         const release = yield github.getRelease(inputVersion);
