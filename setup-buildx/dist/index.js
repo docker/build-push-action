@@ -2495,6 +2495,7 @@ function run() {
             const driver = core.getInput('driver') || 'docker-container';
             const driverOpt = core.getInput('driver-opt');
             const install = /true/i.test(core.getInput('install'));
+            const use = /true/i.test(core.getInput('use'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
             yield installer.buildx(buildxVer, dockerConfigHome);
             core.info('📣 Buildx info');
@@ -2503,7 +2504,6 @@ function run() {
             let createArgs = [
                 'buildx',
                 'create',
-                '--use',
                 '--name',
                 `builder-${process.env.GITHUB_SHA}`,
                 '--driver',
@@ -2511,6 +2511,9 @@ function run() {
             ];
             if (driverOpt) {
                 createArgs.push('--driver-opt', driverOpt);
+            }
+            if (use) {
+                createArgs.push('--use');
             }
             yield exec.exec('docker', createArgs);
             core.info('🏃 Booting builder...');

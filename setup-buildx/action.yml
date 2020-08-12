@@ -22,6 +22,10 @@ inputs:
     description: 'Sets up docker build command as an alias to docker buildx'
     default: 'false'
     required: false
+  use:
+    description: 'Switch to this builder instance'
+    default: 'true'
+    required: false
 
 outputs:
   platforms:

@@ -62,6 +62,28 @@ jobs:
         run: |
           docker build --help
 
+  use:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        use:
+          - true
+          - false
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/
+        with:
+          use: ${{ matrix.use }}
+      -
+        name: List builder instances
+        run: docker buildx ls
+
   driver:
     runs-on: ubuntu-latest
     strategy:

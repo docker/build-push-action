@@ -94,6 +94,7 @@ Following inputs can be used as `step.with` keys
 | `driver`         | String  | `docker-container`  | Sets the [builder driver](https://github.com/docker/buildx#--driver-driver) to be used. |
 | `driver-opt`     | String  |                     | Passes additional [driver-specific options](https://github.com/docker/buildx#--driver-opt-options). e.g. `image=moby/buildkit:master` |
 | `install`        | Bool    | `false`             | Sets up `docker build` command as an alias to `docker buildx` |
+| `use`            | Bool    | `true`              | Switch to this builder instance |
 
 ### outputs
 
