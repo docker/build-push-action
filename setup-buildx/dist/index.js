@@ -2519,8 +2519,6 @@ function run() {
                 core.info('🤝 Setting buildx as default builder...');
                 yield exec.exec('docker', ['buildx', 'install'], false);
             }
-            core.info('🐳 Docker info');
-            yield exec.exec('docker', ['info'], false);
             core.info('🛒 Extracting available platforms...');
             core.setOutput('platforms', yield buildx.platforms());
         }
