@@ -67,25 +67,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        driver:
-          - docker-container
-          - docker
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2.3.1
-      -
-        name: Set up Docker Buildx
-        id: buildx
-        uses: ./setup-buildx/
-        with:
-          driver: ${{ matrix.driver }}
-
-  driver-opt:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
         driver-opt:
           - image=moby/buildkit:latest
           - image=moby/buildkit:master
@@ -98,6 +79,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/
         with:
+          driver: docker-container
           driver-opt: ${{ matrix.driver-opt }}
 
   with-qemu:
