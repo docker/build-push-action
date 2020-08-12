@@ -113,6 +113,7 @@ jobs:
         buildx-version:
           - latest
           - v0.2.2
+          - ""
         qemu-platforms:
           - all
           - arm64,riscv64,arm
