@@ -1016,7 +1016,7 @@ function run() {
             core.info(`💎 Installing QEMU static binaries...`);
             yield exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms], false);
             core.info('🛒 Extracting available platforms...');
-            yield exec.exec(`docker`, ['run', '--rm', '--privileged', image], false).then(res => {
+            yield exec.exec(`docker`, ['run', '--rm', '--privileged', image], true).then(res => {
                 if (res.stderr != '' && !res.success) {
                     throw new Error(res.stderr);
                 }

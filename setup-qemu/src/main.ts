@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     await exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms], false);
 
     core.info('🛒 Extracting available platforms...');
-    await exec.exec(`docker`, ['run', '--rm', '--privileged', image], false).then(res => {
+    await exec.exec(`docker`, ['run', '--rm', '--privileged', image], true).then(res => {
       if (res.stderr != '' && !res.success) {
         throw new Error(res.stderr);
       }
