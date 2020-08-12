@@ -41,6 +41,9 @@ jobs:
         with:
           buildx-version: latest
       -
+        name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
+      -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
 ```
@@ -77,9 +80,6 @@ jobs:
         uses: docker/actions/setup-buildx@v1
         with:
           buildx-version: latest
-      -
-        name: Builder instance name
-        run: echo ${{ steps.buildx.outputs.name }}
       -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
