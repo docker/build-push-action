@@ -2492,21 +2492,27 @@ function run() {
                 return;
             }
             const buildxVer = core.getInput('buildx-version') || 'latest';
+            const driver = core.getInput('driver') || 'docker-container';
+            const driverOpt = core.getInput('driver-opt');
             const install = /true/i.test(core.getInput('install'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
             yield installer.buildx(buildxVer, dockerConfigHome);
             core.info('📣 Buildx info');
             yield exec.exec('docker', ['buildx', 'version']);
             core.info('🔨 Creating a new builder instance...');
-            yield exec.exec('docker', [
+            let createArgs = [
                 'buildx',
                 'create',
+                '--use',
                 '--name',
                 `builder-${process.env.GITHUB_SHA}`,
                 '--driver',
-                'docker-container',
-                '--use'
-            ]);
+                driver
+            ];
+            if (driverOpt) {
+                createArgs.push('--driver-opt', driverOpt);
+            }
+            yield exec.exec('docker', createArgs);
             core.info('🏃 Booting builder...');
             yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
             if (install) {

@@ -8,8 +8,15 @@ branding:
 
 inputs:
   buildx-version:
-    description: 'Buildx version. Example: v0.3.0'
+    description: 'Buildx version. e.g. v0.3.0'
     default: 'latest'
+    required: false
+  driver:
+    description: 'Sets the builder driver to be used'
+    default: 'docker-container'
+    required: false
+  driver-opt:
+    description: 'Passes additional driver-specific options. Eg. image=moby/buildkit:master'
     required: false
   install:
     description: 'Sets up docker build command as an alias to docker buildx'

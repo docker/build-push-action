@@ -15,7 +15,7 @@ on:
       - setup-qemu/**
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

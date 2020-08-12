@@ -48,8 +48,8 @@ Following inputs can be used as `step.with` keys
 
 | Name             | Type    | Default                     | Description                        |
 |------------------|---------|-----------------------------|------------------------------------|
-| `image`          | String  | `tonistiigi/binfmt:latest`  | QEMU static binaries Docker image. Example: [`tonistiigi/binfmt:latest`](https://hub.docker.com/r/tonistiigi/binfmt/tags) |
-| `platforms`      | String  | `all`                       | Platforms to install. Example: `arm64,riscv64,arm` |
+| `image`          | String  | `tonistiigi/binfmt:latest`  | QEMU static binaries Docker image. e.g. [`tonistiigi/binfmt:latest`](https://hub.docker.com/r/tonistiigi/binfmt/tags) |
+| `platforms`      | String  | `all`                       | Platforms to install. e.g. `arm64,riscv64,arm` |
 
 ### outputs
 

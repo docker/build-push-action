@@ -15,7 +15,7 @@ on:
       - setup-buildx/**
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -61,6 +61,44 @@ jobs:
         name: Check cmd
         run: |
           docker build --help
+
+  driver:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        driver:
+          - docker-container
+          - docker
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/
+        with:
+          driver: ${{ matrix.driver }}
+
+  driver-opt:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        driver-opt:
+          - image=moby/buildkit:latest
+          - image=moby/buildkit:master
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/
+        with:
+          driver-opt: ${{ matrix.driver-opt }}
 
   with-qemu:
     runs-on: ubuntu-latest

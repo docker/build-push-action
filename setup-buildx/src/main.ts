@@ -14,6 +14,8 @@ async function run(): Promise<void> {
     }
 
     const buildxVer: string = core.getInput('buildx-version') || 'latest';
+    const driver: string = core.getInput('driver') || 'docker-container';
+    const driverOpt: string = core.getInput('driver-opt');
     const install: boolean = /true/i.test(core.getInput('install'));
     const dockerConfigHome: string = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
     await installer.buildx(buildxVer, dockerConfigHome);
@@ -22,15 +24,21 @@ async function run(): Promise<void> {
     await exec.exec('docker', ['buildx', 'version']);
 
     core.info('🔨 Creating a new builder instance...');
-    await exec.exec('docker', [
+    let createArgs: Array<string> = [
       'buildx',
       'create',
+      '--use',
       '--name',
       `builder-${process.env.GITHUB_SHA}`,
       '--driver',
-      'docker-container',
-      '--use'
-    ]);
+      driver
+    ];
+
+    if (driverOpt) {
+      createArgs.push('--driver-opt', driverOpt);
+    }
+
+    await exec.exec('docker', createArgs);
 
     core.info('🏃 Booting builder...');
     await exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
