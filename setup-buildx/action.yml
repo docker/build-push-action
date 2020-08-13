@@ -7,7 +7,7 @@ branding:
   icon: 'truck'
 
 inputs:
-  buildx-version:
+  version:
     description: 'Buildx version. e.g. v0.3.0'
     required: false
   driver:

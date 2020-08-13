@@ -39,7 +39,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/
         with:
-          buildx-version: ${{ matrix.buildx-version }}
+          version: ${{ matrix.buildx-version }}
       -
         name: Builder instance name
         run: echo ${{ steps.buildx.outputs.name }}
@@ -155,7 +155,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/
         with:
-          buildx-version: ${{ matrix.buildx-version }}
+          version: ${{ matrix.buildx-version }}
       -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}

@@ -12,16 +12,16 @@ async function run(): Promise<void> {
       return;
     }
 
-    const buildxVer: string = core.getInput('buildx-version');
-    const driver: string = core.getInput('driver') || 'docker-container';
-    const driverOpt: string = core.getInput('driver-opt');
-    const install: boolean = /true/i.test(core.getInput('install'));
-    const use: boolean = /true/i.test(core.getInput('use'));
+    const bxVersion: string = core.getInput('version');
+    const bxDriver: string = core.getInput('driver') || 'docker-container';
+    const bxDriverOpt: string = core.getInput('driver-opt');
+    const bxInstall: boolean = /true/i.test(core.getInput('install'));
+    const bxUse: boolean = /true/i.test(core.getInput('use'));
 
     const dockerConfigHome: string = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
 
-    if (!(await buildx.isAvailable()) || buildxVer) {
-      await buildx.install(buildxVer || 'latest', dockerConfigHome);
+    if (!(await buildx.isAvailable()) || bxVersion) {
+      await buildx.install(bxVersion || 'latest', dockerConfigHome);
     }
 
     core.info('📣 Buildx info');
@@ -32,11 +32,11 @@ async function run(): Promise<void> {
     stateHelper.setBuilderName(builderName);
 
     core.info('🔨 Creating a new builder instance...');
-    let createArgs: Array<string> = ['buildx', 'create', '--name', builderName, '--driver', driver];
-    if (driverOpt) {
-      createArgs.push('--driver-opt', driverOpt);
+    let createArgs: Array<string> = ['buildx', 'create', '--name', builderName, '--driver', bxDriver];
+    if (bxDriverOpt) {
+      createArgs.push('--driver-opt', bxDriverOpt);
     }
-    if (use) {
+    if (bxUse) {
       createArgs.push('--use');
     }
 
@@ -45,7 +45,7 @@ async function run(): Promise<void> {
     core.info('🏃 Booting builder...');
     await exec.exec('docker', ['buildx', 'inspect', '--bootstrap'], false);
 
-    if (install) {
+    if (bxInstall) {
       core.info('🤝 Setting buildx as default builder...');
       await exec.exec('docker', ['buildx', 'install'], false);
     }

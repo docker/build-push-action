@@ -39,7 +39,7 @@ jobs:
         id: buildx
         uses: docker/actions/setup-buildx@v1
         with:
-          buildx-version: latest
+          version: latest
       -
         name: Builder instance name
         run: echo ${{ steps.buildx.outputs.name }}
@@ -79,7 +79,7 @@ jobs:
         id: buildx
         uses: docker/actions/setup-buildx@v1
         with:
-          buildx-version: latest
+          version: latest
       -
         name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
@@ -93,7 +93,7 @@ Following inputs can be used as `step.with` keys
 
 | Name             | Type    | Default                           | Description                        |
 |------------------|---------|-----------------------------------|------------------------------------|
-| `buildx-version` | String  | _the one installed on the runner_ | [Buildx](https://github.com/docker/buildx) version. e.g. `v0.3.0`, `latest` |
+| `version`        | String  | _the one installed on the runner_ | [Buildx](https://github.com/docker/buildx) version. e.g. `v0.3.0`, `latest` |
 | `driver`         | String  | `docker-container`                | Sets the [builder driver](https://github.com/docker/buildx#--driver-driver) to be used. |
 | `driver-opt`     | String  |                                   | Passes additional [driver-specific options](https://github.com/docker/buildx#--driver-opt-options). e.g. `image=moby/buildkit:master` |
 | `install`        | Bool    | `false`                           | Sets up `docker build` command as an alias to `docker buildx` |
