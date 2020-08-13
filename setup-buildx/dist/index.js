@@ -2489,14 +2489,14 @@ function run() {
                 core.setFailed('Only supported on linux platform');
                 return;
             }
-            const buildxVer = core.getInput('buildx-version');
-            const driver = core.getInput('driver') || 'docker-container';
-            const driverOpt = core.getInput('driver-opt');
-            const install = /true/i.test(core.getInput('install'));
-            const use = /true/i.test(core.getInput('use'));
+            const bxVersion = core.getInput('version');
+            const bxDriver = core.getInput('driver') || 'docker-container';
+            const bxDriverOpt = core.getInput('driver-opt');
+            const bxInstall = /true/i.test(core.getInput('install'));
+            const bxUse = /true/i.test(core.getInput('use'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
-            if (!(yield buildx.isAvailable()) || buildxVer) {
-                yield buildx.install(buildxVer || 'latest', dockerConfigHome);
+            if (!(yield buildx.isAvailable()) || bxVersion) {
+                yield buildx.install(bxVersion || 'latest', dockerConfigHome);
             }
             core.info('📣 Buildx info');
             yield exec.exec('docker', ['buildx', 'version'], false);
@@ -2504,17 +2504,17 @@ function run() {
             core.setOutput('name', builderName);
             stateHelper.setBuilderName(builderName);
             core.info('🔨 Creating a new builder instance...');
-            let createArgs = ['buildx', 'create', '--name', builderName, '--driver', driver];
-            if (driverOpt) {
-                createArgs.push('--driver-opt', driverOpt);
+            let createArgs = ['buildx', 'create', '--name', builderName, '--driver', bxDriver];
+            if (bxDriverOpt) {
+                createArgs.push('--driver-opt', bxDriverOpt);
             }
-            if (use) {
+            if (bxUse) {
                 createArgs.push('--use');
             }
             yield exec.exec('docker', createArgs, false);
             core.info('🏃 Booting builder...');
             yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap'], false);
-            if (install) {
+            if (bxInstall) {
                 core.info('🤝 Setting buildx as default builder...');
                 yield exec.exec('docker', ['buildx', 'install'], false);
             }
