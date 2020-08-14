@@ -1021,6 +1021,7 @@ function run() {
                     throw new Error(res.stderr);
                 }
                 const platforms = JSON.parse(res.stdout.trim());
+                core.info(`${platforms.supported.join(',')}`);
                 core.setOutput('platforms', platforms.supported.join(','));
             });
         }

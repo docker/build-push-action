@@ -2519,7 +2519,9 @@ function run() {
                 yield exec.exec('docker', ['buildx', 'install'], false);
             }
             core.info('🛒 Extracting available platforms...');
-            core.setOutput('platforms', yield buildx.platforms());
+            const platforms = yield buildx.platforms();
+            core.info(`${platforms}`);
+            core.setOutput('platforms', platforms);
         }
         catch (error) {
             core.setFailed(error.message);

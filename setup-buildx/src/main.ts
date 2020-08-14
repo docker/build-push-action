@@ -51,7 +51,9 @@ async function run(): Promise<void> {
     }
 
     core.info('🛒 Extracting available platforms...');
-    core.setOutput('platforms', await buildx.platforms());
+    const platforms = await buildx.platforms();
+    core.info(`${platforms}`);
+    core.setOutput('platforms', platforms);
   } catch (error) {
     core.setFailed(error.message);
   }

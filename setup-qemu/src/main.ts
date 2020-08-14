@@ -26,6 +26,7 @@ async function run(): Promise<void> {
         throw new Error(res.stderr);
       }
       const platforms: Platforms = JSON.parse(res.stdout.trim());
+      core.info(`${platforms.supported.join(',')}`);
       core.setOutput('platforms', platforms.supported.join(','));
     });
   } catch (error) {
