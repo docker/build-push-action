@@ -1,0 +1,38 @@
+name: setup-buildx-test
+
+on:
+  push:
+    branches:
+      - master
+      - v2-working-branch # remove when merged to master
+    paths:
+      - .github/workflows/setup-buildx-test.yml
+      - setup-buildx/**
+  pull_request:
+    branches:
+      - master
+      - v2-working-branch # remove when merged to master
+    paths:
+      - .github/workflows/setup-buildx-test.yml
+      - setup-buildx/**
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Install
+        run: yarn --cwd ./setup-buildx/ install
+      -
+        name: Test
+        run: yarn --cwd ./setup-buildx/ run test
+#      -
+#        name: Upload coverage
+#        uses: codecov/codecov-action@v1.0.7
+#        if: success()
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          file: ./coverage/clover.xml
