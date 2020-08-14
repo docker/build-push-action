@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - master
+      - mig # remove when merged to master
     paths:
       - .github/workflows/setup-buildx-test.yml
       - setup-buildx/**
   pull_request:
     branches:
       - master
+      - mig # remove when merged to master
     paths:
       - .github/workflows/setup-buildx-test.yml
       - setup-buildx/**
