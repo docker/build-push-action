@@ -69,7 +69,7 @@ jobs:
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.builder }}
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
-          push: true
+          #push: true
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
