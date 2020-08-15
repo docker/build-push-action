@@ -1015,10 +1015,12 @@ function run() {
             }
             const inputs = yield context_helper_1.loadInputs();
             let buildArgs = [];
+            const buildxEnabled = yield context_helper_1.mustBuildx(inputs);
             // Check buildx
-            if (yield context_helper_1.mustBuildx(inputs)) {
+            if (buildxEnabled) {
                 if (yield !buildx.isAvailable()) {
-                    throw new Error(`Buildx is required but not available`);
+                    core.setFailed(`Buildx is required but not available`);
+                    return;
                 }
                 core.info(`🚀 Buildx will be used to build your image`);
                 buildArgs.push('buildx', 'build');
@@ -1026,6 +1028,7 @@ function run() {
             else {
                 buildArgs.push('build');
             }
+            // Global options
             if (inputs.file) {
                 buildArgs.push('--file', inputs.file);
             }
@@ -1047,31 +1050,45 @@ function run() {
             if (inputs.noCache) {
                 buildArgs.push('--no-cache');
             }
-            if (inputs.builder) {
-                core.info(`📌 Using build instance ${inputs.builder}`);
-                yield buildx.use(inputs.builder);
+            // Buildx options
+            if (buildxEnabled) {
+                if (inputs.builder) {
+                    core.info(`📌 Using build instance ${inputs.builder}`);
+                    yield buildx.use(inputs.builder);
+                }
+                if (inputs.platforms) {
+                    buildArgs.push('--platform', inputs.platforms);
+                }
+                if (inputs.load) {
+                    buildArgs.push('--load');
+                }
+                if (inputs.push) {
+                    buildArgs.push('--push');
+                }
+                yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
+                    buildArgs.push('--output', output);
+                }));
+                yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
+                    buildArgs.push('--cache-from', cacheFrom);
+                }));
+                yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
+                    buildArgs.push('--cache-from', cacheTo);
+                }));
             }
-            if (inputs.platforms) {
-                buildArgs.push('--platform', inputs.platforms);
-            }
-            if (inputs.load) {
-                buildArgs.push('--load');
-            }
-            if (inputs.push) {
-                buildArgs.push('--push');
-            }
-            yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--output', output);
-            }));
-            yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--cache-from', cacheFrom);
-            }));
-            yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--cache-from', cacheTo);
-            }));
             buildArgs.push(inputs.context);
             core.info(`🏃 Starting build...`);
             yield exec.exec('docker', buildArgs);
+            if (!buildxEnabled && inputs.push) {
+                let pushRepos = [];
+                yield asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
+                    const repo = tag.split(':', -1)[0];
+                    if (!pushRepos.includes(repo)) {
+                        pushRepos.push(repo);
+                        core.info(`⬆️ Pushing ${repo}...`);
+                        yield exec.exec('docker', ['push', repo]);
+                    }
+                }));
+            }
         }
         catch (error) {
             core.setFailed(error.message);

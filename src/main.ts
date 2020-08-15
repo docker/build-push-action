@@ -13,11 +13,13 @@ async function run(): Promise<void> {
 
     const inputs: Inputs = await loadInputs();
     let buildArgs: Array<string> = [];
+    const buildxEnabled = await mustBuildx(inputs);
 
     // Check buildx
-    if (await mustBuildx(inputs)) {
+    if (buildxEnabled) {
       if (await !buildx.isAvailable()) {
-        throw new Error(`Buildx is required but not available`);
+        core.setFailed(`Buildx is required but not available`);
+        return;
       }
       core.info(`🚀 Buildx will be used to build your image`);
       buildArgs.push('buildx', 'build');
@@ -25,6 +27,7 @@ async function run(): Promise<void> {
       buildArgs.push('build');
     }
 
+    // Global options
     if (inputs.file) {
       buildArgs.push('--file', inputs.file);
     }
@@ -46,32 +49,50 @@ async function run(): Promise<void> {
     if (inputs.noCache) {
       buildArgs.push('--no-cache');
     }
-    if (inputs.builder) {
-      core.info(`📌 Using build instance ${inputs.builder}`);
-      await buildx.use(inputs.builder);
+
+    // Buildx options
+    if (buildxEnabled) {
+      if (inputs.builder) {
+        core.info(`📌 Using build instance ${inputs.builder}`);
+        await buildx.use(inputs.builder);
+      }
+      if (inputs.platforms) {
+        buildArgs.push('--platform', inputs.platforms);
+      }
+      if (inputs.load) {
+        buildArgs.push('--load');
+      }
+      if (inputs.push) {
+        buildArgs.push('--push');
+      }
+      await asyncForEach(inputs.outputs, async output => {
+        buildArgs.push('--output', output);
+      });
+      await asyncForEach(inputs.cacheFrom, async cacheFrom => {
+        buildArgs.push('--cache-from', cacheFrom);
+      });
+      await asyncForEach(inputs.cacheTo, async cacheTo => {
+        buildArgs.push('--cache-from', cacheTo);
+      });
     }
-    if (inputs.platforms) {
-      buildArgs.push('--platform', inputs.platforms);
-    }
-    if (inputs.load) {
-      buildArgs.push('--load');
-    }
-    if (inputs.push) {
-      buildArgs.push('--push');
-    }
-    await asyncForEach(inputs.outputs, async output => {
-      buildArgs.push('--output', output);
-    });
-    await asyncForEach(inputs.cacheFrom, async cacheFrom => {
-      buildArgs.push('--cache-from', cacheFrom);
-    });
-    await asyncForEach(inputs.cacheTo, async cacheTo => {
-      buildArgs.push('--cache-from', cacheTo);
-    });
+
     buildArgs.push(inputs.context);
 
     core.info(`🏃 Starting build...`);
     await exec.exec('docker', buildArgs);
+
+    if (!buildxEnabled && inputs.push) {
+      let pushRepos: Array<string> = [];
+      await asyncForEach(inputs.tags, async tag => {
+        const repo = tag.split(':', -1)[0];
+        if (!pushRepos.includes(repo)) {
+          pushRepos.push(repo);
+
+          core.info(`⬆️ Pushing ${repo}...`);
+          await exec.exec('docker', ['push', repo]);
+        }
+      });
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
