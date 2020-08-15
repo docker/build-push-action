@@ -1213,7 +1213,7 @@ function mustBuildx(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         return (inputs.builder.length > 0 ||
             inputs.platforms.length > 0 ||
-            inputs.push ||
+            inputs.load ||
             inputs.outputs.length > 0 ||
             inputs.cacheFrom.length > 0 ||
             inputs.cacheTo.length > 0);

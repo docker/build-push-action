@@ -42,7 +42,7 @@ export async function mustBuildx(inputs: Inputs): Promise<boolean> {
   return (
     inputs.builder.length > 0 ||
     inputs.platforms.length > 0 ||
-    inputs.push ||
+    inputs.load ||
     inputs.outputs.length > 0 ||
     inputs.cacheFrom.length > 0 ||
     inputs.cacheTo.length > 0
