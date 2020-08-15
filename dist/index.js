@@ -1004,6 +1004,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
 const buildx = __importStar(__webpack_require__(982));
 const context_helper_1 = __webpack_require__(338);
+const docker_1 = __webpack_require__(231);
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
 function run() {
@@ -1081,7 +1082,12 @@ function run() {
             if (!buildxEnabled && inputs.push) {
                 let pushRepos = [];
                 yield asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-                    const repo = tag.split(':', -1)[0];
+                    const img = yield docker_1.parseImage(tag);
+                    if (!img) {
+                        core.warning(`Cannot parse image reference ${tag}`);
+                        return;
+                    }
+                    const repo = `${img.registry}${img.namespace}${img.repository}`;
                     if (!pushRepos.includes(repo)) {
                         pushRepos.push(repo);
                         core.info(`⬆️ Pushing ${repo}...`);
@@ -1102,6 +1108,46 @@ const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, func
 });
 run();
 //# sourceMappingURL=main.js.map
+
+/***/ }),
+
+/***/ 231:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseImage = void 0;
+exports.parseImage = (image) => __awaiter(void 0, void 0, void 0, function* () {
+    const match = image.match(/^(?:([^\/]+)\/)?(?:([^\/]+)\/)?([^@:\/]+)(?:[@:](.+))?$/);
+    if (!match) {
+        return;
+    }
+    let res = {
+        registry: match[1],
+        namespace: match[2],
+        repository: match[3],
+        tag: match[4]
+    };
+    if (!res.namespace && res.registry && !/[:.]/.test(res.registry)) {
+        res.namespace = res.registry;
+        res.registry = undefined;
+    }
+    res.registry = res.registry ? `${res.registry}/` : '';
+    res.namespace = res.namespace && res.namespace !== 'library' ? `${res.namespace}/` : '';
+    res.tag = res.tag && res.tag !== 'latest' ? `:${res.tag}` : '';
+    return res;
+});
+//# sourceMappingURL=docker.js.map
 
 /***/ }),
 

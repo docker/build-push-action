@@ -1,6 +1,7 @@
 import * as os from 'os';
 import * as buildx from './buildx';
 import {Inputs, loadInputs, mustBuildx} from './context-helper';
+import {Image, parseImage} from './docker';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
@@ -84,10 +85,14 @@ async function run(): Promise<void> {
     if (!buildxEnabled && inputs.push) {
       let pushRepos: Array<string> = [];
       await asyncForEach(inputs.tags, async tag => {
-        const repo = tag.split(':', -1)[0];
+        const img: Image | undefined = await parseImage(tag);
+        if (!img) {
+          core.warning(`Cannot parse image reference ${tag}`);
+          return;
+        }
+        const repo: string = `${img.registry}${img.namespace}${img.repository}`;
         if (!pushRepos.includes(repo)) {
           pushRepos.push(repo);
-
           core.info(`⬆️ Pushing ${repo}...`);
           await exec.exec('docker', ['push', repo]);
         }
