@@ -1,0 +1,39 @@
+{
+  "name": "docker-build-push",
+  "description": "GitHub Action to build and push Docker images",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc && ncc build",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "pre-checkin": "yarn run format && yarn run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docker/build-push-action.git",
+    "directory": "setup-buildx"
+  },
+  "keywords": [
+    "actions",
+    "docker",
+    "build",
+    "push"
+  ],
+  "author": "Docker",
+  "contributors": [
+    "CrazyMax"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.4",
+    "@actions/tool-cache": "^1.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.14",
+    "@zeit/ncc": "^0.22.3",
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.5",
+    "typescript-formatter": "^7.2.2"
+  }
+}

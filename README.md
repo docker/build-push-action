@@ -1,243 +1,139 @@
-# build-push-action
+## About
 
-Builds and pushes Docker images and will log in to a Docker registry if required.
+GitHub Action to build and push Docker images.
 
-Suggestions and issues can be posted on the repositories [issues page](https://github.com/docker/build-push-action/issues).
+___
 
-[Inputs](#Inputs)
-* [repository](#repository)
-* [username](#username)
-* [password](#password)
-* [registry](#registry)
-* [tags](#tags)
-* [tag_with_ref](#tag_with_ref)
-* [tag_with_sha](#tag_with_sha)
-* [path](#path)
-* [dockerfile](#dockerfile)
-* [target](#target)
-* [always_pull](#always_pull)
-* [build_args](#build_args)
-* [cache_froms](#cache_froms)
-* [labels](#labels)
-* [add_git_labels](#add_git_labels)
-* [push](#push)
+* [Usage](#usage)
+  * [Quick start](#quick-start)
+  * [With Buildx](#with-buildx)
+* [Customizing](#customizing)
+  * [inputs](#inputs)
+  * [outputs](#outputs)
+* [Limitation](#limitation)
 
-[Example usage](#Example-usage)
+## Usage
 
-## Inputs
-
-### `repository`
-
-**Required** Docker repository to tag the image with.
-
-### `username`
-
-Username used to log in to a Docker registry. If not set then no login will occur.
-
-### `password`
-
-Password or personal access token used to log in to a Docker registry. If not set then no login will occur.
-
-### `registry`
-
-Server address of Docker registry. If not set then will default to Docker Hub.
-
-### `tags`
-
-Comma-delimited list of tags. These will be added to the registry/repository to form the image's tags.
-
-Example:
+### Quick start
 
 ```yaml
-tags: tag1,tag2
+name: ci
+
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+    tags:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          tags: |
+            user/app:latest
+            user/app:1.0.0
 ```
 
-### `tag_with_ref`
+### With Buildx
 
-Boolean value. Defaults to `false`.
-
-Automatically tags the built image with the git reference. The format of the tag depends on the type of git reference with all forward slashes replaced with `-`.
-
-For pushes to a branch the reference will be `refs/heads/{branch-name}` and the tag will be `{branch-name}`. If `{branch-name}` is master then the tag will be `latest`.
-
-For pull requests the reference will be `refs/pull/{pull-request}` and the tag will be `pr-{pull-request}`.
-
-For git tags the reference will be `refs/tags/{git-tag}` and the tag will be `{git-tag}`.
-
-Examples:
-
-|Git Reference|Image tag|
-|---|---|
-|`refs/heads/master`|`latest`|
-|`refs/heads/mybranch`|`mybranch`|
-|`refs/heads/my/branch`|`my-branch`|
-|`refs/pull/2/merge`|`pr-2-merge`|
-|`refs/tags/v1.0.0`|`v1.0.0`|
-
-### `tag_with_sha`
-
-Boolean value. Defaults to `false`.
-
-Automatically tags the built image with the git short SHA prefixed with `sha-`.
-
-Example:
-
-|Git SHA|Image tag|
-|---|---|
-|`676cae2f85471aeff6776463c72881ebd902dcf9`|`sha-676cae2`|
-
-### `path`
-
-Path to the build context. Defaults to `.`
-
-### `dockerfile`
-
-Path to the Dockerfile. Defaults to `{path}/Dockerfile`
-
-Note when set this path is **not** relative to the `path` input but is instead relative to the current working directory.
-
-### `target`
-
-Sets the target stage to build.
-
-### `always_pull`
-
-Boolean value. Defaults to `false`.
-
-Always attempt to pull a newer version of the image.
-
-### `build_args`
-
-Comma-delimited list of build-time variables.
-
-Example:
+You can also use our [setup-buildx](https://github.com/docker/setup-buildx-action) action that extends the
+`docker build` command with the full support of the features provided by
+[Moby BuildKit](https://github.com/moby/buildkit) builder toolkit to build multi-platform images.
 
 ```yaml
-build_args: arg1=value1,arg2=value2
+name: ci
+
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+    tags:
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.builder }}
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
+          tags: |
+            user/app:latest
+            user/app:1.0.0
 ```
 
-### `cache_froms`
+## Customizing
 
-Comma-delimited list of images to consider as cache sources.
+### inputs
 
-Example:
-```yaml
-cache_froms: myorg/baseimage:latest
-```
+Following inputs can be used as `step.with` keys
 
-### `labels`
+| Name                | Type    | Default                           | Description                        |
+|---------------------|---------|-----------------------------------|------------------------------------|
+| `context`           | String  | `.`                               | Build's context is the set of files located in the specified `PATH` or `URL` |
+| `file`              | String  | `./Dockerfile`                    | Path to the Dockerfile. |
+| `build-args`        | String  |                                   | Newline-delimited list of build-time variables |
+| `labels`            | String  |                                   | Newline-delimited list of metadata for an image |
+| `tags`              | String  |                                   | Newline-delimited list of tags **required** |
+| `pull`              | Bool    | `false`                           | Always attempt to pull a newer version of the image |
+| `target`            | String  |                                   | Sets the target stage to build |
+| `no-cache`          | Bool    | `false`                           | Do not use cache when building the image |
+| `builder`**¹**      | String  |                                   | Builder instance |
+| `platforms`**¹**    | String  |                                   | Comma-delimited list of target platforms for build |
+| `load`**¹**         | Bool    | `false`                           | Shorthand for `--output=type=docker` |
+| `push`              | Bool    | `false`                           | Whether to push the built image (or shorthand for `--output=type=registry` if buildx used) |
+| `outputs`**¹**      | String  |                                   | Newline-delimited list of output destinations (format: `type=local,dest=path`) |
+| `cache-from`**¹**   | String  |                                   | Newline-delimited list of external cache sources (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
+| `cache-to`**¹**     | String  |                                   | Newline-delimited list of cache export destinations (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
 
-Comma-delimited list of labels to add to the built image.
+> **¹** Only available if [docker buildx](https://github.com/docker/buildx) is enabled.
+> See [setup-buildx](https://github.com/docker/setup-buildx-action) action for more info.
 
-Example:
+### outputs
 
-```yaml
-labels: label_name_1=label_value_1,label_name_2=label_value_2
-```
+Following outputs are available
 
-### `add_git_labels`
+| Name          | Type    | Description                           |
+|---------------|---------|---------------------------------------|
+| `digest`      | String  | Image content-addressable identifier also called a digest |
 
-Boolean value. Defaults to `false`.
+## Limitation
 
-Adds labels with git repository information to the built image based on the standards set out in https://github.com/opencontainers/image-spec/blob/master/annotations.md.
-
-The labels are:
-
-|Label key|Example value|Description|
-|---|---|---|
-|`org.opencontainers.image.created`|`2020-03-06T23:00:00Z`|Date and time on which the image was built (string, date-time as defined by RFC 3339).|
-|`org.opencontainers.image.source`|`https://github.com/myorg/myrepository`|URL to the GitHub repository.|
-|`org.opencontainers.image.revision`|`676cae2f85471aeff6776463c72881ebd902dcf9`|The full git SHA of this commit.|
-
-
-### `push`
-
-Boolean value. Defaults to `true`.
-
-Whether to push the built image.
-
-## Example usage
-
-The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
-
-```yaml
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
-  - name: Build and push Docker images
-    uses: docker/build-push-action@v1
-    with:
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
-      repository: myorg/myrepository
-      tags: latest
-```
-
-The following will build the root Dockerfile, tag the image with the git reference and SHA as described above, log in to Docker Hub using GitHub secrets, and push the image to the Docker Hub repository `myorg/myrepository`:
-
-```yaml
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
-  - name: Build and push Docker images
-    uses: docker/build-push-action@v1
-    with:
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
-      repository: myorg/myrepository
-      tag_with_ref: true
-      tag_with_sha: true
-```
-
-The following will only push the image when the event that kicked off the workflow was a push of a git tag:
-
-```yaml
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
-  - name: Build and push Docker images
-    uses: docker/build-push-action@v1
-    with:
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
-      repository: myorg/myrepository
-      tag_with_ref: true
-      push: ${{ startsWith(github.ref, 'refs/tags/') }}
-```
-
-The following builds the `mytarget` stage and pushes that:
- 
-```yaml
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
-  - name: Build and push Docker images
-    uses: docker/build-push-action@v1
-    with:
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
-      repository: myorg/myrepository
-      tag_with_ref: true
-      target: mytarget
-```
-
-The following will build the root Dockerfile, tag the image as `myorg/myrepository:latest`, log in to Google Container Registry using GitHub secrets (where `DOCKER_PASSWORD` is a [JSON key](https://cloud.google.com/container-registry/docs/advanced-authentication#json-key)), and push the image to the GCR repository `myorg/myrepository`:
- 
-```yaml
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
-  - name: Build and push Docker images
-    uses: docker/build-push-action@v1
-    with:
-      username: _json_key
-      password: ${{ secrets.DOCKER_PASSWORD }}
-      registry: gcr.io
-      repository: myorg/myrepository
-      tags: latest
-```
+This action is only available for Linux [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).
