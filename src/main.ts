@@ -68,6 +68,7 @@ async function run(): Promise<void> {
     await asyncForEach(inputs.cacheTo, async cacheTo => {
       buildArgs.push('--cache-from', cacheTo);
     });
+    buildArgs.push(inputs.context);
 
     core.info(`🏃 Starting build...`);
     await exec.exec('docker', buildArgs);

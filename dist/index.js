@@ -1069,6 +1069,7 @@ function run() {
             yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
                 buildArgs.push('--cache-from', cacheTo);
             }));
+            buildArgs.push(inputs.context);
             core.info(`🏃 Starting build...`);
             yield exec.exec('docker', buildArgs);
         }
