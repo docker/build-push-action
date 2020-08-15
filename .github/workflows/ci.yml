@@ -15,12 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Runner info
-        run: |
-          sudo apt-get install -y hwinfo
-          sudo hwinfo --short
-          sudo mount
-      -
         name: Run local registry
         run: |
           docker run -d -p 5000:5000 registry:2
