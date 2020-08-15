@@ -27,6 +27,7 @@ jobs:
         with:
           context: ./test
           file: ./test/Dockerfile
+          push: true
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
