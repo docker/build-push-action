@@ -7,6 +7,7 @@ ___
 * [Usage](#usage)
   * [Quick start](#quick-start)
   * [Bake](#bake)
+  * [Git context](#git-context)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -47,8 +48,6 @@ jobs:
         name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-        with:
-          install: true
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
@@ -70,7 +69,7 @@ jobs:
 ### Bake
 
 [Buildx bake](https://github.com/docker/buildx#buildx-bake-options-target) is also available with this action through
-the [`bake` inputs](#inputs).
+the [`bake` inputs](#inputs):
 
 ```yaml
 name: ci
@@ -83,7 +82,7 @@ on:
     tags:
 
 jobs:
-  buildx:
+  bake:
     runs-on: ubuntu-latest
     steps:
       -
@@ -98,8 +97,6 @@ jobs:
         name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-        with:
-          install: true
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
@@ -118,6 +115,58 @@ jobs:
           bake-targets: |
             default
             release
+```
+
+### Git context
+
+You can build from Git directly without [`actions/checkout`](https://github.com/actions/checkout/) action,
+even in private repositories if your `context` is a valid Git url:
+
+```yaml
+name: ci
+
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+    tags:
+
+jobs:
+  git-context:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        uses: ./
+        env:
+          GIT_AUTH_TOKEN: ${{ github.token }}
+          GIT_REF: ${{ github.ref }}
+        with:
+          context: ${{ github.repositoryUrl }}
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64,linux/386
+          push: true
+          tags: |
+            name/app:latest
+            name/app:1.0.0
 ```
 
 ## Customizing
@@ -155,6 +204,18 @@ Following outputs are available
 | Name          | Type    | Description                           |
 |---------------|---------|---------------------------------------|
 | `digest`      | String  | Image content-addressable identifier also called a digest |
+
+### environment variables
+
+Following environment variables can be used as `step.env` keys
+
+| Name                     | Description                           |
+|--------------------------|---------------------------------------|
+| `GIT_AUTH_HEADER`**¹**   | Raw authorization header to authenticate against git repository |
+| `GIT_AUTH_TOKEN`**¹**    | `x-access-token` basic auth to authenticate against git repository |
+| `GIT_REF`**¹**           | Git refrerence to use against git repository |
+
+> **¹** Only used if `input.context` is a valid git uri.
 
 ## Limitation
 
