@@ -25,7 +25,7 @@ inputs:
     required: false
   tags:
     description: "Newline-delimited list of tags"
-    required: true
+    required: false
   pull:
     description: "Always attempt to pull a newer version of the image"
     required: false
@@ -44,11 +44,11 @@ inputs:
     description: "Comma-delimited list of target platforms for build"
     required: false
   load:
-    description: "Shorthand for --output=type=docker"
+    description: "Load is a shorthand for --output=type=docker"
     required: false
     default: 'false'
   push:
-    description: "Shorthand for --output=type=registry"
+    description: "Push is a shorthand for --output=type=registry"
     required: false
     default: 'false'
   outputs:
@@ -59,6 +59,16 @@ inputs:
     required: false
   cache-to:
     description: "Newline-delimited list of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
+    required: false
+  bake:
+    description: "Use bake as the high-level build command"
+    required: false
+    default: 'false'
+  bake-files:
+    description: "Newline-delimited list of bake definition files"
+    required: false
+  bake-targets:
+    description: "Newline-delimited list of bake targets"
     required: false
 
 outputs:

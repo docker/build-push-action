@@ -1003,7 +1003,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
 const buildx = __importStar(__webpack_require__(982));
-const context_helper_1 = __webpack_require__(338);
+const context_1 = __webpack_require__(482);
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
 function run() {
@@ -1013,146 +1013,25 @@ function run() {
                 core.setFailed('Only supported on linux platform');
                 return;
             }
-            const inputs = yield context_helper_1.loadInputs();
             if (!(yield buildx.isAvailable())) {
                 core.setFailed(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
                 return;
             }
-            let buildArgs = ['buildx', 'build'];
+            const inputs = yield context_1.getInputs();
             if (inputs.builder) {
                 core.info(`📌 Using builder instance ${inputs.builder}`);
                 yield buildx.use(inputs.builder);
             }
-            if (inputs.file) {
-                buildArgs.push('--file', inputs.file);
-            }
-            yield asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--build-arg', buildArg);
-            }));
-            yield asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--label', label);
-            }));
-            yield asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--tag', tag);
-            }));
-            if (inputs.pull) {
-                buildArgs.push('--pull');
-            }
-            if (inputs.target) {
-                buildArgs.push('--target', inputs.target);
-            }
-            if (inputs.allow) {
-                buildArgs.push('--allow', inputs.allow);
-            }
-            if (inputs.noCache) {
-                buildArgs.push('--no-cache');
-            }
-            if (inputs.platforms) {
-                buildArgs.push('--platform', inputs.platforms);
-            }
-            if (inputs.load) {
-                buildArgs.push('--load');
-            }
-            if (inputs.push) {
-                buildArgs.push('--push');
-            }
-            yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--output', output);
-            }));
-            yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--cache-from', cacheFrom);
-            }));
-            yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-                buildArgs.push('--cache-from', cacheTo);
-            }));
-            buildArgs.push(inputs.context);
             core.info(`🏃 Starting build...`);
-            yield exec.exec('docker', buildArgs);
+            yield exec.exec('docker', yield context_1.getArgs(inputs));
         }
         catch (error) {
             core.setFailed(error.message);
         }
     });
 }
-const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, function* () {
-    for (let index = 0; index < array.length; index++) {
-        yield callback(array[index], index, array);
-    }
-});
 run();
 //# sourceMappingURL=main.js.map
-
-/***/ }),
-
-/***/ 338:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadInputs = void 0;
-const core = __importStar(__webpack_require__(470));
-function loadInputs() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return {
-            context: core.getInput('context') || '.',
-            file: core.getInput('file') || './Dockerfile',
-            buildArgs: yield getInputList('build-args'),
-            labels: yield getInputList('labels'),
-            tags: yield getInputList('tags'),
-            pull: /true/i.test(core.getInput('pull')),
-            target: core.getInput('target'),
-            allow: core.getInput('allow'),
-            noCache: /true/i.test(core.getInput('no-cache')),
-            builder: core.getInput('builder'),
-            platforms: core.getInput('platforms'),
-            load: /true/i.test(core.getInput('load')),
-            push: /true/i.test(core.getInput('push')),
-            outputs: yield getInputList('outputs'),
-            cacheFrom: yield getInputList('cache-from'),
-            cacheTo: yield getInputList('cache-to')
-        };
-    });
-}
-exports.loadInputs = loadInputs;
-function getInputList(name) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const items = core.getInput(name);
-        if (items == '') {
-            return [];
-        }
-        return items.split(/\r?\n/).reduce((acc, line) => acc.concat(line.split(',')).map(pat => pat.trim()), []);
-    });
-}
-//# sourceMappingURL=context-helper.js.map
 
 /***/ }),
 
@@ -1488,6 +1367,169 @@ function getState(name) {
 }
 exports.getState = getState;
 //# sourceMappingURL=core.js.map
+
+/***/ }),
+
+/***/ 482:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getArgs = exports.getInputs = void 0;
+const core = __importStar(__webpack_require__(470));
+function getInputs() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return {
+            context: core.getInput('context') || '.',
+            file: core.getInput('file') || './Dockerfile',
+            buildArgs: yield getInputList('build-args'),
+            labels: yield getInputList('labels'),
+            tags: yield getInputList('tags'),
+            pull: /true/i.test(core.getInput('pull')),
+            target: core.getInput('target'),
+            allow: core.getInput('allow'),
+            noCache: /true/i.test(core.getInput('no-cache')),
+            builder: core.getInput('builder'),
+            platforms: core.getInput('platforms'),
+            load: /true/i.test(core.getInput('load')),
+            push: /true/i.test(core.getInput('push')),
+            outputs: yield getInputList('outputs'),
+            cacheFrom: yield getInputList('cache-from'),
+            cacheTo: yield getInputList('cache-to'),
+            bake: /true/i.test(core.getInput('bake')),
+            bakeFiles: yield getInputList('bake-files'),
+            bakeTargets: yield getInputList('bake-targets')
+        };
+    });
+}
+exports.getInputs = getInputs;
+function getArgs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let args = ['buildx'];
+        if (inputs.bake) {
+            args.concat(yield getBakeArgs(inputs));
+        }
+        else {
+            args.concat(yield getBuildArgs(inputs));
+        }
+        args.concat(yield getCommonArgs(inputs));
+        if (!inputs.bake) {
+            args.push(inputs.context);
+        }
+        else {
+            args.concat(inputs.bakeTargets);
+        }
+        return args;
+    });
+}
+exports.getArgs = getArgs;
+function getCommonArgs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let args = [];
+        if (inputs.noCache) {
+            args.push('--no-cache');
+        }
+        if (inputs.pull) {
+            args.push('--pull');
+        }
+        if (inputs.load) {
+            args.push('--load');
+        }
+        if (inputs.push) {
+            args.push('--push');
+        }
+        return args;
+    });
+}
+function getBakeArgs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let args = ['bake'];
+        yield asyncForEach(inputs.bakeFiles, (bakeFile) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--file', bakeFile);
+        }));
+        return args;
+    });
+}
+function getBuildArgs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let args = ['build'];
+        yield asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--build-arg', buildArg);
+        }));
+        yield asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--label', label);
+        }));
+        yield asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--tag', tag);
+        }));
+        if (inputs.target) {
+            args.push('--target', inputs.target);
+        }
+        if (inputs.allow) {
+            args.push('--allow', inputs.allow);
+        }
+        if (inputs.platforms) {
+            args.push('--platform', inputs.platforms);
+        }
+        yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--output', output);
+        }));
+        yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--cache-from', cacheFrom);
+        }));
+        yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--cache-from', cacheTo);
+        }));
+        if (inputs.file) {
+            args.push('--file', inputs.file);
+        }
+        return args;
+    });
+}
+function getInputList(name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const items = core.getInput(name);
+        if (items == '') {
+            return [];
+        }
+        return items.split(/\r?\n/).reduce((acc, line) => acc.concat(line.split(',')).map(pat => pat.trim()), []);
+    });
+}
+const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    for (let index = 0; index < array.length; index++) {
+        yield callback(array[index], index, array);
+    }
+});
+//# sourceMappingURL=context.js.map
 
 /***/ }),
 

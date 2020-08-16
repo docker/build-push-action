@@ -54,4 +54,48 @@ jobs:
             localhost:5000/name/app:1.0.0
       -
         name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  bake:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - default
+          - release
+    steps:
+      -
+        name: Run local registry
+        run: |
+          docker run -d -p 5000:5000 registry:2
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up QEMU
+        uses: ./setup-qemu/ # change to docker/setup-qemu-action@master
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
+#        with:
+#          driver-opt: network=host
+      -
+        name: Build and push
+        uses: ./
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          bake: true
+          #push: true
+          bake-files: |
+            ./test/config.hcl
+          bake-targets: |
+            ${{ matrix.target }}
+      -
+        name: Dump context
+        if: always()
         uses: crazy-max/ghaction-dump-context@v1
