@@ -37134,7 +37134,7 @@ function getBuildArgs(inputs) {
             args.push('--cache-from', cacheFrom);
         }));
         yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--cache-from', cacheTo);
+            args.push('--cache-to', cacheTo);
         }));
         if (inputs.file) {
             args.push('--file', inputs.file);

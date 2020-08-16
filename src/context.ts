@@ -137,7 +137,7 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
     args.push('--cache-from', cacheFrom);
   });
   await asyncForEach(inputs.cacheTo, async cacheTo => {
-    args.push('--cache-from', cacheTo);
+    args.push('--cache-to', cacheTo);
   });
   if (inputs.file) {
     args.push('--file', inputs.file);
