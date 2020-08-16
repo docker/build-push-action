@@ -13,12 +13,14 @@ async function run(): Promise<void> {
     }
 
     const inputs: Inputs = await loadInputs();
+    const buildxAvailable = await buildx.isAvailable();
+    const buildxInstalled = buildxAvailable && (await buildx.isInstalled());
+    const buildxEnabled = (await mustBuildx(inputs)) || buildxInstalled;
     let buildArgs: Array<string> = [];
-    const buildxEnabled = await mustBuildx(inputs);
 
     // Check buildx
     if (buildxEnabled) {
-      if (await !buildx.isAvailable()) {
+      if (!buildxAvailable) {
         core.setFailed(`Buildx is required but not available`);
         return;
       }

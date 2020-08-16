@@ -1015,11 +1015,13 @@ function run() {
                 return;
             }
             const inputs = yield context_helper_1.loadInputs();
+            const buildxAvailable = yield buildx.isAvailable();
+            const buildxInstalled = buildxAvailable && (yield buildx.isInstalled());
+            const buildxEnabled = (yield context_helper_1.mustBuildx(inputs)) || buildxInstalled;
             let buildArgs = [];
-            const buildxEnabled = yield context_helper_1.mustBuildx(inputs);
             // Check buildx
             if (buildxEnabled) {
-                if (yield !buildx.isAvailable()) {
+                if (!buildxAvailable) {
                     core.setFailed(`Buildx is required but not available`);
                     return;
                 }
@@ -1893,8 +1895,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.use = exports.isAvailable = void 0;
+exports.use = exports.isInstalled = exports.isAvailable = void 0;
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+const os_1 = __importDefault(__webpack_require__(87));
 const exec = __importStar(__webpack_require__(807));
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1907,6 +1915,19 @@ function isAvailable() {
     });
 }
 exports.isAvailable = isAvailable;
+function isInstalled() {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const dockerHome = process.env.DOCKER_CONFIG || path_1.default.join(os_1.default.homedir(), '.docker');
+        const dockerCfgFile = path_1.default.join(dockerHome, 'config.json');
+        if (!fs_1.default.existsSync(dockerCfgFile)) {
+            return false;
+        }
+        const dockerCfg = JSON.parse(fs_1.default.readFileSync(dockerCfgFile, { encoding: 'utf-8' }));
+        return ((_a = dockerCfg.aliases) === null || _a === void 0 ? void 0 : _a.builder) == 'buildx';
+    });
+}
+exports.isInstalled = isInstalled;
 function use(builder) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exec.exec(`docker`, ['buildx', 'use', '--builder', builder], false).then(res => {
