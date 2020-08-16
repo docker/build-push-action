@@ -1,8 +1,32 @@
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+
+export interface Config {
+  credsStore?: string;
+  experimental?: string;
+  stackOrchestrator?: string;
+  aliases?: {
+    builder?: string;
+  };
+}
+
 export interface Image {
   registry?: string;
   namespace?: string;
   repository: string;
   tag?: string;
+}
+
+export async function config(): Promise<Config | undefined> {
+  const dockerHome: string = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
+
+  const file: string = path.join(dockerHome, 'config.json');
+  if (!fs.existsSync(file)) {
+    return;
+  }
+
+  return JSON.parse(fs.readFileSync(file, {encoding: 'utf-8'})) as Config;
 }
 
 export const parseImage = async (image: string): Promise<Image | undefined> => {

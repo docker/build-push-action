@@ -1114,7 +1114,7 @@ run();
 /***/ }),
 
 /***/ 231:
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
@@ -1127,8 +1127,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseImage = void 0;
+exports.parseImage = exports.config = void 0;
+const path_1 = __importDefault(__webpack_require__(622));
+const os_1 = __importDefault(__webpack_require__(87));
+const fs_1 = __importDefault(__webpack_require__(747));
+function config() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const dockerHome = process.env.DOCKER_CONFIG || path_1.default.join(os_1.default.homedir(), '.docker');
+        const file = path_1.default.join(dockerHome, 'config.json');
+        if (!fs_1.default.existsSync(file)) {
+            return;
+        }
+        return JSON.parse(fs_1.default.readFileSync(file, { encoding: 'utf-8' }));
+    });
+}
+exports.config = config;
 exports.parseImage = (image) => __awaiter(void 0, void 0, void 0, function* () {
     const match = image.match(/^(?:([^\/]+)\/)?(?:([^\/]+)\/)?([^@:\/]+)(?:[@:](.+))?$/);
     if (!match) {
@@ -1895,14 +1912,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.use = exports.isInstalled = exports.isAvailable = void 0;
-const fs_1 = __importDefault(__webpack_require__(747));
-const path_1 = __importDefault(__webpack_require__(622));
-const os_1 = __importDefault(__webpack_require__(87));
+const docker = __importStar(__webpack_require__(231));
 const exec = __importStar(__webpack_require__(807));
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1918,13 +1930,8 @@ exports.isAvailable = isAvailable;
 function isInstalled() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const dockerHome = process.env.DOCKER_CONFIG || path_1.default.join(os_1.default.homedir(), '.docker');
-        const dockerCfgFile = path_1.default.join(dockerHome, 'config.json');
-        if (!fs_1.default.existsSync(dockerCfgFile)) {
-            return false;
-        }
-        const dockerCfg = JSON.parse(fs_1.default.readFileSync(dockerCfgFile, { encoding: 'utf-8' }));
-        return ((_a = dockerCfg.aliases) === null || _a === void 0 ? void 0 : _a.builder) == 'buildx';
+        const dockerCfg = yield docker.config();
+        return ((_a = dockerCfg === null || dockerCfg === void 0 ? void 0 : dockerCfg.aliases) === null || _a === void 0 ? void 0 : _a.builder) == 'buildx';
     });
 }
 exports.isInstalled = isInstalled;

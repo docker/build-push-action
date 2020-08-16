@@ -22,7 +22,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2.3.1
       -
-        name: Build
+        name: Build and push
         uses: ./
         with:
           context: ./test
@@ -68,7 +68,7 @@ jobs:
           context: ./test
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.builder }}
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/386
           #push: true
           tags: |
             localhost:5000/name/app:latest
