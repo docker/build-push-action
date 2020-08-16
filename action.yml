@@ -6,6 +6,9 @@ branding:
   color: 'blue'
 
 inputs:
+  builder:
+    description: "Builder instance"
+    required: false
   context:
     description: "Build's context is the set of files located in the specified PATH or URL"
     required: false
@@ -34,9 +37,6 @@ inputs:
     description: "Do not use cache when building the image"
     required: false
     default: 'false'
-  builder:
-    description: "Builder instance"
-    required: false
   platforms:
     description: "Comma-delimited list of target platforms for build"
     required: false
@@ -45,7 +45,7 @@ inputs:
     required: false
     default: 'false'
   push:
-    description: "Whether to push the built image (shorthand for --output=type=registry if buildx used)"
+    description: "Shorthand for --output=type=registry"
     required: false
     default: 'false'
   outputs:
@@ -65,4 +65,3 @@ outputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
-

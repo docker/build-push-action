@@ -1004,7 +1004,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
 const buildx = __importStar(__webpack_require__(982));
 const context_helper_1 = __webpack_require__(338);
-const docker_1 = __webpack_require__(231);
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
 function run() {
@@ -1015,23 +1014,15 @@ function run() {
                 return;
             }
             const inputs = yield context_helper_1.loadInputs();
-            const buildxAvailable = yield buildx.isAvailable();
-            const buildxInstalled = buildxAvailable && (yield buildx.isInstalled());
-            const buildxEnabled = (yield context_helper_1.mustBuildx(inputs)) || buildxInstalled;
-            let buildArgs = [];
-            // Check buildx
-            if (buildxEnabled) {
-                if (!buildxAvailable) {
-                    core.setFailed(`Buildx is required but not available`);
-                    return;
-                }
-                core.info(`🚀 Buildx will be used to build your image`);
-                buildArgs.push('buildx', 'build');
+            if (!(yield buildx.isAvailable())) {
+                core.setFailed(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
+                return;
             }
-            else {
-                buildArgs.push('build');
+            let buildArgs = ['buildx', 'build'];
+            if (inputs.builder) {
+                core.info(`📌 Using builder instance ${inputs.builder}`);
+                yield buildx.use(inputs.builder);
             }
-            // Global options
             if (inputs.file) {
                 buildArgs.push('--file', inputs.file);
             }
@@ -1053,50 +1044,27 @@ function run() {
             if (inputs.noCache) {
                 buildArgs.push('--no-cache');
             }
-            // Buildx options
-            if (buildxEnabled) {
-                if (inputs.builder) {
-                    core.info(`📌 Using builder instance ${inputs.builder}`);
-                    yield buildx.use(inputs.builder);
-                }
-                if (inputs.platforms) {
-                    buildArgs.push('--platform', inputs.platforms);
-                }
-                if (inputs.load) {
-                    buildArgs.push('--load');
-                }
-                if (inputs.push) {
-                    buildArgs.push('--push');
-                }
-                yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-                    buildArgs.push('--output', output);
-                }));
-                yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
-                    buildArgs.push('--cache-from', cacheFrom);
-                }));
-                yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-                    buildArgs.push('--cache-from', cacheTo);
-                }));
+            if (inputs.platforms) {
+                buildArgs.push('--platform', inputs.platforms);
             }
+            if (inputs.load) {
+                buildArgs.push('--load');
+            }
+            if (inputs.push) {
+                buildArgs.push('--push');
+            }
+            yield asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
+                buildArgs.push('--output', output);
+            }));
+            yield asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
+                buildArgs.push('--cache-from', cacheFrom);
+            }));
+            yield asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
+                buildArgs.push('--cache-from', cacheTo);
+            }));
             buildArgs.push(inputs.context);
             core.info(`🏃 Starting build...`);
             yield exec.exec('docker', buildArgs);
-            if (!buildxEnabled && inputs.push) {
-                let pushRepos = [];
-                yield asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-                    const img = yield docker_1.parseImage(tag);
-                    if (!img) {
-                        core.warning(`Cannot parse image reference ${tag}`);
-                        return;
-                    }
-                    const repo = `${img.registry}${img.namespace}${img.repository}`;
-                    if (!pushRepos.includes(repo)) {
-                        pushRepos.push(repo);
-                        core.info(`⬆️ Pushing ${repo}...`);
-                        yield exec.exec('docker', ['push', repo]);
-                    }
-                }));
-            }
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1110,63 +1078,6 @@ const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, func
 });
 run();
 //# sourceMappingURL=main.js.map
-
-/***/ }),
-
-/***/ 231:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseImage = exports.config = void 0;
-const path_1 = __importDefault(__webpack_require__(622));
-const os_1 = __importDefault(__webpack_require__(87));
-const fs_1 = __importDefault(__webpack_require__(747));
-function config() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const dockerHome = process.env.DOCKER_CONFIG || path_1.default.join(os_1.default.homedir(), '.docker');
-        const file = path_1.default.join(dockerHome, 'config.json');
-        if (!fs_1.default.existsSync(file)) {
-            return;
-        }
-        return JSON.parse(fs_1.default.readFileSync(file, { encoding: 'utf-8' }));
-    });
-}
-exports.config = config;
-exports.parseImage = (image) => __awaiter(void 0, void 0, void 0, function* () {
-    const match = image.match(/^(?:([^\/]+)\/)?(?:([^\/]+)\/)?([^@:\/]+)(?:[@:](.+))?$/);
-    if (!match) {
-        return;
-    }
-    let res = {
-        registry: match[1],
-        namespace: match[2],
-        repository: match[3],
-        tag: match[4]
-    };
-    if (!res.namespace && res.registry && !/[:.]/.test(res.registry)) {
-        res.namespace = res.registry;
-        res.registry = undefined;
-    }
-    res.registry = res.registry ? `${res.registry}/` : '';
-    res.namespace = res.namespace && res.namespace !== 'library' ? `${res.namespace}/` : '';
-    res.tag = res.tag && res.tag !== 'latest' ? `:${res.tag}` : '';
-    return res;
-});
-//# sourceMappingURL=docker.js.map
 
 /***/ }),
 
@@ -1204,7 +1115,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mustBuildx = exports.loadInputs = void 0;
+exports.loadInputs = void 0;
 const core = __importStar(__webpack_require__(470));
 function loadInputs() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1228,17 +1139,6 @@ function loadInputs() {
     });
 }
 exports.loadInputs = loadInputs;
-function mustBuildx(inputs) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return (inputs.builder.length > 0 ||
-            inputs.platforms.length > 0 ||
-            inputs.load ||
-            inputs.outputs.length > 0 ||
-            inputs.cacheFrom.length > 0 ||
-            inputs.cacheTo.length > 0);
-    });
-}
-exports.mustBuildx = mustBuildx;
 function getInputList(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const items = core.getInput(name);
@@ -1913,8 +1813,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.use = exports.isInstalled = exports.isAvailable = void 0;
-const docker = __importStar(__webpack_require__(231));
+exports.use = exports.isAvailable = void 0;
 const exec = __importStar(__webpack_require__(807));
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1927,14 +1826,6 @@ function isAvailable() {
     });
 }
 exports.isAvailable = isAvailable;
-function isInstalled() {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        const dockerCfg = yield docker.config();
-        return ((_a = dockerCfg === null || dockerCfg === void 0 ? void 0 : dockerCfg.aliases) === null || _a === void 0 ? void 0 : _a.builder) == 'buildx';
-    });
-}
-exports.isInstalled = isInstalled;
 function use(builder) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exec.exec(`docker`, ['buildx', 'use', '--builder', builder], false).then(res => {

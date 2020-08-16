@@ -6,7 +6,6 @@ ___
 
 * [Usage](#usage)
   * [Quick start](#quick-start)
-  * [With Buildx](#with-buildx)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -14,45 +13,12 @@ ___
 
 ## Usage
 
+This action uses our [setup-buildx](https://github.com/docker/setup-buildx-action) action that extends the
+`docker build` command named [buildx](https://github.com/docker/buildx) with the full support of the features
+provided by [Moby BuildKit](https://github.com/moby/buildkit) builder toolkik. This includes multi-arch build,
+build-secrets, remote cache, etc. and different builder deployment/namespacing options.
+
 ### Quick start
-
-```yaml
-name: ci
-
-on:
-  pull_request:
-    branches: master
-  push:
-    branches: master
-    tags:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          tags: |
-            user/app:latest
-            user/app:1.0.0
-```
-
-### With Buildx
-
-You can also use our [setup-buildx](https://github.com/docker/setup-buildx-action) action that extends the
-`docker build` command with the full support of the features provided by
-[Moby BuildKit](https://github.com/moby/buildkit) builder toolkit to build multi-platform images.
 
 ```yaml
 name: ci
@@ -94,6 +60,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
+          push: true
           tags: |
             user/app:latest
             user/app:1.0.0
@@ -107,6 +74,7 @@ Following inputs can be used as `step.with` keys
 
 | Name                | Type    | Default                           | Description                        |
 |---------------------|---------|-----------------------------------|------------------------------------|
+| `builder`           | String  |                                   | Builder instance |
 | `context`           | String  | `.`                               | Build's context is the set of files located in the specified `PATH` or `URL` |
 | `file`              | String  | `./Dockerfile`                    | Path to the Dockerfile. |
 | `build-args`        | String  |                                   | Newline-delimited list of build-time variables |
@@ -115,16 +83,12 @@ Following inputs can be used as `step.with` keys
 | `pull`              | Bool    | `false`                           | Always attempt to pull a newer version of the image |
 | `target`            | String  |                                   | Sets the target stage to build |
 | `no-cache`          | Bool    | `false`                           | Do not use cache when building the image |
-| `builder`**¹**      | String  |                                   | Builder instance |
-| `platforms`**¹**    | String  |                                   | Comma-delimited list of target platforms for build |
-| `load`**¹**         | Bool    | `false`                           | Shorthand for `--output=type=docker` |
-| `push`              | Bool    | `false`                           | Whether to push the built image (or shorthand for `--output=type=registry` if buildx used) |
-| `outputs`**¹**      | String  |                                   | Newline-delimited list of output destinations (format: `type=local,dest=path`) |
-| `cache-from`**¹**   | String  |                                   | Newline-delimited list of external cache sources (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
-| `cache-to`**¹**     | String  |                                   | Newline-delimited list of cache export destinations (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
-
-> **¹** Only available if [docker buildx](https://github.com/docker/buildx) is enabled.
-> See [setup-buildx](https://github.com/docker/setup-buildx-action) action for more info.
+| `platforms`         | String  |                                   | Comma-delimited list of target platforms for build |
+| `load`              | Bool    | `false`                           | Shorthand for `--output=type=docker` |
+| `push`              | Bool    | `false`                           | Shorthand for `--output=type=registry` |
+| `outputs`           | String  |                                   | Newline-delimited list of output destinations (format: `type=local,dest=path`) |
+| `cache-from`        | String  |                                   | Newline-delimited list of external cache sources (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
+| `cache-to`          | String  |                                   | Newline-delimited list of cache export destinations (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
 
 ### outputs
 

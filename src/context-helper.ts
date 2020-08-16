@@ -38,17 +38,6 @@ export async function loadInputs(): Promise<Inputs> {
   };
 }
 
-export async function mustBuildx(inputs: Inputs): Promise<boolean> {
-  return (
-    inputs.builder.length > 0 ||
-    inputs.platforms.length > 0 ||
-    inputs.load ||
-    inputs.outputs.length > 0 ||
-    inputs.cacheFrom.length > 0 ||
-    inputs.cacheTo.length > 0
-  );
-}
-
 async function getInputList(name: string): Promise<string[]> {
   const items = core.getInput(name);
   if (items == '') {
