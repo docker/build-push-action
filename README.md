@@ -92,7 +92,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.builder }}
+          builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
           tags: |
             user/app:latest

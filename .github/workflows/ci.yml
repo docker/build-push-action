@@ -67,7 +67,7 @@ jobs:
         with:
           context: ./test
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
-          builder: ${{ steps.buildx.outputs.builder }}
+          builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64,linux/386
           #push: true
           tags: |
