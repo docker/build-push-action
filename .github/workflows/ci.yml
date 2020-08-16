@@ -39,7 +39,6 @@ jobs:
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
 #        with:
 #          driver-opt: network=host
-#          buildkitd-flags:
       -
         name: Build and push
         uses: ./
@@ -48,7 +47,7 @@ jobs:
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64,linux/386
-          allow: network.host,security.insecure
+          #allow: network.host,security.insecure
           #push: true
           tags: |
             localhost:5000/name/app:latest
