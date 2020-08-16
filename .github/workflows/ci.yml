@@ -76,14 +76,15 @@ jobs:
         name: Set up Docker Buildx
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
-#        with:
-#          driver-opt: network=host
+        with:
+          version: latest
+          #driver-opt: network=host
       -
         name: Build and push
         uses: ./
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_REF: ${{ github.ref }}
+          GIT_AUTH_TOKEN: ${{ github.token }}
+          GIT_REF: ${{ github.ref }}
         with:
           context: ${{ github.repositoryUrl }}
           file: ./test/Dockerfile

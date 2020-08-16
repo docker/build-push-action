@@ -1912,10 +1912,12 @@ function getBuildContext() {
             return '.';
         }
         try {
-            const gitURL = git_url_parse_1.default(context);
-            gitURL.token = gitURL.token || process.env['GIT_TOKEN'] || process.env['GITHUB_TOKEN'] || '';
-            gitURL.ref = gitURL.ref || process.env['GIT_REF'] || process.env['GITHUB_REF'] || '';
-            return gitURL.toString();
+            const gitUrl = git_url_parse_1.default(context);
+            const gitRef = process.env['GIT_REF'] || '';
+            if (gitRef) {
+                return `${gitUrl.toString()}#${gitRef}`;
+            }
+            return gitUrl.toString();
         }
         catch (_a) {
             return context;

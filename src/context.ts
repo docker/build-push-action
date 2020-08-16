@@ -72,10 +72,12 @@ async function getBuildContext(): Promise<string> {
     return '.';
   }
   try {
-    const gitURL = gitUrlParse(context);
-    gitURL.token = gitURL.token || process.env['GIT_TOKEN'] || process.env['GITHUB_TOKEN'] || '';
-    gitURL.ref = gitURL.ref || process.env['GIT_REF'] || process.env['GITHUB_REF'] || '';
-    return gitURL.toString();
+    const gitUrl = gitUrlParse(context);
+    const gitRef = process.env['GIT_REF'] || '';
+    if (gitRef) {
+      return `${gitUrl.toString()}#${gitRef}`;
+    }
+    return gitUrl.toString();
   } catch {
     return context;
   }
