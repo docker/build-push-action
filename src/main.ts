@@ -19,16 +19,14 @@ async function run(): Promise<void> {
     }
 
     let inputs: Inputs = await getInputs();
-    const args: string[] = await getArgs(inputs);
-
     if (inputs.builder) {
       core.info(`📌 Using builder instance ${inputs.builder}`);
       await buildx.use(inputs.builder);
     }
-
     inputs = await github.restoreCache(inputs);
 
     core.info(`🏃 Starting build...`);
+    const args: string[] = await getArgs(inputs);
     await exec.exec('docker', args);
   } catch (error) {
     core.setFailed(error.message);

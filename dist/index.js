@@ -5660,13 +5660,13 @@ function run() {
                 return;
             }
             let inputs = yield context_1.getInputs();
-            const args = yield context_1.getArgs(inputs);
             if (inputs.builder) {
                 core.info(`📌 Using builder instance ${inputs.builder}`);
                 yield buildx.use(inputs.builder);
             }
             inputs = yield github.restoreCache(inputs);
             core.info(`🏃 Starting build...`);
+            const args = yield context_1.getArgs(inputs);
             yield exec.exec('docker', args);
         }
         catch (error) {
