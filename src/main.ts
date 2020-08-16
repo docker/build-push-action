@@ -56,7 +56,7 @@ async function run(): Promise<void> {
     // Buildx options
     if (buildxEnabled) {
       if (inputs.builder) {
-        core.info(`📌 Using build instance ${inputs.builder}`);
+        core.info(`📌 Using builder instance ${inputs.builder}`);
         await buildx.use(inputs.builder);
       }
       if (inputs.platforms) {
