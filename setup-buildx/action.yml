@@ -17,6 +17,9 @@ inputs:
   driver-opt:
     description: 'Passes additional driver-specific options. Eg. image=moby/buildkit:master'
     required: false
+  buildkitd-flags:
+    description: 'Flags for buildkitd daemon'
+    required: false
   install:
     description: 'Sets up docker build command as an alias to docker buildx'
     default: 'false'

@@ -16,6 +16,7 @@ async function run(): Promise<void> {
     const bxVersion: string = core.getInput('version');
     const bxDriver: string = core.getInput('driver') || 'docker-container';
     const bxDriverOpt: string = core.getInput('driver-opt');
+    const bxBuildkitdFlags: string = core.getInput('buildkitd-flags');
     const bxInstall: boolean = /true/i.test(core.getInput('install'));
     const bxUse: boolean = /true/i.test(core.getInput('use'));
 
@@ -28,7 +29,7 @@ async function run(): Promise<void> {
     core.info('📣 Buildx info');
     await exec.exec('docker', ['buildx', 'version']);
 
-    const builderName: string = `builder-${(await buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
+    const builderName: string = `builder-${process.env.GITHUB_JOB}-${(await buildx.countBuilders()) + 1}`;
     core.setOutput('name', builderName);
     stateHelper.setBuilderName(builderName);
 
@@ -36,6 +37,9 @@ async function run(): Promise<void> {
     let createArgs: Array<string> = ['buildx', 'create', '--name', builderName, '--driver', bxDriver];
     if (bxDriverOpt) {
       createArgs.push('--driver-opt', bxDriverOpt);
+    }
+    if (bxBuildkitdFlags) {
+      createArgs.push('--buildkitd-flags', bxBuildkitdFlags);
     }
     if (bxUse) {
       createArgs.push('--use');

@@ -2493,6 +2493,7 @@ function run() {
             const bxVersion = core.getInput('version');
             const bxDriver = core.getInput('driver') || 'docker-container';
             const bxDriverOpt = core.getInput('driver-opt');
+            const bxBuildkitdFlags = core.getInput('buildkitd-flags');
             const bxInstall = /true/i.test(core.getInput('install'));
             const bxUse = /true/i.test(core.getInput('use'));
             const dockerConfigHome = process.env.DOCKER_CONFIG || path.join(os.homedir(), '.docker');
@@ -2501,13 +2502,16 @@ function run() {
             }
             core.info('📣 Buildx info');
             yield exec.exec('docker', ['buildx', 'version']);
-            const builderName = `builder-${(yield buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
+            const builderName = `builder-${process.env.GITHUB_JOB}-${(yield buildx.countBuilders()) + 1}`;
             core.setOutput('name', builderName);
             stateHelper.setBuilderName(builderName);
             core.info('🔨 Creating a new builder instance...');
             let createArgs = ['buildx', 'create', '--name', builderName, '--driver', bxDriver];
             if (bxDriverOpt) {
                 createArgs.push('--driver-opt', bxDriverOpt);
+            }
+            if (bxBuildkitdFlags) {
+                createArgs.push('--buildkitd-flags', bxBuildkitdFlags);
             }
             if (bxUse) {
                 createArgs.push('--use');
