@@ -50,7 +50,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -99,7 +99,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -149,7 +149,7 @@ jobs:
           version: latest
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
