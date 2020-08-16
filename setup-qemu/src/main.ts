@@ -1,6 +1,7 @@
 import * as os from 'os';
+import * as mexec from './exec';
 import * as core from '@actions/core';
-import * as exec from './exec';
+import * as exec from '@actions/exec';
 
 interface Platforms {
   supported: string[];
@@ -18,10 +19,10 @@ async function run(): Promise<void> {
     const platforms: string = core.getInput('platforms') || 'all';
 
     core.info(`💎 Installing QEMU static binaries...`);
-    await exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms], false);
+    await exec.exec('docker', ['run', '--rm', '--privileged', image, '--install', platforms]);
 
     core.info('🛒 Extracting available platforms...');
-    await exec.exec(`docker`, ['run', '--rm', '--privileged', image], true).then(res => {
+    await mexec.exec(`docker`, ['run', '--rm', '--privileged', image], true).then(res => {
       if (res.stderr != '' && !res.success) {
         throw new Error(res.stderr);
       }

@@ -1,4 +1,4 @@
-import * as actionsExec from '@actions/exec';
+import * as aexec from '@actions/exec';
 import {ExecOptions} from '@actions/exec';
 
 export interface ExecResult {
@@ -24,7 +24,7 @@ export const exec = async (command: string, args: string[] = [], silent: boolean
     }
   };
 
-  const returnCode: number = await actionsExec.exec(command, args, options);
+  const returnCode: number = await aexec.exec(command, args, options);
 
   return {
     success: returnCode === 0,

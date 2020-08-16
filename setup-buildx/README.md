@@ -37,7 +37,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/actions/setup-buildx@v1
+        uses: docker/setup-buildx-action@v1
         with:
           version: latest
       -
@@ -71,13 +71,13 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/actions/setup-qemu@v1
+        uses: docker/setup-qemu-action@v1
         with:
           platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/actions/setup-buildx@v1
+        uses: docker/setup-buildx-action@v1
         with:
           version: latest
       -

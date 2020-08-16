@@ -2186,7 +2186,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setBuilderName = exports.builderName = exports.IsPost = void 0;
 const core = __importStar(__webpack_require__(470));
 exports.IsPost = !!process.env['STATE_isPost'];
-exports.builderName = !!process.env['STATE_builderName'];
+exports.builderName = process.env['STATE_builderName'] || '';
 function setBuilderName(builderName) {
     core.saveState('builderName', builderName);
 }
@@ -2479,9 +2479,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 const buildx = __importStar(__webpack_require__(982));
-const exec = __importStar(__webpack_require__(807));
+const mexec = __importStar(__webpack_require__(807));
 const stateHelper = __importStar(__webpack_require__(153));
 const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2499,7 +2500,7 @@ function run() {
                 yield buildx.install(bxVersion || 'latest', dockerConfigHome);
             }
             core.info('📣 Buildx info');
-            yield exec.exec('docker', ['buildx', 'version'], false);
+            yield exec.exec('docker', ['buildx', 'version']);
             const builderName = `builder-${(yield buildx.countBuilders()) + 1}-${process.env.GITHUB_JOB}`;
             core.setOutput('name', builderName);
             stateHelper.setBuilderName(builderName);
@@ -2511,12 +2512,12 @@ function run() {
             if (bxUse) {
                 createArgs.push('--use');
             }
-            yield exec.exec('docker', createArgs, false);
+            yield exec.exec('docker', createArgs);
             core.info('🏃 Booting builder...');
-            yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap'], false);
+            yield exec.exec('docker', ['buildx', 'inspect', '--bootstrap']);
             if (bxInstall) {
                 core.info('🤝 Setting buildx as default builder...');
-                yield exec.exec('docker', ['buildx', 'install'], false);
+                yield exec.exec('docker', ['buildx', 'install']);
             }
             core.info('🛒 Extracting available platforms...');
             const platforms = yield buildx.platforms();
@@ -2530,13 +2531,14 @@ function run() {
 }
 function cleanup() {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            core.info('🚿 Removing builder instance...');
-            yield exec.exec('docker', ['buildx', 'rm', `${process.env.STATE_builderName}`], false);
+        if (stateHelper.builderName.length == 0) {
+            return;
         }
-        catch (error) {
-            core.warning(error.message);
-        }
+        yield mexec.exec('docker', ['buildx', 'rm', `${stateHelper.builderName}`], false).then(res => {
+            if (res.stderr != '' && !res.success) {
+                core.warning(res.stderr);
+            }
+        });
     });
 }
 if (!stateHelper.IsPost) {
@@ -6481,7 +6483,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.exec = void 0;
-const actionsExec = __importStar(__webpack_require__(986));
+const aexec = __importStar(__webpack_require__(986));
 exports.exec = (command, args = [], silent) => __awaiter(void 0, void 0, void 0, function* () {
     let stdout = '';
     let stderr = '';
@@ -6497,7 +6499,7 @@ exports.exec = (command, args = [], silent) => __awaiter(void 0, void 0, void 0,
             stderr += data.toString();
         }
     };
-    const returnCode = yield actionsExec.exec(command, args, options);
+    const returnCode = yield aexec.exec(command, args, options);
     return {
         success: returnCode === 0,
         stdout: stdout.trim(),
