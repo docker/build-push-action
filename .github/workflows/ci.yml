@@ -18,7 +18,6 @@ jobs:
       matrix:
         dockerfile:
           - multi
-          - multi-golang
           - multi-sudo
     steps:
       -
@@ -46,7 +45,7 @@ jobs:
           context: ./test
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64,linux/386
+          platforms: linux/amd64,linux/arm64
           #allow: network.host,security.insecure
           #push: true
           tags: |
@@ -89,7 +88,7 @@ jobs:
           context: ${{ github.repositoryUrl }}
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64,linux/386
+          platforms: linux/amd64,linux/arm64
           #allow: network.host,security.insecure
           #push: true
           tags: |
@@ -165,7 +164,7 @@ jobs:
           context: ./test
           file: ./test/Dockerfile-multi-golang
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64,linux/386
+          platforms: linux/amd64,linux/arm64
           cache-github: true
           tags: |
             localhost:5000/name/app:latest
@@ -177,11 +176,11 @@ jobs:
           context: ./test
           file: ./test/Dockerfile-multi-golang
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64,linux/386
+          platforms: linux/amd64,linux/arm64
           cache-github: true
           tags: |
-            localhost:5000/name/app:latest
-            localhost:5000/name/app:1.0.0
+            localhost:5000/name/app2:latest
+            localhost:5000/name/app2:1.0.0
       -
         name: Dump context
         if: always()
