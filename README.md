@@ -82,6 +82,7 @@ Following inputs can be used as `step.with` keys
 | `tags`              | String  |                                   | Newline-delimited list of tags **required** |
 | `pull`              | Bool    | `false`                           | Always attempt to pull a newer version of the image |
 | `target`            | String  |                                   | Sets the target stage to build |
+| `allow`             | String  |                                   | Allow extra privileged entitlement (eg. network.host,security.insecure) |
 | `no-cache`          | Bool    | `false`                           | Do not use cache when building the image |
 | `platforms`         | String  |                                   | Comma-delimited list of target platforms for build |
 | `load`              | Bool    | `false`                           | Shorthand for `--output=type=docker` |

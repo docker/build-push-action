@@ -33,6 +33,9 @@ inputs:
   target:
     description: "Sets the target stage to build"
     required: false
+  allow:
+    description: "Allow extra privileged entitlement (eg. network.host,security.insecure)"
+    required: false
   no-cache:
     description: "Do not use cache when building the image"
     required: false

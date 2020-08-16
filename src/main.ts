@@ -42,6 +42,9 @@ async function run(): Promise<void> {
     if (inputs.target) {
       buildArgs.push('--target', inputs.target);
     }
+    if (inputs.allow) {
+      buildArgs.push('--allow', inputs.allow);
+    }
     if (inputs.noCache) {
       buildArgs.push('--no-cache');
     }

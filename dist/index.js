@@ -1041,6 +1041,9 @@ function run() {
             if (inputs.target) {
                 buildArgs.push('--target', inputs.target);
             }
+            if (inputs.allow) {
+                buildArgs.push('--allow', inputs.allow);
+            }
             if (inputs.noCache) {
                 buildArgs.push('--no-cache');
             }
@@ -1127,6 +1130,7 @@ function loadInputs() {
             tags: yield getInputList('tags'),
             pull: /true/i.test(core.getInput('pull')),
             target: core.getInput('target'),
+            allow: core.getInput('allow'),
             noCache: /true/i.test(core.getInput('no-cache')),
             builder: core.getInput('builder'),
             platforms: core.getInput('platforms'),

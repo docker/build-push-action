@@ -8,6 +8,7 @@ export interface Inputs {
   tags: string[];
   pull: boolean;
   target: string;
+  allow: string;
   noCache: boolean;
   builder: string;
   platforms: string;
@@ -27,6 +28,7 @@ export async function loadInputs(): Promise<Inputs> {
     tags: await getInputList('tags'),
     pull: /true/i.test(core.getInput('pull')),
     target: core.getInput('target'),
+    allow: core.getInput('allow'),
     noCache: /true/i.test(core.getInput('no-cache')),
     builder: core.getInput('builder'),
     platforms: core.getInput('platforms'),
