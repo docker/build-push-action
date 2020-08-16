@@ -17,6 +17,7 @@ async function run(): Promise<void> {
     }
 
     const inputs: Inputs = await getInputs();
+    const args: string[] = await getArgs(inputs);
 
     if (inputs.builder) {
       core.info(`📌 Using builder instance ${inputs.builder}`);
@@ -24,7 +25,7 @@ async function run(): Promise<void> {
     }
 
     core.info(`🏃 Starting build...`);
-    await exec.exec('docker', await getArgs(inputs));
+    await exec.exec('docker', args);
   } catch (error) {
     core.setFailed(error.message);
   }

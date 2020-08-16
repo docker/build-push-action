@@ -1018,12 +1018,13 @@ function run() {
                 return;
             }
             const inputs = yield context_1.getInputs();
+            const args = yield context_1.getArgs(inputs);
             if (inputs.builder) {
                 core.info(`📌 Using builder instance ${inputs.builder}`);
                 yield buildx.use(inputs.builder);
             }
             core.info(`🏃 Starting build...`);
-            yield exec.exec('docker', yield context_1.getArgs(inputs));
+            yield exec.exec('docker', args);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1436,17 +1437,17 @@ function getArgs(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['buildx'];
         if (inputs.bake) {
-            args.concat(yield getBakeArgs(inputs));
+            args.push.apply(args, yield getBakeArgs(inputs));
         }
         else {
-            args.concat(yield getBuildArgs(inputs));
+            args.push.apply(args, yield getBuildArgs(inputs));
         }
-        args.concat(yield getCommonArgs(inputs));
+        args.push.apply(args, yield getCommonArgs(inputs));
         if (!inputs.bake) {
             args.push(inputs.context);
         }
         else {
-            args.concat(inputs.bakeTargets);
+            args.push.apply(args, inputs.bakeTargets);
         }
         return args;
     });

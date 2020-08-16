@@ -46,25 +46,26 @@ export async function getInputs(): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs): Promise<string[]> {
+export async function getArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = ['buildx'];
+
   if (inputs.bake) {
-    args.concat(await getBakeArgs(inputs));
+    args.push.apply(args, await getBakeArgs(inputs));
   } else {
-    args.concat(await getBuildArgs(inputs));
+    args.push.apply(args, await getBuildArgs(inputs));
   }
-  args.concat(await getCommonArgs(inputs));
+  args.push.apply(args, await getCommonArgs(inputs));
 
   if (!inputs.bake) {
     args.push(inputs.context);
   } else {
-    args.concat(inputs.bakeTargets);
+    args.push.apply(args, inputs.bakeTargets);
   }
 
   return args;
 }
 
-async function getCommonArgs(inputs: Inputs): Promise<string[]> {
+async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = [];
   if (inputs.noCache) {
     args.push('--no-cache');
@@ -81,7 +82,7 @@ async function getCommonArgs(inputs: Inputs): Promise<string[]> {
   return args;
 }
 
-async function getBakeArgs(inputs: Inputs): Promise<string[]> {
+async function getBakeArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = ['bake'];
   await asyncForEach(inputs.bakeFiles, async bakeFile => {
     args.push('--file', bakeFile);
@@ -89,7 +90,7 @@ async function getBakeArgs(inputs: Inputs): Promise<string[]> {
   return args;
 }
 
-async function getBuildArgs(inputs: Inputs): Promise<string[]> {
+async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = ['build'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
