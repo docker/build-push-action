@@ -28,12 +28,6 @@ jobs:
           - ""
     steps:
       -
-        name: Runner info
-        run: |
-          sudo apt-get install -y hwinfo
-          sudo hwinfo --short
-          sudo mount
-      -
         name: Checkout
         uses: actions/checkout@v2.3.1
       -

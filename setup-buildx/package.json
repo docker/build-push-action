@@ -1,6 +1,6 @@
 {
   "name": "setup-buildx",
-  "description": "GitHub Action to set up Docker Buildx",
+  "description": "Set up Docker Buildx",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc && ncc build",
@@ -11,15 +11,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/docker/actions.git",
-    "directory": "setup-buildx"
+    "url": "git+https://github.com/docker/setup-buildx-action.git"
   },
   "keywords": [
     "actions",
     "docker",
     "buildx"
   ],
-  "author": "CrazyMax",
+  "author": "Docker",
+  "contributors": [
+    "CrazyMax"
+  ],
   "license": "Apache-2.0",
   "dependencies": {
     "@actions/core": "^1.2.4",
