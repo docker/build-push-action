@@ -81,8 +81,11 @@ jobs:
       -
         name: Build and push
         uses: ./
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REF: ${{ github.ref }}
         with:
-          context: "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}#${{ github.ref }}"
+          context: ${{ github.repositoryUrl }}
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64,linux/386

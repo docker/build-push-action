@@ -6,6 +6,7 @@ ___
 
 * [Usage](#usage)
   * [Quick start](#quick-start)
+  * [Bake](#bake)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
