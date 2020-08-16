@@ -1,6 +1,5 @@
 import * as os from 'os';
 import * as path from 'path';
-import md5 from 'md5';
 import {Inputs} from './context';
 import * as stateHelper from './state-helper';
 import * as cache from '@actions/cache';
@@ -13,11 +12,11 @@ export async function restoreCache(inputs: Inputs): Promise<Inputs> {
     return inputs;
   }
 
-  const primaryKey = `${process.env.RUNNER_OS}-docker-build-push-${md5(inputs.context)}`;
+  const primaryKey = `${process.env.RUNNER_OS}-docker-build-push-${process.env.GITHUB_SHA}`;
   stateHelper.setCachePrimaryKey(primaryKey);
 
   try {
-    const cacheKey = await cache.restoreCache([cachePath], primaryKey);
+    const cacheKey = await cache.restoreCache([cachePath], primaryKey, [`${process.env.RUNNER_OS}-docker-build-push-`]);
 
     if (!cacheKey) {
       core.info(`GitHub Cache not found for key: ${primaryKey}`);
