@@ -60,6 +60,10 @@ inputs:
   cache-to:
     description: "Newline-delimited list of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
     required: false
+  cache-github:
+    description: "Export all the layers of all intermediate steps in the GitHub cache"
+    required: false
+    default: 'false'
   bake:
     description: "Use bake as the high-level build command"
     required: false

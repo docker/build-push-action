@@ -18,6 +18,7 @@ export interface Inputs {
   outputs: string[];
   cacheFrom: string[];
   cacheTo: string[];
+  cacheGithub: boolean;
   bake: boolean;
   bakeFiles: string[];
   bakeTargets: string[];
@@ -41,6 +42,7 @@ export async function getInputs(): Promise<Inputs> {
     outputs: await getInputList('outputs'),
     cacheFrom: await getInputList('cache-from'),
     cacheTo: await getInputList('cache-to'),
+    cacheGithub: /true/i.test(core.getInput('cache-github')),
     bake: /true/i.test(core.getInput('bake')),
     bakeFiles: await getInputList('bake-files'),
     bakeTargets: await getInputList('bake-targets')
