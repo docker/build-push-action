@@ -61,10 +61,6 @@ inputs:
   cache-to:
     description: "Newline-delimited list of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
     required: false
-  cache-github:
-    description: "Export all the layers of all intermediate steps in the GitHub cache"
-    required: false
-    default: 'false'
 
 outputs:
   digest:
@@ -73,4 +69,3 @@ outputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
-  post: 'dist/index.js'

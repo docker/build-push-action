@@ -17,7 +17,6 @@ export interface Inputs {
   outputs: string[];
   cacheFrom: string[];
   cacheTo: string[];
-  cacheGithub: boolean;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -37,8 +36,7 @@ export async function getInputs(): Promise<Inputs> {
     push: /true/i.test(core.getInput('push')),
     outputs: await getInputList('outputs'),
     cacheFrom: await getInputList('cache-from'),
-    cacheTo: await getInputList('cache-to'),
-    cacheGithub: /true/i.test(core.getInput('cache-github'))
+    cacheTo: await getInputList('cache-to')
   };
 }
 
