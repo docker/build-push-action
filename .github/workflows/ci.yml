@@ -53,6 +53,10 @@ jobs:
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
       -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
@@ -96,6 +100,10 @@ jobs:
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
         name: Dump context
         if: always()
