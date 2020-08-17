@@ -9,10 +9,10 @@ export interface Inputs {
   tags: string[];
   pull: boolean;
   target: string;
-  allow: string;
+  allow: string[];
   noCache: boolean;
   builder: string;
-  platforms: string;
+  platforms: string[];
   load: boolean;
   push: boolean;
   outputs: string[];
@@ -33,10 +33,10 @@ export async function getInputs(): Promise<Inputs> {
     tags: await getInputList('tags'),
     pull: /true/i.test(core.getInput('pull')),
     target: core.getInput('target'),
-    allow: core.getInput('allow'),
+    allow: await getInputList('allow'),
     noCache: /true/i.test(core.getInput('no-cache')),
     builder: core.getInput('builder'),
-    platforms: core.getInput('platforms'),
+    platforms: await getInputList('platforms'),
     load: /true/i.test(core.getInput('load')),
     push: /true/i.test(core.getInput('push')),
     outputs: await getInputList('outputs'),
@@ -125,10 +125,10 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
     args.push('--target', inputs.target);
   }
   if (inputs.allow) {
-    args.push('--allow', inputs.allow);
+    args.push('--allow', inputs.allow.join(','));
   }
   if (inputs.platforms) {
-    args.push('--platform', inputs.platforms);
+    args.push('--platform', inputs.platforms.join(','));
   }
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
@@ -145,7 +145,7 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   return args;
 }
 
-async function getInputList(name: string): Promise<string[]> {
+export async function getInputList(name: string): Promise<string[]> {
   const items = core.getInput(name);
   if (items == '') {
     return [];
@@ -153,7 +153,7 @@ async function getInputList(name: string): Promise<string[]> {
   return items.split(/\r?\n/).reduce<string[]>((acc, line) => acc.concat(line.split(',')).map(pat => pat.trim()), []);
 }
 
-const asyncForEach = async (array, callback) => {
+export const asyncForEach = async (array, callback) => {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
