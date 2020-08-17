@@ -1,5 +1,5 @@
 {
-  "name": "setup-buildx",
+  "name": "docker-setup-buildx",
   "description": "Set up Docker Buildx",
   "main": "lib/main.js",
   "scripts": {
