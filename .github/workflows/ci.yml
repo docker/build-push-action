@@ -36,8 +36,8 @@ jobs:
         name: Set up Docker Buildx
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
-#        with:
-#          driver-opt: network=host
+        with:
+          driver-opt: network=host
       -
         name: Build and push
         uses: ./
@@ -46,8 +46,8 @@ jobs:
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          #allow: network.host,security.insecure
-          #push: true
+          allow: network.host,security.insecure
+          push: true
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
@@ -77,7 +77,7 @@ jobs:
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
           version: latest
-          #driver-opt: network=host
+          driver-opt: network=host
       -
         name: Build and push
         uses: ./
@@ -89,8 +89,8 @@ jobs:
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          #allow: network.host,security.insecure
-          #push: true
+          allow: network.host,security.insecure
+          push: true
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
@@ -124,15 +124,15 @@ jobs:
         name: Set up Docker Buildx
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
-#        with:
-#          driver-opt: network=host
+        with:
+          driver-opt: network=host
       -
         name: Build and push
         uses: ./
         with:
           builder: ${{ steps.buildx.outputs.name }}
           bake: true
-          #push: true
+          push: false # set to true when https://github.com/docker/buildx/issues/179 is fixed
           bake-files: |
             ./test/config.hcl
           bake-targets: |
