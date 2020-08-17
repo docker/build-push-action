@@ -89,9 +89,8 @@ jobs:
         uses: ./
         env:
           GIT_AUTH_TOKEN: ${{ github.token }}
-          GIT_REF: ${{ github.ref }}
         with:
-          context: ${{ github.repositoryUrl }}
+          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64

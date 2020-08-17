@@ -158,9 +158,8 @@ jobs:
         uses: ./
         env:
           GIT_AUTH_TOKEN: ${{ github.token }}
-          GIT_REF: ${{ github.ref }}
         with:
-          context: ${{ github.repositoryUrl }}
+          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64,linux/386
           push: true
@@ -178,7 +177,7 @@ Following inputs can be used as `step.with` keys
 | Name                | Type    | Default                           | Description                        |
 |---------------------|---------|-----------------------------------|------------------------------------|
 | `builder`           | String  |                                   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
-| `context`           | String  | `.`                               | Build's context is the set of files located in the specified `PATH` or `URL` |
+| `context`           | String  | `.`                               | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) |
 | `file`              | String  | `./Dockerfile`                    | Path to the Dockerfile. |
 | `build-args`        | List    |                                   | List of build-time variables |
 | `labels`            | List    |                                   | List of metadata for an image |
@@ -223,7 +222,6 @@ Following environment variables can be used as `step.env` keys
 |--------------------------|---------------------------------------|
 | `GIT_AUTH_HEADER`**¹**   | Raw authorization header to authenticate against git repository |
 | `GIT_AUTH_TOKEN`**¹**    | `x-access-token` basic auth to authenticate against git repository |
-| `GIT_REF`**¹**           | Git refrerence to use against git repository |
 
 > **¹** Only used if `input.context` is a valid git uri.
 

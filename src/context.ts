@@ -1,4 +1,3 @@
-import gitUrlParse from 'git-url-parse';
 import * as core from '@actions/core';
 
 export interface Inputs {
@@ -26,7 +25,7 @@ export interface Inputs {
 
 export async function getInputs(): Promise<Inputs> {
   return {
-    context: await getBuildContext(),
+    context: core.getInput('context') || '.',
     file: core.getInput('file') || './Dockerfile',
     buildArgs: await getInputList('build-args'),
     labels: await getInputList('labels'),
@@ -66,23 +65,6 @@ export async function getArgs(inputs: Inputs): Promise<Array<string>> {
   }
 
   return args;
-}
-
-async function getBuildContext(): Promise<string> {
-  let context: string = core.getInput('context');
-  if (!context) {
-    return '.';
-  }
-  try {
-    const gitUrl = gitUrlParse(context);
-    const gitRef = process.env['GIT_REF'] || '';
-    if (gitRef) {
-      return `${gitUrl.toString()}#${gitRef}`;
-    }
-    return gitUrl.toString();
-  } catch {
-    return context;
-  }
 }
 
 async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
