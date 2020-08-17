@@ -38,6 +38,7 @@ jobs:
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
           driver-opt: network=host
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         uses: ./
@@ -78,6 +79,7 @@ jobs:
         with:
           version: latest
           driver-opt: network=host
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         uses: ./
@@ -126,6 +128,7 @@ jobs:
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
           driver-opt: network=host
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         uses: ./
