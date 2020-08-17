@@ -1,5 +1,6 @@
-name: Docker Build and Push
-description: Build and push Docker images
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+name: Docker Build Push
+description: Build and push Docker images with Buildx
 author: docker
 branding:
   icon: 'anchor'
@@ -64,16 +65,6 @@ inputs:
     description: "Export all the layers of all intermediate steps in the GitHub cache"
     required: false
     default: 'false'
-  bake:
-    description: "Use bake as the high-level build command"
-    required: false
-    default: 'false'
-  bake-files:
-    description: "Newline-delimited list of bake definition files"
-    required: false
-  bake-targets:
-    description: "Newline-delimited list of bake targets"
-    required: false
 
 outputs:
   digest:

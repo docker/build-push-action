@@ -8,7 +8,7 @@ import * as core from '@actions/core';
 const cachePath = path.join(os.tmpdir(), 'docker-build-push');
 
 export async function restoreCache(inputs: Inputs): Promise<Inputs> {
-  if (inputs.bake || !inputs.cacheGithub) {
+  if (!inputs.cacheGithub) {
     return inputs;
   }
 
@@ -40,7 +40,7 @@ export async function restoreCache(inputs: Inputs): Promise<Inputs> {
 }
 
 export async function saveCache(inputs: Inputs): Promise<void> {
-  if (inputs.bake || !inputs.cacheGithub) {
+  if (!inputs.cacheGithub) {
     return;
   }
 

@@ -1928,65 +1928,7 @@ var ValueType;
 
 /***/ }),
 /* 44 */,
-/* 45 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-// Dependencies
-
-var parseUrl = __webpack_require__(823),
-    isSsh = __webpack_require__(720);
-
-/**
- * gitUp
- * Parses the input url.
- *
- * @name gitUp
- * @function
- * @param {String} input The input url.
- * @return {Object} An object containing the following fields:
- *
- *  - `protocols` (Array): An array with the url protocols (usually it has one element).
- *  - `port` (null|Number): The domain port.
- *  - `resource` (String): The url domain (including subdomains).
- *  - `user` (String): The authentication user (usually for ssh urls).
- *  - `pathname` (String): The url pathname.
- *  - `hash` (String): The url hash.
- *  - `search` (String): The url querystring value.
- *  - `href` (String): The input url.
- *  - `protocol` (String): The git url protocol.
- *  - `token` (String): The oauth token (could appear in the https urls).
- */
-function gitUp(input) {
-    var output = parseUrl(input);
-    output.token = "";
-
-    var splits = output.user.split(":");
-    if (splits.length === 2) {
-        if (splits[1] === "x-oauth-basic") {
-            output.token = splits[0];
-        } else if (splits[0] === "x-token-auth") {
-            output.token = splits[1];
-        }
-    }
-
-    if (isSsh(output.protocols) || isSsh(input)) {
-        output.protocol = "ssh";
-    } else if (output.protocols.length) {
-        output.protocol = output.protocols[0];
-    } else {
-        output.protocol = "file";
-    }
-
-    output.href = output.href.replace(/\/$/, "");
-    return output;
-}
-
-module.exports = gitUp;
-
-/***/ }),
+/* 45 */,
 /* 46 */,
 /* 47 */
 /***/ (function(__unusedmodule, exports) {
@@ -2023,149 +1965,46 @@ module.exports = ["ac","com.ac","edu.ac","gov.ac","net.ac","mil.ac","org.ac","ad
 /* 51 */,
 /* 52 */,
 /* 53 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
-// TODO: Use the `URL` global when targeting Node.js 10
-const URLParser = typeof URL === 'undefined' ? __webpack_require__(835).URL : URL;
-
-const testParameter = (name, filters) => {
-	return filters.some(filter => filter instanceof RegExp ? filter.test(name) : filter === name);
-};
-
-module.exports = (urlString, opts) => {
-	opts = Object.assign({
-		defaultProtocol: 'http:',
-		normalizeProtocol: true,
-		forceHttp: false,
-		forceHttps: false,
-		stripHash: true,
-		stripWWW: true,
-		removeQueryParameters: [/^utm_\w+/i],
-		removeTrailingSlash: true,
-		removeDirectoryIndex: false,
-		sortQueryParameters: true
-	}, opts);
-
-	// Backwards compatibility
-	if (Reflect.has(opts, 'normalizeHttps')) {
-		opts.forceHttp = opts.normalizeHttps;
-	}
-
-	if (Reflect.has(opts, 'normalizeHttp')) {
-		opts.forceHttps = opts.normalizeHttp;
-	}
-
-	if (Reflect.has(opts, 'stripFragment')) {
-		opts.stripHash = opts.stripFragment;
-	}
-
-	urlString = urlString.trim();
-
-	const hasRelativeProtocol = urlString.startsWith('//');
-	const isRelativeUrl = !hasRelativeProtocol && /^\.*\//.test(urlString);
-
-	// Prepend protocol
-	if (!isRelativeUrl) {
-		urlString = urlString.replace(/^(?!(?:\w+:)?\/\/)|^\/\//, opts.defaultProtocol);
-	}
-
-	const urlObj = new URLParser(urlString);
-
-	if (opts.forceHttp && opts.forceHttps) {
-		throw new Error('The `forceHttp` and `forceHttps` options cannot be used together');
-	}
-
-	if (opts.forceHttp && urlObj.protocol === 'https:') {
-		urlObj.protocol = 'http:';
-	}
-
-	if (opts.forceHttps && urlObj.protocol === 'http:') {
-		urlObj.protocol = 'https:';
-	}
-
-	// Remove hash
-	if (opts.stripHash) {
-		urlObj.hash = '';
-	}
-
-	// Remove duplicate slashes if not preceded by a protocol
-	if (urlObj.pathname) {
-		// TODO: Use the following instead when targeting Node.js 10
-		// `urlObj.pathname = urlObj.pathname.replace(/(?<!https?:)\/{2,}/g, '/');`
-		urlObj.pathname = urlObj.pathname.replace(/((?![https?:]).)\/{2,}/g, (_, p1) => {
-			if (/^(?!\/)/g.test(p1)) {
-				return `${p1}/`;
-			}
-			return '/';
-		});
-	}
-
-	// Decode URI octets
-	if (urlObj.pathname) {
-		urlObj.pathname = decodeURI(urlObj.pathname);
-	}
-
-	// Remove directory index
-	if (opts.removeDirectoryIndex === true) {
-		opts.removeDirectoryIndex = [/^index\.[a-z]+$/];
-	}
-
-	if (Array.isArray(opts.removeDirectoryIndex) && opts.removeDirectoryIndex.length > 0) {
-		let pathComponents = urlObj.pathname.split('/');
-		const lastComponent = pathComponents[pathComponents.length - 1];
-
-		if (testParameter(lastComponent, opts.removeDirectoryIndex)) {
-			pathComponents = pathComponents.slice(0, pathComponents.length - 1);
-			urlObj.pathname = pathComponents.slice(1).join('/') + '/';
-		}
-	}
-
-	if (urlObj.hostname) {
-		// Remove trailing dot
-		urlObj.hostname = urlObj.hostname.replace(/\.$/, '');
-
-		// Remove `www.`
-		// eslint-disable-next-line no-useless-escape
-		if (opts.stripWWW && /^www\.([a-z\-\d]{2,63})\.([a-z\.]{2,5})$/.test(urlObj.hostname)) {
-			// Each label should be max 63 at length (min: 2).
-			// The extension should be max 5 at length (min: 2).
-			// Source: https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
-			urlObj.hostname = urlObj.hostname.replace(/^www\./, '');
-		}
-	}
-
-	// Remove query unwanted parameters
-	if (Array.isArray(opts.removeQueryParameters)) {
-		for (const key of [...urlObj.searchParams.keys()]) {
-			if (testParameter(key, opts.removeQueryParameters)) {
-				urlObj.searchParams.delete(key);
-			}
-		}
-	}
-
-	// Sort query parameters
-	if (opts.sortQueryParameters) {
-		urlObj.searchParams.sort();
-	}
-
-	// Take advantage of many of the Node `url` normalizations
-	urlString = urlObj.toString();
-
-	// Remove ending `/`
-	if (opts.removeTrailingSlash || urlObj.pathname === '/') {
-		urlString = urlString.replace(/\/$/, '');
-	}
-
-	// Restore relative protocol, if applicable
-	if (hasRelativeProtocol && !opts.normalizeProtocol) {
-		urlString = urlString.replace(/^http:\/\//, '//');
-	}
-
-	return urlString;
-};
-
+/*!
+ * Copyright 2019, OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const context_1 = __webpack_require__(560);
+class NoopContextManager {
+    active() {
+        return context_1.Context.ROOT_CONTEXT;
+    }
+    with(context, fn) {
+        return fn();
+    }
+    bind(target, context) {
+        return target;
+    }
+    enable() {
+        return this;
+    }
+    disable() {
+        return this;
+    }
+}
+exports.NoopContextManager = NoopContextManager;
+//# sourceMappingURL=NoopContextManager.js.map
 
 /***/ }),
 /* 54 */,
@@ -5545,12 +5384,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* 188 */,
 /* 189 */,
 /* 190 */,
-/* 191 */
-/***/ (function(module) {
-
-module.exports = require("querystring");
-
-/***/ }),
+/* 191 */,
 /* 192 */,
 /* 193 */,
 /* 194 */,
@@ -6368,239 +6202,7 @@ exports.downloadCacheStorageSDK = downloadCacheStorageSDK;
 
 /***/ }),
 /* 252 */,
-/* 253 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-var gitUp = __webpack_require__(45);
-
-/**
- * gitUrlParse
- * Parses a Git url.
- *
- * @name gitUrlParse
- * @function
- * @param {String} url The Git url to parse.
- * @return {GitUrl} The `GitUrl` object containing:
- *
- *  - `protocols` (Array): An array with the url protocols (usually it has one element).
- *  - `port` (null|Number): The domain port.
- *  - `resource` (String): The url domain (including subdomains).
- *  - `user` (String): The authentication user (usually for ssh urls).
- *  - `pathname` (String): The url pathname.
- *  - `hash` (String): The url hash.
- *  - `search` (String): The url querystring value.
- *  - `href` (String): The input url.
- *  - `protocol` (String): The git url protocol.
- *  - `token` (String): The oauth token (could appear in the https urls).
- *  - `source` (String): The Git provider (e.g. `"github.com"`).
- *  - `owner` (String): The repository owner.
- *  - `name` (String): The repository name.
- *  - `ref` (String): The repository ref (e.g., "master" or "dev").
- *  - `filepath` (String): A filepath relative to the repository root.
- *  - `filepathtype` (String): The type of filepath in the url ("blob" or "tree").
- *  - `full_name` (String): The owner and name values in the `owner/name` format.
- *  - `toString` (Function): A function to stringify the parsed url into another url type.
- *  - `organization` (String): The organization the owner belongs to. This is CloudForge specific.
- *  - `git_suffix` (Boolean): Whether to add the `.git` suffix or not.
- *
- */
-function gitUrlParse(url) {
-
-    if (typeof url !== "string") {
-        throw new Error("The url must be a string.");
-    }
-
-    var urlInfo = gitUp(url),
-        sourceParts = urlInfo.resource.split("."),
-        splits = null;
-
-    urlInfo.toString = function (type) {
-        return gitUrlParse.stringify(this, type);
-    };
-
-    urlInfo.source = sourceParts.length > 2 ? sourceParts.slice(1 - sourceParts.length).join(".") : urlInfo.source = urlInfo.resource;
-
-    // Note: Some hosting services (e.g. Visual Studio Team Services) allow whitespace characters
-    // in the repository and owner names so we decode the URL pieces to get the correct result
-    urlInfo.git_suffix = /\.git$/.test(urlInfo.pathname);
-    urlInfo.name = decodeURIComponent(urlInfo.pathname.replace(/^\//, '').replace(/\.git$/, ""));
-    urlInfo.owner = decodeURIComponent(urlInfo.user);
-
-    switch (urlInfo.source) {
-        case "git.cloudforge.com":
-            urlInfo.owner = urlInfo.user;
-            urlInfo.organization = sourceParts[0];
-            urlInfo.source = "cloudforge.com";
-            break;
-        case "visualstudio.com":
-            // Handle VSTS SSH URLs
-            if (urlInfo.resource === 'vs-ssh.visualstudio.com') {
-                splits = urlInfo.name.split("/");
-                if (splits.length === 4) {
-                    urlInfo.organization = splits[1];
-                    urlInfo.owner = splits[2];
-                    urlInfo.name = splits[3];
-                    urlInfo.full_name = splits[2] + '/' + splits[3];
-                }
-                break;
-            } else {
-                splits = urlInfo.name.split("/");
-                if (splits.length === 2) {
-                    urlInfo.owner = splits[1];
-                    urlInfo.name = splits[1];
-                    urlInfo.full_name = '_git/' + urlInfo.name;
-                } else if (splits.length === 3) {
-                    urlInfo.name = splits[2];
-                    if (splits[0] === 'DefaultCollection') {
-                        urlInfo.owner = splits[2];
-                        urlInfo.organization = splits[0];
-                        urlInfo.full_name = urlInfo.organization + '/_git/' + urlInfo.name;
-                    } else {
-                        urlInfo.owner = splits[0];
-                        urlInfo.full_name = urlInfo.owner + '/_git/' + urlInfo.name;
-                    }
-                } else if (splits.length === 4) {
-                    urlInfo.organization = splits[0];
-                    urlInfo.owner = splits[1];
-                    urlInfo.name = splits[3];
-                    urlInfo.full_name = urlInfo.organization + '/' + urlInfo.owner + '/_git/' + urlInfo.name;
-                }
-                break;
-            }
-
-        // Azure DevOps (formerly Visual Studio Team Services)
-        case "dev.azure.com":
-        case "azure.com":
-            if (urlInfo.resource === 'ssh.dev.azure.com') {
-                splits = urlInfo.name.split("/");
-                if (splits.length === 4) {
-                    urlInfo.organization = splits[1];
-                    urlInfo.owner = splits[2];
-                    urlInfo.name = splits[3];
-                }
-                break;
-            } else {
-                splits = urlInfo.name.split("/");
-                if (splits.length === 5) {
-                    urlInfo.organization = splits[0];
-                    urlInfo.owner = splits[1];
-                    urlInfo.name = splits[4];
-                    urlInfo.full_name = '_git/' + urlInfo.name;
-                } else if (splits.length === 3) {
-                    urlInfo.name = splits[2];
-                    if (splits[0] === 'DefaultCollection') {
-                        urlInfo.owner = splits[2];
-                        urlInfo.organization = splits[0];
-                        urlInfo.full_name = urlInfo.organization + '/_git/' + urlInfo.name;
-                    } else {
-                        urlInfo.owner = splits[0];
-                        urlInfo.full_name = urlInfo.owner + '/_git/' + urlInfo.name;
-                    }
-                } else if (splits.length === 4) {
-                    urlInfo.organization = splits[0];
-                    urlInfo.owner = splits[1];
-                    urlInfo.name = splits[3];
-                    urlInfo.full_name = urlInfo.organization + '/' + urlInfo.owner + '/_git/' + urlInfo.name;
-                }
-                break;
-            }
-        default:
-            splits = urlInfo.name.split("/");
-            var nameIndex = splits.length - 1;
-            if (splits.length >= 2) {
-                var blobIndex = splits.indexOf("blob", 2);
-                var treeIndex = splits.indexOf("tree", 2);
-                var commitIndex = splits.indexOf("commit", 2);
-                nameIndex = blobIndex > 0 ? blobIndex - 1 : treeIndex > 0 ? treeIndex - 1 : commitIndex > 0 ? commitIndex - 1 : nameIndex;
-
-                urlInfo.owner = splits.slice(0, nameIndex).join('/');
-                urlInfo.name = splits[nameIndex];
-                if (commitIndex) {
-                    urlInfo.commit = splits[nameIndex + 2];
-                }
-            }
-
-            urlInfo.ref = "";
-            urlInfo.filepathtype = "";
-            urlInfo.filepath = "";
-            if (splits.length > nameIndex + 2 && ["blob", "tree"].indexOf(splits[nameIndex + 1]) >= 0) {
-                urlInfo.filepathtype = splits[nameIndex + 1];
-                urlInfo.ref = splits[nameIndex + 2];
-                if (splits.length > nameIndex + 3) {
-                    urlInfo.filepath = splits.slice(nameIndex + 3).join('/');
-                }
-            }
-            urlInfo.organization = urlInfo.owner;
-            break;
-    }
-
-    if (!urlInfo.full_name) {
-        urlInfo.full_name = urlInfo.owner;
-        if (urlInfo.name) {
-            urlInfo.full_name && (urlInfo.full_name += "/");
-            urlInfo.full_name += urlInfo.name;
-        }
-    }
-
-    return urlInfo;
-}
-
-/**
- * stringify
- * Stringifies a `GitUrl` object.
- *
- * @name stringify
- * @function
- * @param {GitUrl} obj The parsed Git url object.
- * @param {String} type The type of the stringified url (default `obj.protocol`).
- * @return {String} The stringified url.
- */
-gitUrlParse.stringify = function (obj, type) {
-    type = type || (obj.protocols && obj.protocols.length ? obj.protocols.join('+') : obj.protocol);
-    var port = obj.port ? ":" + obj.port : '';
-    var user = obj.user || 'git';
-    var maybeGitSuffix = obj.git_suffix ? ".git" : "";
-    switch (type) {
-        case "ssh":
-            if (port) return "ssh://" + user + "@" + obj.resource + port + "/" + obj.full_name + maybeGitSuffix;else return user + "@" + obj.resource + ":" + obj.full_name + maybeGitSuffix;
-        case "git+ssh":
-        case "ssh+git":
-        case "ftp":
-        case "ftps":
-            return type + "://" + user + "@" + obj.resource + port + "/" + obj.full_name + maybeGitSuffix;
-        case "http":
-        case "https":
-            var auth = obj.token ? buildToken(obj) : obj.user && (obj.protocols.includes('http') || obj.protocols.includes('https')) ? obj.user + "@" : "";
-            return type + "://" + auth + obj.resource + port + "/" + obj.full_name + maybeGitSuffix;
-        default:
-            return obj.href;
-    }
-};
-
-/*!
- * buildToken
- * Builds OAuth token prefix (helper function)
- *
- * @name buildToken
- * @function
- * @param {GitUrl} obj The parsed Git url object.
- * @return {String} token prefix
- */
-function buildToken(obj) {
-    switch (obj.source) {
-        case "bitbucket.org":
-            return "x-token-auth:" + obj.token + "@";
-        default:
-            return obj.token + "@";
-    }
-}
-
-module.exports = gitUrlParse;
-
-/***/ }),
+/* 253 */,
 /* 254 */,
 /* 255 */,
 /* 256 */
@@ -34836,7 +34438,7 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(__webpack_require__(560));
-__export(__webpack_require__(599));
+__export(__webpack_require__(53));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
@@ -35304,17 +34906,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = void 0;
-const git_url_parse_1 = __importDefault(__webpack_require__(253));
 const core = __importStar(__webpack_require__(470));
 function getInputs() {
     return __awaiter(this, void 0, void 0, function* () {
         return {
-            context: yield getBuildContext(),
+            context: core.getInput('context') || '.',
             file: core.getInput('file') || './Dockerfile',
             buildArgs: yield getInputList('build-args'),
             labels: yield getInputList('labels'),
@@ -35330,10 +34928,7 @@ function getInputs() {
             outputs: yield getInputList('outputs'),
             cacheFrom: yield getInputList('cache-from'),
             cacheTo: yield getInputList('cache-to'),
-            cacheGithub: /true/i.test(core.getInput('cache-github')),
-            bake: /true/i.test(core.getInput('bake')),
-            bakeFiles: yield getInputList('bake-files'),
-            bakeTargets: yield getInputList('bake-targets')
+            cacheGithub: /true/i.test(core.getInput('cache-github'))
         };
     });
 }
@@ -35341,42 +34936,13 @@ exports.getInputs = getInputs;
 function getArgs(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['buildx'];
-        if (inputs.bake) {
-            args.push.apply(args, yield getBakeArgs(inputs));
-        }
-        else {
-            args.push.apply(args, yield getBuildArgs(inputs));
-        }
+        args.push.apply(args, yield getBuildArgs(inputs));
         args.push.apply(args, yield getCommonArgs(inputs));
-        if (!inputs.bake) {
-            args.push(inputs.context);
-        }
-        else {
-            args.push.apply(args, inputs.bakeTargets);
-        }
+        args.push(inputs.context);
         return args;
     });
 }
 exports.getArgs = getArgs;
-function getBuildContext() {
-    return __awaiter(this, void 0, void 0, function* () {
-        let context = core.getInput('context');
-        if (!context) {
-            return '.';
-        }
-        try {
-            const gitUrl = git_url_parse_1.default(context);
-            const gitRef = process.env['GIT_REF'] || '';
-            if (gitRef) {
-                return `${gitUrl.toString()}#${gitRef}`;
-            }
-            return gitUrl.toString();
-        }
-        catch (_a) {
-            return context;
-        }
-    });
-}
 function getCommonArgs(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = [];
@@ -35392,15 +34958,6 @@ function getCommonArgs(inputs) {
         if (inputs.push) {
             args.push('--push');
         }
-        return args;
-    });
-}
-function getBakeArgs(inputs) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let args = ['bake'];
-        yield exports.asyncForEach(inputs.bakeFiles, (bakeFile) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--file', bakeFile);
-        }));
         return args;
     });
 }
@@ -38477,49 +38034,7 @@ exports.partialMatch = partialMatch;
 
 /***/ }),
 /* 598 */,
-/* 599 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-/*!
- * Copyright 2019, OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-const context_1 = __webpack_require__(560);
-class NoopContextManager {
-    active() {
-        return context_1.Context.ROOT_CONTEXT;
-    }
-    with(context, fn) {
-        return fn();
-    }
-    bind(target, context) {
-        return target;
-    }
-    enable() {
-        return this;
-    }
-    disable() {
-        return this;
-    }
-}
-exports.NoopContextManager = NoopContextManager;
-//# sourceMappingURL=NoopContextManager.js.map
-
-/***/ }),
+/* 599 */,
 /* 600 */,
 /* 601 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -41252,145 +40767,7 @@ exports.NOOP_METER_PROVIDER = new NoopMeterProvider();
 /* 663 */,
 /* 664 */,
 /* 665 */,
-/* 666 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-// Dependencies
-var protocols = __webpack_require__(737),
-    isSsh = __webpack_require__(720),
-    qs = __webpack_require__(191);
-
-/**
- * parsePath
- * Parses the input url.
- *
- * @name parsePath
- * @function
- * @param {String} url The input url.
- * @return {Object} An object containing the following fields:
- *
- *  - `protocols` (Array): An array with the url protocols (usually it has one element).
- *  - `protocol` (String): The first protocol, `"ssh"` (if the url is a ssh url) or `"file"`.
- *  - `port` (null|Number): The domain port.
- *  - `resource` (String): The url domain (including subdomains).
- *  - `user` (String): The authentication user (usually for ssh urls).
- *  - `pathname` (String): The url pathname.
- *  - `hash` (String): The url hash.
- *  - `search` (String): The url querystring value.
- *  - `href` (String): The input url.
- *  - `query` (Object): The url querystring, parsed as object.
- */
-function parsePath(url) {
-    url = (url || "").trim();
-    var output = {
-        protocols: protocols(url),
-        protocol: null,
-        port: null,
-        resource: "",
-        user: "",
-        pathname: "",
-        hash: "",
-        search: "",
-        href: url,
-        query: Object.create(null)
-    },
-        protocolIndex = url.indexOf("://"),
-        resourceIndex = -1,
-        splits = null,
-        parts = null;
-
-    if (url.startsWith(".")) {
-        if (url.startsWith("./")) {
-            url = url.substring(2);
-        }
-        output.pathname = url;
-        output.protocol = "file";
-    }
-
-    var firstChar = url.charAt(1);
-    if (!output.protocol) {
-        output.protocol = output.protocols[0];
-        if (!output.protocol) {
-            if (isSsh(url)) {
-                output.protocol = "ssh";
-            } else if (firstChar === "/" || firstChar === "~") {
-                url = url.substring(2);
-                output.protocol = "file";
-            } else {
-                output.protocol = "file";
-            }
-        }
-    }
-
-    if (protocolIndex !== -1) {
-        url = url.substring(protocolIndex + 3);
-    }
-
-    parts = url.split("/");
-    if (output.protocol !== "file") {
-        output.resource = parts.shift();
-    } else {
-        output.resource = "";
-    }
-
-    // user@domain
-    splits = output.resource.split("@");
-    if (splits.length === 2) {
-        output.user = splits[0];
-        output.resource = splits[1];
-    }
-
-    // domain.com:port
-    splits = output.resource.split(":");
-    if (splits.length === 2) {
-        output.resource = splits[0];
-        if (splits[1]) {
-            output.port = Number(splits[1]);
-            if (isNaN(output.port)) {
-                output.port = null;
-                parts.unshift(splits[1]);
-            }
-        } else {
-            output.port = null;
-        }
-    }
-
-    // Remove empty elements
-    parts = parts.filter(Boolean);
-
-    // Stringify the pathname
-    if (output.protocol === "file") {
-        output.pathname = output.href;
-    } else {
-        output.pathname = output.pathname || (output.protocol !== "file" || output.href[0] === "/" ? "/" : "") + parts.join("/");
-    }
-
-    // #some-hash
-    splits = output.pathname.split("#");
-    if (splits.length === 2) {
-        output.pathname = splits[0];
-        output.hash = splits[1];
-    }
-
-    // ?foo=bar
-    splits = output.pathname.split("?");
-    if (splits.length === 2) {
-        output.pathname = splits[0];
-        output.search = splits[1];
-    }
-
-    output.query = qs.parse(output.search);
-    output.href = output.href.replace(/\/$/, "");
-    output.pathname = output.pathname.replace(/\/$/, "");
-    return output;
-}
-
-module.exports = parsePath;
-
-/***/ }),
+/* 666 */,
 /* 667 */,
 /* 668 */,
 /* 669 */
@@ -42035,47 +41412,7 @@ for (var i = 0; i < modules.length; i++) {
 /* 717 */,
 /* 718 */,
 /* 719 */,
-/* 720 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-// Dependencies
-var protocols = __webpack_require__(737);
-
-/**
- * isSsh
- * Checks if an input value is a ssh url or not.
- *
- * @name isSsh
- * @function
- * @param {String|Array} input The input url or an array of protocols.
- * @return {Boolean} `true` if the input is a ssh url, `false` otherwise.
- */
-function isSsh(input) {
-
-    if (Array.isArray(input)) {
-        return input.indexOf("ssh") !== -1 || input.indexOf("rsync") !== -1;
-    }
-
-    if (typeof input !== "string") {
-        return false;
-    }
-
-    var prots = protocols(input);
-    input = input.substring(input.indexOf("://") + 3);
-    if (isSsh(prots)) {
-        return true;
-    }
-
-    // TODO This probably could be improved :)
-    return input.indexOf("@") < input.indexOf(":");
-}
-
-module.exports = isSsh;
-
-/***/ }),
+/* 720 */,
 /* 721 */,
 /* 722 */
 /***/ (function(module) {
@@ -42450,39 +41787,7 @@ function rng() {
 
 /***/ }),
 /* 736 */,
-/* 737 */
-/***/ (function(module) {
-
-"use strict";
-
-
-/**
- * protocols
- * Returns the protocols of an input url.
- *
- * @name protocols
- * @function
- * @param {String} input The input url.
- * @param {Boolean|Number} first If `true`, the first protocol will be returned. If number, it will represent the zero-based index of the protocols array.
- * @return {Array|String} The array of protocols or the specified protocol.
- */
-module.exports = function protocols(input, first) {
-
-    if (first === true) {
-        first = 0;
-    }
-
-    var index = input.indexOf("://"),
-        splits = input.substring(0, index).split("+").filter(Boolean);
-
-    if (typeof first === "number") {
-        return splits[first];
-    }
-
-    return splits;
-};
-
-/***/ }),
+/* 737 */,
 /* 738 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -44683,67 +43988,7 @@ module.exports = {
 /***/ }),
 /* 821 */,
 /* 822 */,
-/* 823 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var parsePath = __webpack_require__(666),
-    normalizeUrl = __webpack_require__(53);
-
-/**
- * parseUrl
- * Parses the input url.
- *
- * **Note**: This *throws* if invalid urls are provided.
- *
- * @name parseUrl
- * @function
- * @param {String} url The input url.
- * @param {Boolean|Object} normalize Wheter to normalize the url or not.
- *                         Default is `false`. If `true`, the url will
- *                         be normalized. If an object, it will be the
- *                         options object sent to [`normalize-url`](https://github.com/sindresorhus/normalize-url).
- *
- *                         For SSH urls, normalize won't work.
- *
- * @return {Object} An object containing the following fields:
- *
- *  - `protocols` (Array): An array with the url protocols (usually it has one element).
- *  - `protocol` (String): The first protocol, `"ssh"` (if the url is a ssh url) or `"file"`.
- *  - `port` (null|Number): The domain port.
- *  - `resource` (String): The url domain (including subdomains).
- *  - `user` (String): The authentication user (usually for ssh urls).
- *  - `pathname` (String): The url pathname.
- *  - `hash` (String): The url hash.
- *  - `search` (String): The url querystring value.
- *  - `href` (String): The input url.
- *  - `query` (Object): The url querystring, parsed as object.
- */
-function parseUrl(url) {
-    var normalize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-    if (typeof url !== "string" || !url.trim()) {
-        throw new Error("Invalid url.");
-    }
-    if (normalize) {
-        if ((typeof normalize === "undefined" ? "undefined" : _typeof(normalize)) !== "object") {
-            normalize = {
-                stripFragment: false
-            };
-        }
-        url = normalizeUrl(url, normalize);
-    }
-    var parsed = parsePath(url);
-    return parsed;
-}
-
-module.exports = parseUrl;
-
-/***/ }),
+/* 823 */,
 /* 824 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -44787,7 +44032,7 @@ const core = __importStar(__webpack_require__(470));
 const cachePath = path.join(os.tmpdir(), 'docker-build-push');
 function restoreCache(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (inputs.bake || !inputs.cacheGithub) {
+        if (!inputs.cacheGithub) {
             return inputs;
         }
         const primaryKey = `${process.env.RUNNER_OS}-docker-build-push-${process.env.GITHUB_SHA}`;
@@ -44819,7 +44064,7 @@ function restoreCache(inputs) {
 exports.restoreCache = restoreCache;
 function saveCache(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (inputs.bake || !inputs.cacheGithub) {
+        if (!inputs.cacheGithub) {
             return;
         }
         if (!stateHelper.cachePrimaryKey) {

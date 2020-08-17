@@ -6,7 +6,6 @@ ___
 
 * [Usage](#usage)
   * [Quick start](#quick-start)
-  * [Bake](#bake)
   * [Git context](#git-context)
 * [Customizing](#customizing)
   * [inputs](#inputs)
@@ -64,57 +63,6 @@ jobs:
           tags: |
             user/app:latest
             user/app:1.0.0
-```
-
-### Bake
-
-[Buildx bake](https://github.com/docker/buildx#buildx-bake-options-target) is also available with this action through
-the [`bake` inputs](#inputs):
-
-```yaml
-name: ci
-
-on:
-  pull_request:
-    branches: master
-  push:
-    branches: master
-    tags:
-
-jobs:
-  bake:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      -
-        name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          bake: true
-          bake-files: |
-            ./config.hcl
-          bake-targets: |
-            default
-            release
 ```
 
 ### Git context
@@ -192,9 +140,6 @@ Following inputs can be used as `step.with` keys
 | `outputs`           | List    |                                   | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
 | `cache-from`        | List    |                                   | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
 | `cache-to`          | List    |                                   | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
-| `bake`              | Bool    | `false`                           | Use [bake](https://github.com/docker/buildx#buildx-bake-options-target) as the high-level build command |
-| `bake-files`        | List    |                                   | List of [bake definition files](https://github.com/docker/buildx#file-definition) |
-| `bake-targets`      | List    |                                   | List of bake targets |
 
 > List type can be a comma or newline-delimited string
 > ```yaml

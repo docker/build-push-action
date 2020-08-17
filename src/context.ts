@@ -18,9 +18,6 @@ export interface Inputs {
   cacheFrom: string[];
   cacheTo: string[];
   cacheGithub: boolean;
-  bake: boolean;
-  bakeFiles: string[];
-  bakeTargets: string[];
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -41,29 +38,15 @@ export async function getInputs(): Promise<Inputs> {
     outputs: await getInputList('outputs'),
     cacheFrom: await getInputList('cache-from'),
     cacheTo: await getInputList('cache-to'),
-    cacheGithub: /true/i.test(core.getInput('cache-github')),
-    bake: /true/i.test(core.getInput('bake')),
-    bakeFiles: await getInputList('bake-files'),
-    bakeTargets: await getInputList('bake-targets')
+    cacheGithub: /true/i.test(core.getInput('cache-github'))
   };
 }
 
 export async function getArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = ['buildx'];
-
-  if (inputs.bake) {
-    args.push.apply(args, await getBakeArgs(inputs));
-  } else {
-    args.push.apply(args, await getBuildArgs(inputs));
-  }
+  args.push.apply(args, await getBuildArgs(inputs));
   args.push.apply(args, await getCommonArgs(inputs));
-
-  if (!inputs.bake) {
-    args.push(inputs.context);
-  } else {
-    args.push.apply(args, inputs.bakeTargets);
-  }
-
+  args.push(inputs.context);
   return args;
 }
 
@@ -81,14 +64,6 @@ async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
   if (inputs.push) {
     args.push('--push');
   }
-  return args;
-}
-
-async function getBakeArgs(inputs: Inputs): Promise<Array<string>> {
-  let args: Array<string> = ['bake'];
-  await asyncForEach(inputs.bakeFiles, async bakeFile => {
-    args.push('--file', bakeFile);
-  });
   return args;
 }
 
