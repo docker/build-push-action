@@ -19,13 +19,13 @@ inputs:
     required: false
     default: './Dockerfile'
   build-args:
-    description: "Newline-delimited list of build-time variables"
+    description: "List of build-time variables"
     required: false
   labels:
-    description: "Newline-delimited list of metadata for an image"
+    description: "List of metadata for an image"
     required: false
   tags:
-    description: "Newline-delimited list of tags"
+    description: "List of tags"
     required: false
   pull:
     description: "Always attempt to pull a newer version of the image"
@@ -35,14 +35,14 @@ inputs:
     description: "Sets the target stage to build"
     required: false
   allow:
-    description: "Allow extra privileged entitlement (eg. network.host,security.insecure)"
+    description: "List of extra privileged entitlement (eg. network.host,security.insecure)"
     required: false
   no-cache:
     description: "Do not use cache when building the image"
     required: false
     default: 'false'
   platforms:
-    description: "Comma-delimited list of target platforms for build"
+    description: "List of target platforms for build"
     required: false
   load:
     description: "Load is a shorthand for --output=type=docker"
@@ -53,13 +53,13 @@ inputs:
     required: false
     default: 'false'
   outputs:
-    description: "Newline-delimited list of output destinations (format: type=local,dest=path)"
+    description: "List of output destinations (format: type=local,dest=path)"
     required: false
   cache-from:
-    description: "Newline-delimited list of external cache sources for buildx (eg. user/app:cache, type=local,src=path/to/dir)"
+    description: "List of external cache sources for buildx (eg. user/app:cache, type=local,src=path/to/dir)"
     required: false
   cache-to:
-    description: "Newline-delimited list of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
+    description: "List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
     required: false
 
 outputs:

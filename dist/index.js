@@ -1025,6 +1025,12 @@ function run() {
             core.info(`🏃 Starting build...`);
             const args = yield context_1.getArgs(inputs);
             yield exec.exec('docker', args);
+            const imageID = yield buildx.getImageID();
+            if (imageID) {
+                core.info('🛒 Extracting digest...');
+                core.info(`${imageID}`);
+                core.setOutput('digest', imageID);
+            }
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1405,8 +1411,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = void 0;
+exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpDir = void 0;
+const fs = __importStar(__webpack_require__(747));
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+const buildx = __importStar(__webpack_require__(982));
 const core = __importStar(__webpack_require__(470));
+exports.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
 function getInputs() {
     return __awaiter(this, void 0, void 0, function* () {
         return {
@@ -1440,24 +1451,6 @@ function getArgs(inputs) {
     });
 }
 exports.getArgs = getArgs;
-function getCommonArgs(inputs) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let args = [];
-        if (inputs.noCache) {
-            args.push('--no-cache');
-        }
-        if (inputs.pull) {
-            args.push('--pull');
-        }
-        if (inputs.load) {
-            args.push('--load');
-        }
-        if (inputs.push) {
-            args.push('--push');
-        }
-        return args;
-    });
-}
 function getBuildArgs(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['build'];
@@ -1473,11 +1466,14 @@ function getBuildArgs(inputs) {
         if (inputs.target) {
             args.push('--target', inputs.target);
         }
-        if (inputs.allow) {
+        if (inputs.allow.length > 0) {
             args.push('--allow', inputs.allow.join(','));
         }
-        if (inputs.platforms) {
+        if (inputs.platforms.length > 0) {
             args.push('--platform', inputs.platforms.join(','));
+        }
+        else {
+            args.push('--iidfile', yield buildx.getImageIDFile());
         }
         yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
             args.push('--output', output);
@@ -1490,6 +1486,24 @@ function getBuildArgs(inputs) {
         }));
         if (inputs.file) {
             args.push('--file', inputs.file);
+        }
+        return args;
+    });
+}
+function getCommonArgs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let args = [];
+        if (inputs.noCache) {
+            args.push('--no-cache');
+        }
+        if (inputs.pull) {
+            args.push('--pull');
+        }
+        if (inputs.load) {
+            args.push('--load');
+        }
+        if (inputs.push) {
+            args.push('--push');
         }
         return args;
     });
@@ -1838,9 +1852,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.use = exports.isAvailable = void 0;
+exports.use = exports.isAvailable = exports.getImageID = exports.getImageIDFile = void 0;
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+const context = __importStar(__webpack_require__(482));
 const exec = __importStar(__webpack_require__(807));
+function getImageIDFile() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return path_1.default.join(context.tmpDir, 'iidfile');
+    });
+}
+exports.getImageIDFile = getImageIDFile;
+function getImageID() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const iidFile = yield getImageIDFile();
+        if (!fs_1.default.existsSync(iidFile)) {
+            return undefined;
+        }
+        return fs_1.default.readFileSync(iidFile, { encoding: 'utf-8' });
+    });
+}
+exports.getImageID = getImageID;
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exec.exec(`docker`, ['buildx'], true).then(res => {

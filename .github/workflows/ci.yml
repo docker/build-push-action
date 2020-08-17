@@ -11,7 +11,54 @@ on:
       - v2-working-branch # remove when merged to master
 
 jobs:
-  main:
+  single:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Run local registry
+        run: |
+          docker run -d -p 5000:5000 registry:2
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up QEMU
+        uses: ./setup-qemu/ # change to docker/setup-qemu-action@master
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
+        with:
+          driver-opt: network=host
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
+      -
+        name: Build and push
+        id: docker_build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          allow: network.host,security.insecure
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+            localhost:5000/name/app:1.0.0
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  multi:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

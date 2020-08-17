@@ -1,4 +1,10 @@
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as buildx from './buildx';
 import * as core from '@actions/core';
+
+export const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
 
 export interface Inputs {
   context: string;
@@ -48,23 +54,6 @@ export async function getArgs(inputs: Inputs): Promise<Array<string>> {
   return args;
 }
 
-async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
-  let args: Array<string> = [];
-  if (inputs.noCache) {
-    args.push('--no-cache');
-  }
-  if (inputs.pull) {
-    args.push('--pull');
-  }
-  if (inputs.load) {
-    args.push('--load');
-  }
-  if (inputs.push) {
-    args.push('--push');
-  }
-  return args;
-}
-
 async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   let args: Array<string> = ['build'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
@@ -79,11 +68,13 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   if (inputs.target) {
     args.push('--target', inputs.target);
   }
-  if (inputs.allow) {
+  if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
   }
-  if (inputs.platforms) {
+  if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
+  } else {
+    args.push('--iidfile', await buildx.getImageIDFile());
   }
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
@@ -96,6 +87,23 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   });
   if (inputs.file) {
     args.push('--file', inputs.file);
+  }
+  return args;
+}
+
+async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
+  let args: Array<string> = [];
+  if (inputs.noCache) {
+    args.push('--no-cache');
+  }
+  if (inputs.pull) {
+    args.push('--pull');
+  }
+  if (inputs.load) {
+    args.push('--load');
+  }
+  if (inputs.push) {
+    args.push('--push');
   }
   return args;
 }

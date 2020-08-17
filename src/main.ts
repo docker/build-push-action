@@ -25,6 +25,13 @@ async function run(): Promise<void> {
     core.info(`🏃 Starting build...`);
     const args: string[] = await getArgs(inputs);
     await exec.exec('docker', args);
+
+    const imageID = await buildx.getImageID();
+    if (imageID) {
+      core.info('🛒 Extracting digest...');
+      core.info(`${imageID}`);
+      core.setOutput('digest', imageID);
+    }
   } catch (error) {
     core.setFailed(error.message);
   }

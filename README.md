@@ -32,7 +32,56 @@ on:
     tags:
 
 jobs:
-  buildx:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available 
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: |
+            user/app:latest
+            user/app:1.0.0
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+```
+
+### Multi-platform image
+
+```yaml
+name: ci
+
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+    tags:
+
+jobs:
+  multi:
     runs-on: ubuntu-latest
     steps:
       -
@@ -58,7 +107,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le,linux/s390x
           push: true
           tags: |
             user/app:latest
