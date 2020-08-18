@@ -22,7 +22,10 @@
   ],
   "author": "Docker",
   "contributors": [
-    "CrazyMax"
+    {
+      "name": "CrazyMax",
+      "url": "https://crazymax.dev"
+    }
   ],
   "license": "Apache-2.0",
   "dependencies": {

@@ -6,7 +6,9 @@ ___
 
 * [Usage](#usage)
   * [Quick start](#quick-start)
+  * [Multi-platform image](#multi-platform-image)
   * [Git context](#git-context)
+  * [Complete workflow](#complete-workflow)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -25,11 +27,8 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 name: ci
 
 on:
-  pull_request:
-    branches: master
   push:
     branches: master
-    tags:
 
 jobs:
   main:
@@ -49,7 +48,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available 
+        uses: crazy-max/ghaction-docker-login@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -60,9 +59,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: |
-            user/app:latest
-            user/app:1.0.0
+          tags: user/app:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
@@ -74,11 +71,8 @@ jobs:
 name: ci
 
 on:
-  pull_request:
-    branches: master
   push:
     branches: master
-    tags:
 
 jobs:
   multi:
@@ -98,7 +92,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available 
+        uses: crazy-max/ghaction-docker-login@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -107,6 +101,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386
           push: true
           tags: |
             user/app:latest
@@ -122,11 +119,8 @@ even in private repositories if your `context` is a valid Git url:
 name: ci
 
 on:
-  pull_request:
-    branches: master
   push:
     branches: master
-    tags:
 
 jobs:
   git-context:
@@ -145,23 +139,96 @@ jobs:
           version: latest
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 # switch to docker/login-action@v1 when available
+        uses: crazy-max/ghaction-docker-login@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       -
         name: Build and push
-        uses: ./
-        env:
-          GIT_AUTH_TOKEN: ${{ github.token }}
+        uses: docker/build-push-action@v2
         with:
-          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
           builder: ${{ steps.buildx.outputs.name }}
+          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
           platforms: linux/amd64,linux/arm64,linux/386
           push: true
           tags: |
             name/app:latest
             name/app:1.0.0
+        env:
+          GIT_AUTH_TOKEN: ${{ github.token }}
+```
+
+### Complete workflow
+
+* On `pull_request` event, Docker image `name/app:edge` is **built**.
+* On `push` event, Docker image `name/app:edge` is **built** and **pushed** to DockerHub.
+* On `schedule` event, Docker image `name/app:nightly` is **built** and **pushed** to DockerHub.
+* On `push tags` event, Docker image `name/app:<version>` and `name/app:latest` is **built** and **pushed** to DockerHub.
+
+```yaml
+name: ci
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # everyday at 10am
+  push:
+    branches: master
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: master
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Prepare
+        id: prep
+        run: |
+          DOCKER_IMAGE=name/app
+          VERSION=edge
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            VERSION=nightly
+          fi
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
+          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            TAGS="$TAGS,${DOCKER_IMAGE}:latest"
+          fi
+          echo ::set-output name=tags::${TAGS}
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: crazy-max/ghaction-docker-login@v1 
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.prep.outputs.tags }}
 ```
 
 ## Customizing
