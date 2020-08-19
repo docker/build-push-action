@@ -2,6 +2,9 @@
 
 GitHub Action to build and push Docker images.
 
+> :bulb: See also our [setup-buildx](https://github.com/docker/setup-buildx-action)
+> and [setup-qemu](https://github.com/docker/setup-qemu-action) actions
+
 ___
 
 * [Usage](#usage)
@@ -18,7 +21,7 @@ ___
 
 This action uses our [setup-buildx](https://github.com/docker/setup-buildx-action) action that extends the
 `docker build` command named [buildx](https://github.com/docker/buildx) with the full support of the features
-provided by [Moby BuildKit](https://github.com/moby/buildkit) builder toolkik. This includes multi-arch build,
+provided by [Moby BuildKit](https://github.com/moby/buildkit) builder toolkit. This includes multi-arch build,
 build-secrets, remote cache, etc. and different builder deployment/namespacing options.
 
 ### Quick start
