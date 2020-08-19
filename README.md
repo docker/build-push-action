@@ -1,9 +1,16 @@
+[![GitHub release](https://img.shields.io/github/release/docker/build-push-action.svg?style=flat-square)](https://github.com/docker/build-push-action/releases/latest)
+[![GitHub marketplace](https://img.shields.io/badge/marketplace-docker--build--push-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/docker-build-push)
+[![CI workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/ci?label=ci&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=ci)
+[![Test workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/test?label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
+
 ## About
 
 GitHub Action to build and push Docker images.
 
 > :bulb: See also our [setup-buildx](https://github.com/docker/setup-buildx-action)
 > and [setup-qemu](https://github.com/docker/setup-qemu-action) actions
+
+![Screenshot](.github/build-push-action.png)
 
 ___
 
