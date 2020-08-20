@@ -22,6 +22,7 @@ ___
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
+  * [environment variables](#environment-variables)
 * [Keep up-to-date with GitHub Dependabot](#keep-up-to-date-with-github-dependabot)
 * [Limitation](#limitation)
 
