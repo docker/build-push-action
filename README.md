@@ -249,24 +249,24 @@ jobs:
 
 Following inputs can be used as `step.with` keys
 
-| Name                | Type    | Default                           | Description                        |
-|---------------------|---------|-----------------------------------|------------------------------------|
-| `builder`           | String  |                                   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
-| `context`           | String  | `.`                               | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) |
-| `file`              | String  | `./Dockerfile`                    | Path to the Dockerfile. |
-| `build-args`        | List    |                                   | List of build-time variables |
-| `labels`            | List    |                                   | List of metadata for an image |
-| `tags`              | List    |                                   | List of tags |
-| `pull`              | Bool    | `false`                           | Always attempt to pull a newer version of the image |
-| `target`            | String  |                                   | Sets the target stage to build |
-| `allow`             | List    |                                   | List of [extra privileged entitlement](https://github.com/docker/buildx#--allowentitlement) (eg. `network.host,security.insecure`) |
-| `no-cache`          | Bool    | `false`                           | Do not use cache when building the image |
-| `platforms`         | List    |                                   | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
-| `load`              | Bool    | `false`                           | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` |
-| `push`              | Bool    | `false`                           | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` |
-| `outputs`           | List    |                                   | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
-| `cache-from`        | List    |                                   | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
-| `cache-to`          | List    |                                   | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
+| Name                | Type    | Description                        |
+|---------------------|---------|------------------------------------|
+| `builder`           | String  | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
+| `context`           | String  | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default `.`) |
+| `file`              | String  | Path to the Dockerfile (default `./Dockerfile`) |
+| `build-args`        | List    | List of build-time variables |
+| `labels`            | List    | List of metadata for an image |
+| `tags`              | List    | List of tags |
+| `pull`              | Bool    | Always attempt to pull a newer version of the image (default `false`) |
+| `target`            | String  | Sets the target stage to build |
+| `allow`             | List    | List of [extra privileged entitlement](https://github.com/docker/buildx#--allowentitlement) (eg. `network.host,security.insecure`) |
+| `no-cache`          | Bool    | Do not use cache when building the image (default `false`) |
+| `platforms`         | List    | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
+| `load`              | Bool    | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
+| `push`              | Bool    | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
+| `outputs`           | List    | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
+| `cache-from`        | List    | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
+| `cache-to`          | List    | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
 
 > List type can be a comma or newline-delimited string
 > ```yaml
