@@ -27,7 +27,7 @@ describe('getVersion', () => {
 
 describe('parseVersion', () => {
   test.each([
-    ['github.com/docker/buildx v0.2.2 ab5fe3dec5785b8d0a7d2cf2499c38e504d4c609', '0.2.2'],
+    ['github.com/docker/buildx 0.4.1+azure bda4882a65349ca359216b135896bddc1d92461c', '0.4.1'],
     ['github.com/docker/buildx v0.4.1 bda4882a65349ca359216b135896bddc1d92461c', '0.4.1'],
     ['github.com/docker/buildx v0.4.2 fb7b670b764764dc4716df3eba07ffdae4cc47b2', '0.4.2']
   ])('given %p', async (stdout, expected) => {

@@ -35,7 +35,7 @@ export async function getVersion(): Promise<string> {
 }
 
 export async function parseVersion(stdout: string): Promise<string> {
-  const matches = /\sv([0-9.]+)\s/.exec(stdout);
+  const matches = /\sv?([0-9.]+)/.exec(stdout);
   if (!matches) {
     throw new Error(`Cannot parse Buildx version`);
   }
