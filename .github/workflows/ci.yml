@@ -99,6 +99,7 @@ jobs:
           buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
+        id: docker_build
         uses: ./
         with:
           context: ./test
@@ -153,6 +154,7 @@ jobs:
           buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
+        id: docker_build
         uses: ./
         env:
           GIT_AUTH_TOKEN: ${{ github.token }}
