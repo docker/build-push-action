@@ -115,6 +115,9 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+      -
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
@@ -167,6 +170,9 @@ jobs:
         name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
       -
         name: Dump context
         if: always()
