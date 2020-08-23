@@ -16,6 +16,9 @@ async function run(): Promise<void> {
       return;
     }
 
+    const buildxVersion = await buildx.getVersion();
+    core.info(`📣 Buildx version: ${buildxVersion}`);
+
     let inputs: Inputs = await getInputs();
     if (inputs.builder) {
       core.info(`📌 Using builder instance ${inputs.builder}`);
@@ -23,7 +26,7 @@ async function run(): Promise<void> {
     }
 
     core.info(`🏃 Starting build...`);
-    const args: string[] = await getArgs(inputs);
+    const args: string[] = await getArgs(inputs, buildxVersion);
     await exec.exec('docker', args);
 
     const imageID = await buildx.getImageID();

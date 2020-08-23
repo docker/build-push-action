@@ -13,6 +13,12 @@ on:
 jobs:
   single:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx-version:
+          - ""
+          - latest
     steps:
       -
         name: Run local registry
@@ -31,6 +37,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opt: network=host
           buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
@@ -63,6 +70,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        buildx-version:
+          - ""
+          - latest
         dockerfile:
           - multi
           - multi-sudo
@@ -84,6 +94,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opt: network=host
           buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
@@ -110,6 +121,12 @@ jobs:
 
   git-context:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx-version:
+          #- "" # GIT_AUTH_TOKEN not available in the current version on the GitHub Runner
+          - latest
     steps:
       -
         name: Run local registry
@@ -128,7 +145,7 @@ jobs:
         id: buildx
         uses: ./setup-buildx/ # change to docker/setup-buildx-action@master
         with:
-          version: latest
+          version: ${{ matrix.buildx-version }}
           driver-opt: network=host
           buildkitd-flags: --allow-insecure-entitlement security.insecure
       -

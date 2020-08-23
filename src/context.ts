@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as semver from 'semver';
 import * as buildx from './buildx';
 import * as core from '@actions/core';
 
@@ -46,15 +47,15 @@ export async function getInputs(): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs): Promise<Array<string>> {
+export async function getArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs));
+  args.push.apply(args, await getBuildArgs(inputs, buildxVersion));
   args.push.apply(args, await getCommonArgs(inputs));
   args.push(inputs.context);
   return args;
 }
 
-async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['build'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -73,7 +74,8 @@ async function getBuildArgs(inputs: Inputs): Promise<Array<string>> {
   }
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
-  } else {
+  }
+  if (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2')) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
   await asyncForEach(inputs.outputs, async output => {
