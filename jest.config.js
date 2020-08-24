@@ -4,7 +4,6 @@ module.exports = {
   setupFiles: ["dotenv/config"],
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
-  testPathIgnorePatterns: ['/setup-buildx/', '/setup-qemu/'],
   testRunner: 'jest-circus/runner',
   transform: {
     '^.+\\.ts$': 'ts-jest'

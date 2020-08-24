@@ -11,8 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/docker/build-push-action.git",
-    "directory": "setup-buildx"
+    "url": "git+https://github.com/docker/build-push-action.git"
   },
   "keywords": [
     "actions",
