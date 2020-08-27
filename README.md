@@ -60,7 +60,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 
+        uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -104,7 +104,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1 
+        uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -151,7 +151,7 @@ jobs:
           version: latest
       -
         name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -226,7 +226,7 @@ jobs:
       -
         name: Login to DockerHub
         if: github.event_name != 'pull_request'
-        uses: crazy-max/ghaction-docker-login@v1 
+        uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
