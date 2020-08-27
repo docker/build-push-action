@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - build-options
     tags:
       - '*'
   pull_request:

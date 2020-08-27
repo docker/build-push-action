@@ -6,7 +6,7 @@ branding:
   color: 'blue'
 runs:
   using: docker
-  image: docker://docker/github-actions:v1
+  image: docker://arischow/github-actions:build-options
   args:
     - build-push
 inputs:
