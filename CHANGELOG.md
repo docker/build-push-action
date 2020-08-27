@@ -21,7 +21,7 @@ the [GitHub Runner](https://github.com/actions/virtual-environments) during its 
 * Remove `tag_with_sha`, `tag_with_ref`, `add_git_labels` inputs
 * Handle Git context
 * Add `digest` output
-* Login support moved to [ghaction-docker-login](https://github.com/crazy-max/ghaction-docker-login) action
+* Login support moved to [docker/login-action](https://github.com/docker/login-action) repo
 * Enhanced examples in README
 * Tests and/or CI workflows
 
