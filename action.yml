@@ -6,7 +6,7 @@ branding:
   color: 'blue'
 runs:
   using: docker
-  image: docker://arischow/github-actions:build-options
+  image: docker://arischow/github-actions:v1.2.0
   args:
     - build-push
 inputs:
@@ -64,3 +64,6 @@ inputs:
     description: Whether to push the image
     required: false
     default: true
+  build_options:
+    description: other extra build options (e.g. --ssh default)
+    required: false
