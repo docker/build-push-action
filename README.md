@@ -18,6 +18,7 @@ ___
 
 * [Usage](#usage)
   * [Quick start](#quick-start)
+  * [Isolated builders](#isolated-builders)
   * [Multi-platform image](#multi-platform-image)
   * [Git context](#git-context)
   * [Leverage GitHub cache](#leverage-github-cache)
@@ -78,6 +79,48 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+```
+
+### Isolated builders
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+
+jobs:
+  multi-builders:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        uses: docker/setup-buildx-action@master
+        id: builder1
+      -
+        uses: docker/setup-buildx-action@master
+        id: builder2
+      -
+        name: Builder 1 name
+        run: echo ${{ steps.builder1.outputs.name }}
+      -
+        name: Builder 2 name
+        run: echo ${{ steps.builder2.outputs.name }}
+      -
+        name: Build against builder1
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.builder1.outputs.name }}
+          target: mytarget1
+      -
+        name: Build against builder2
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.builder2.outputs.name }}
+          target: mytarget2
 ```
 
 ### Multi-platform image
@@ -186,7 +229,7 @@ on:
     branches: master
 
 jobs:
-  main:
+  github-cache:
     runs-on: ubuntu-latest
     steps:
       -
