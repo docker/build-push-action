@@ -7,8 +7,10 @@
 
 GitHub Action to build and push Docker images.
 
-> :bulb: See also our [setup-buildx](https://github.com/docker/setup-buildx-action)
-> and [setup-qemu](https://github.com/docker/setup-qemu-action) actions
+> :bulb: See also:
+> * [login](https://github.com/docker/login-action) action
+> * [setup-buildx](https://github.com/docker/setup-buildx-action) action
+> * [setup-qemu](https://github.com/docker/setup-qemu-action) action
 
 ![Screenshot](.github/build-push-action.png)
 
@@ -18,6 +20,7 @@ ___
   * [Quick start](#quick-start)
   * [Multi-platform image](#multi-platform-image)
   * [Git context](#git-context)
+  * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
 * [Customizing](#customizing)
   * [inputs](#inputs)
@@ -51,13 +54,13 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@master
         with:
           platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
@@ -95,13 +98,13 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@master
         with:
           platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
@@ -140,13 +143,13 @@ jobs:
     steps:
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@master
         with:
           platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@master
         with:
           version: latest
       -
@@ -168,6 +171,63 @@ jobs:
             name/app:1.0.0
         env:
           GIT_AUTH_TOKEN: ${{ github.token }}
+```
+
+### Leverage GitHub cache
+
+You can leverage [GitHub cache](https://docs.github.com/en/actions/configuring-and-managing-workflows/caching-dependencies-to-speed-up-workflows)
+using [@actions/cache](https://github.com/actions/cache) with this action.
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+      -
+        name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: user/app:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
 ### Complete workflow
@@ -216,13 +276,13 @@ jobs:
           echo ::set-output name=tags::${TAGS}
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@master
         with:
           platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
         if: github.event_name != 'pull_request'
