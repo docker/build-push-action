@@ -3566,9 +3566,9 @@ function getInputs() {
             platforms: yield getInputList('platforms'),
             load: /true/i.test(core.getInput('load')),
             push: /true/i.test(core.getInput('push')),
-            outputs: yield getInputList('outputs'),
-            cacheFrom: yield getInputList('cache-from'),
-            cacheTo: yield getInputList('cache-to')
+            outputs: yield getInputList('outputs', true),
+            cacheFrom: yield getInputList('cache-from', true),
+            cacheTo: yield getInputList('cache-to', true)
         };
     });
 }
@@ -3640,13 +3640,15 @@ function getCommonArgs(inputs) {
         return args;
     });
 }
-function getInputList(name) {
+function getInputList(name, ignoreComma) {
     return __awaiter(this, void 0, void 0, function* () {
         const items = core.getInput(name);
         if (items == '') {
             return [];
         }
-        return items.split(/\r?\n/).reduce((acc, line) => acc.concat(line.split(',')).map(pat => pat.trim()), []);
+        return items
+            .split(/\r?\n/)
+            .reduce((acc, line) => acc.concat(!ignoreComma ? line.split(',') : line).map(pat => pat.trim()), []);
     });
 }
 exports.getInputList = getInputList;

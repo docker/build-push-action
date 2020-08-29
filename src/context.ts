@@ -41,9 +41,9 @@ export async function getInputs(): Promise<Inputs> {
     platforms: await getInputList('platforms'),
     load: /true/i.test(core.getInput('load')),
     push: /true/i.test(core.getInput('push')),
-    outputs: await getInputList('outputs'),
-    cacheFrom: await getInputList('cache-from'),
-    cacheTo: await getInputList('cache-to')
+    outputs: await getInputList('outputs', true),
+    cacheFrom: await getInputList('cache-from', true),
+    cacheTo: await getInputList('cache-to', true)
   };
 }
 
@@ -110,12 +110,14 @@ async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
   return args;
 }
 
-export async function getInputList(name: string): Promise<string[]> {
+export async function getInputList(name: string, ignoreComma?: boolean): Promise<string[]> {
   const items = core.getInput(name);
   if (items == '') {
     return [];
   }
-  return items.split(/\r?\n/).reduce<string[]>((acc, line) => acc.concat(line.split(',')).map(pat => pat.trim()), []);
+  return items
+    .split(/\r?\n/)
+    .reduce<string[]>((acc, line) => acc.concat(!ignoreComma ? line.split(',') : line).map(pat => pat.trim()), []);
 }
 
 export const asyncForEach = async (array, callback) => {

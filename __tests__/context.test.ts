@@ -35,6 +35,20 @@ describe('getInputList', () => {
     console.log(res);
     expect(res).toEqual(['bar', 'baz', 'bat']);
   });
+
+  it('handles multiple lines and ignoring comma correctly', async () => {
+    setInput('cache-from', 'user/app:cache\ntype=local,src=path/to/dir');
+    const res = await context.getInputList('cache-from', true);
+    console.log(res);
+    expect(res).toEqual(['user/app:cache', 'type=local,src=path/to/dir']);
+  });
+
+  it('handles different new lines and ignoring comma correctly', async () => {
+    setInput('cache-from', 'user/app:cache\r\ntype=local,src=path/to/dir');
+    const res = await context.getInputList('cache-from', true);
+    console.log(res);
+    expect(res).toEqual(['user/app:cache', 'type=local,src=path/to/dir']);
+  });
 });
 
 describe('asyncForEach', () => {

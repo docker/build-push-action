@@ -324,11 +324,11 @@ Following inputs can be used as `step.with` keys
 | `platforms`         | List    | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
 | `load`              | Bool    | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
 | `push`              | Bool    | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
-| `outputs`           | List    | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
-| `cache-from`        | List    | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
-| `cache-to`          | List    | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
+| `outputs`           | CSV     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
+| `cache-from`        | CSV     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
+| `cache-to`          | CSV     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
 
-> List type can be a comma or newline-delimited string
+> `List` type can be a comma or newline-delimited string
 > ```yaml
 > tags: name/app:latest,name/app:1.0.0
 > ```
@@ -336,6 +336,16 @@ Following inputs can be used as `step.with` keys
 > tags: |
 >   name/app:latest
 >   name/app:1.0.0
+> ```
+
+> `CSV` type must be a newline-delimited string
+> ```yaml
+> cache-from: user/app:cache
+> ```
+> ```yaml
+> cache-from: |
+>   user/app:cache
+>   type=local,src=path/to/dir
 > ```
 
 ### outputs
