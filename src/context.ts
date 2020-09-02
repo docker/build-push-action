@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import * as buildx from './buildx';
 import * as core from '@actions/core';
+import * as github from '@actions/github';
 
 export const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
 
@@ -24,12 +25,15 @@ export interface Inputs {
   outputs: string[];
   cacheFrom: string[];
   cacheTo: string[];
+  secrets: string[];
 }
 
 export async function getInputs(): Promise<Inputs> {
   return {
-    context: core.getInput('context') || '.',
-    file: core.getInput('file') || './Dockerfile',
+    context:
+      core.getInput('context') ||
+      `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`,
+    file: core.getInput('file') || 'Dockerfile',
     buildArgs: await getInputList('build-args'),
     labels: await getInputList('labels'),
     tags: await getInputList('tags'),
@@ -43,7 +47,8 @@ export async function getInputs(): Promise<Inputs> {
     push: /true/i.test(core.getInput('push')),
     outputs: await getInputList('outputs', true),
     cacheFrom: await getInputList('cache-from', true),
-    cacheTo: await getInputList('cache-to', true)
+    cacheTo: await getInputList('cache-to', true),
+    secrets: await getInputList('secrets', true)
   };
 }
 
@@ -86,6 +91,9 @@ async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Arra
   });
   await asyncForEach(inputs.cacheTo, async cacheTo => {
     args.push('--cache-to', cacheTo);
+  });
+  await asyncForEach(inputs.secrets, async secret => {
+    args.push('--secret', await buildx.getSecret(secret));
   });
   if (inputs.file) {
     args.push('--file', inputs.file);

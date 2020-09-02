@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import tmp from 'tmp';
 import * as semver from 'semver';
 import * as context from './context';
 import * as exec from './exec';
@@ -14,6 +15,15 @@ export async function getImageID(): Promise<string | undefined> {
     return undefined;
   }
   return fs.readFileSync(iidFile, {encoding: 'utf-8'});
+}
+
+export async function getSecret(kvp: string): Promise<string> {
+  const [key, value] = kvp.split('=');
+  const secretFile = tmp.tmpNameSync({
+    tmpdir: context.tmpDir
+  });
+  await fs.writeFileSync(secretFile, value);
+  return `id=${key},src=${secretFile}`;
 }
 
 export async function isAvailable(): Promise<Boolean> {

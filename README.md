@@ -1,11 +1,11 @@
 [![GitHub release](https://img.shields.io/github/release/docker/build-push-action.svg?style=flat-square)](https://github.com/docker/build-push-action/releases/latest)
-[![GitHub marketplace](https://img.shields.io/badge/marketplace-docker--build--push--images-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/docker-build-push-images)
+[![GitHub marketplace](https://img.shields.io/badge/marketplace-docker--build--push-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/docker-build-push)
 [![CI workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/ci?label=ci&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=ci)
 [![Test workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/test?label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
 
 ## About
 
-GitHub Action to build and push Docker images.
+GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx).
 
 > :bulb: See also:
 > * [login](https://github.com/docker/login-action) action
@@ -17,16 +17,15 @@ GitHub Action to build and push Docker images.
 ___
 
 * [Usage](#usage)
-  * [Quick start](#quick-start)
+  * [Git context](#git-context)
+  * [Path context](#path-context)
   * [Isolated builders](#isolated-builders)
   * [Multi-platform image](#multi-platform-image)
-  * [Git context](#git-context)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
-  * [environment variables](#environment-variables)
 * [Keep up-to-date with GitHub Dependabot](#keep-up-to-date-with-github-dependabot)
 * [Limitation](#limitation)
 
@@ -37,7 +36,9 @@ This action uses our [setup-buildx](https://github.com/docker/setup-buildx-actio
 provided by [Moby BuildKit](https://github.com/moby/buildkit) builder toolkit. This includes multi-arch build,
 build-secrets, remote cache, etc. and different builder deployment/namespacing options.
 
-### Quick start
+### Git context
+
+The default behavior of this action is to use the Git context invoked by your workflow (`https://github.com/owner/repo#ref`).
 
 ```yaml
 name: ci
@@ -50,9 +51,6 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
@@ -81,6 +79,69 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
+If you use this action in a private repository, you have to pass the `GIT_AUTH_TOKEN` to be able to authenticate
+against it with buildx:
+
+```yaml
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: user/app:latest
+          secrets: |
+            GIT_AUTH_TOKEN=${{ github.token }}
+```
+
+### Path context
+
+You can also use the `PATH` context alongside the [`actions/checkout`](https://github.com/actions/checkout/) action.
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+
+jobs:
+  path-context:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          version: latest
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386
+          push: true
+          tags: user/app:latest
+```
+
 ### Isolated builders
 
 ```yaml
@@ -94,9 +155,6 @@ jobs:
   multi-builders:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
       -
         uses: docker/setup-buildx-action@master
         id: builder1
@@ -168,54 +226,6 @@ jobs:
             user/app:1.0.0
 ```
 
-### Git context
-
-You can build from Git directly without [`actions/checkout`](https://github.com/actions/checkout/) action,
-even in private repositories if your `context` is a valid Git url:
-
-```yaml
-name: ci
-
-on:
-  push:
-    branches: master
-
-jobs:
-  git-context:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
-      -
-        name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@master
-        with:
-          version: latest
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
-          platforms: linux/amd64,linux/arm64,linux/386
-          push: true
-          tags: |
-            name/app:latest
-            name/app:1.0.0
-        env:
-          GIT_AUTH_TOKEN: ${{ github.token }}
-```
-
 ### Leverage GitHub cache
 
 You can leverage [GitHub cache](https://docs.github.com/en/actions/configuring-and-managing-workflows/caching-dependencies-to-speed-up-workflows)
@@ -232,9 +242,6 @@ jobs:
   github-cache:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
@@ -355,8 +362,8 @@ Following inputs can be used as `step.with` keys
 | Name                | Type    | Description                        |
 |---------------------|---------|------------------------------------|
 | `builder`           | String  | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
-| `context`           | String  | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default `.`) |
-| `file`              | String  | Path to the Dockerfile (default `./Dockerfile`) |
+| `context`           | String  | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
+| `file`              | String  | Path to the Dockerfile (default `Dockerfile`) |
 | `build-args`        | List    | List of build-time variables |
 | `labels`            | List    | List of metadata for an image |
 | `tags`              | List    | List of tags |
@@ -370,6 +377,7 @@ Following inputs can be used as `step.with` keys
 | `outputs`           | CSV     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
 | `cache-from`        | CSV     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
 | `cache-to`          | CSV     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
+| `secrets`           | CSV     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
 
 > `List` type can be a comma or newline-delimited string
 > ```yaml
@@ -398,17 +406,6 @@ Following outputs are available
 | Name          | Type    | Description                           |
 |---------------|---------|---------------------------------------|
 | `digest`      | String  | Image content-addressable identifier also called a digest |
-
-### environment variables
-
-Following environment variables can be used as `step.env` keys
-
-| Name                     | Description                           |
-|--------------------------|---------------------------------------|
-| `GIT_AUTH_HEADER`**¹**   | Raw authorization header to authenticate against git repository |
-| `GIT_AUTH_TOKEN`**¹**    | `x-access-token` basic auth to authenticate against git repository |
-
-> **¹** Only used if `input.context` is a valid git uri.
 
 ## Keep up-to-date with GitHub Dependabot
 

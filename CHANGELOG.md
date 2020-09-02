@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (2020/08/??)
+## 2.0.0 (2020/??/??)
 
 v2 of Build Push action uses Docker [Buildx](https://github.com/docker/buildx). It's also rewritten as
 a [typescript-action](https://github.com/actions/typescript-action/) to be as closed as possible of
@@ -16,6 +16,7 @@ the [GitHub Runner](https://github.com/actions/virtual-environments) during its 
 * Add [`outputs`](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) input
 * Add [`cache-from`](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) input
 * Add [`cache-to`](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) input
+* Add `secrets` input
 * Review `tags` input
 * Remove `repository`, `username`, `password`, `registry`, `cache_froms` inputs
 * Remove `tag_with_sha`, `tag_with_ref`, `add_git_labels` inputs

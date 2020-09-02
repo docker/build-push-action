@@ -1,5 +1,5 @@
 # https://help.github.com/en/articles/metadata-syntax-for-github-actions
-name: Docker Build Push images
+name: Docker Build Push
 description: Build and push Docker images with Buildx
 author: docker
 branding:
@@ -61,6 +61,9 @@ inputs:
   cache-to:
     description: "List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
     required: false
+  secrets:
+    description: "List of secrets to expose to the build (eg. key=value, GIT_AUTH_TOKEN=mytoken)"
+    required: false
 
 outputs:
   digest:
@@ -69,3 +72,4 @@ outputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
+  post: 'dist/index.js'

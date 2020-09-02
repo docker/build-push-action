@@ -11,7 +11,62 @@ on:
       - v2-working-branch # remove when merged to master
 
 jobs:
-  single:
+  git-context:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx-version:
+          - latest
+    steps:
+      -
+        name: Run local registry
+        run: |
+          docker run -d -p 5000:5000 registry:2
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opt: network=host
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
+      -
+        name: Build and push
+        id: docker_build
+        uses: ./
+        with:
+          file: ./test/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64
+          allow: network.host,security.insecure
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+            localhost:5000/name/app:1.0.0
+          secrets: |
+            GIT_AUTH_TOKEN=${{ github.token }}
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
+        name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  path-context:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -180,63 +235,6 @@ jobs:
       -
         name: Cache hit
         run: echo ${{ steps.cache.outputs.cache-hit }}
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
-
-  git-context:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        buildx-version:
-          #- "" # GIT_AUTH_TOKEN not available in the current version on the GitHub Runner
-          - latest
-    steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
-      -
-        name: Checkout
-        uses: actions/checkout@v2.3.1
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
-      -
-        name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@master
-        with:
-          version: ${{ matrix.buildx-version }}
-          driver-opt: network=host
-          buildkitd-flags: --allow-insecure-entitlement security.insecure
-      -
-        name: Build and push
-        id: docker_build
-        uses: ./
-        env:
-          GIT_AUTH_TOKEN: ${{ github.token }}
-        with:
-          context: "${{ github.repositoryUrl }}#${{ github.ref }}"
-          file: ./test/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
-          push: true
-          tags: |
-            localhost:5000/name/app:latest
-            localhost:5000/name/app:1.0.0
-      -
-        name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
       -
         name: Dump context
         if: always()
