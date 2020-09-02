@@ -52,11 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
-      -
         name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -79,8 +74,8 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
-If you use this action in a private repository, you have to pass the `GIT_AUTH_TOKEN` to be able to authenticate
-against it with buildx:
+If you use this action in a private repository, you have to pass the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
+as a secret named `GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
 
 ```yaml
       -
@@ -219,7 +214,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/386
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
           tags: |
             user/app:latest
@@ -242,11 +237,6 @@ jobs:
   github-cache:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -375,8 +365,8 @@ Following inputs can be used as `step.with` keys
 | `load`              | Bool    | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
 | `push`              | Bool    | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
 | `outputs`           | CSV     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
-| `cache-from`        | CSV     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `user/app:cache`, `type=local,src=path/to/dir`) |
-| `cache-to`          | CSV     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `user/app:cache`, `type=local,dest=path/to/dir`) |
+| `cache-from`        | CSV     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
+| `cache-to`          | CSV     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
 | `secrets`           | CSV     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
 
 > `List` type can be a comma or newline-delimited string
