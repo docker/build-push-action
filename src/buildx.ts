@@ -51,11 +51,3 @@ export async function parseVersion(stdout: string): Promise<string> {
   }
   return semver.clean(matches[1]);
 }
-
-export async function use(builder: string): Promise<void> {
-  return await exec.exec(`docker`, ['buildx', 'use', '--builder', builder], false).then(res => {
-    if (res.stderr != '' && !res.success) {
-      throw new Error(res.stderr);
-    }
-  });
-}

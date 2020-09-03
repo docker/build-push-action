@@ -106,6 +106,9 @@ async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
   if (inputs.noCache) {
     args.push('--no-cache');
   }
+  if (inputs.builder) {
+    args.push('--builder', inputs.builder);
+  }
   if (inputs.pull) {
     args.push('--pull');
   }

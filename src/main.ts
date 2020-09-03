@@ -23,10 +23,6 @@ async function run(): Promise<void> {
     core.info(`📣 Buildx version: ${buildxVersion}`);
 
     let inputs: context.Inputs = await context.getInputs();
-    if (inputs.builder) {
-      core.info(`📌 Using builder instance ${inputs.builder}`);
-      await buildx.use(inputs.builder);
-    }
 
     core.info(`🏃 Starting build...`);
     const args: string[] = await context.getArgs(inputs, buildxVersion);

@@ -2395,10 +2395,6 @@ function run() {
             const buildxVersion = yield buildx.getVersion();
             core.info(`📣 Buildx version: ${buildxVersion}`);
             let inputs = yield context.getInputs();
-            if (inputs.builder) {
-                core.info(`📌 Using builder instance ${inputs.builder}`);
-                yield buildx.use(inputs.builder);
-            }
             core.info(`🏃 Starting build...`);
             const args = yield context.getArgs(inputs, buildxVersion);
             yield exec.exec('docker', args);
@@ -5186,7 +5182,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.use = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
+exports.parseVersion = exports.getVersion = exports.isAvailable = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const tmp_1 = __importDefault(__webpack_require__(517));
@@ -5252,16 +5248,6 @@ function parseVersion(stdout) {
     });
 }
 exports.parseVersion = parseVersion;
-function use(builder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return yield exec.exec(`docker`, ['buildx', 'use', '--builder', builder], false).then(res => {
-            if (res.stderr != '' && !res.success) {
-                throw new Error(res.stderr);
-            }
-        });
-    });
-}
-exports.use = use;
 //# sourceMappingURL=buildx.js.map
 
 /***/ }),
@@ -13736,6 +13722,9 @@ function getCommonArgs(inputs) {
         let args = [];
         if (inputs.noCache) {
             args.push('--no-cache');
+        }
+        if (inputs.builder) {
+            args.push('--builder', inputs.builder);
         }
         if (inputs.pull) {
             args.push('--pull');
