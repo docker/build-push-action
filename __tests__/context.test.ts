@@ -15,8 +15,22 @@ describe('getInputList', () => {
     expect(res).toEqual(['bar', 'baz']);
   });
 
+  it('remove empty lines correctly', async () => {
+    setInput('foo', 'bar\n\nbaz');
+    const res = await context.getInputList('foo');
+    console.log(res);
+    expect(res).toEqual(['bar', 'baz']);
+  });
+
   it('handles comma correctly', async () => {
     setInput('foo', 'bar,baz');
+    const res = await context.getInputList('foo');
+    console.log(res);
+    expect(res).toEqual(['bar', 'baz']);
+  });
+
+  it('remove empty result correctly', async () => {
+    setInput('foo', 'bar,baz,');
     const res = await context.getInputList('foo');
     console.log(res);
     expect(res).toEqual(['bar', 'baz']);
