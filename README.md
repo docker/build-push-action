@@ -232,9 +232,6 @@ jobs:
           - 5000:5000
     steps:
       -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
       -
@@ -247,9 +244,6 @@ jobs:
         name: Build and push to local registry
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           allow: network.host,security.insecure
           push: true
           tags: localhost:5000/name/app:latest
