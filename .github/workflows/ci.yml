@@ -18,11 +18,12 @@ jobs:
       matrix:
         buildx-version:
           - latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -74,11 +75,12 @@ jobs:
         buildx-version:
           - ""
           - latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -131,11 +133,12 @@ jobs:
         dockerfile:
           - multi
           - multi-sudo
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -180,11 +183,12 @@ jobs:
 
   github-cache:
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
