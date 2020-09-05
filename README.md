@@ -52,8 +52,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+      -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
@@ -66,7 +68,6 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: user/app:latest
       -
@@ -83,7 +84,6 @@ as a secret named `GIT_AUTH_TOKEN` to be able to authenticate against it with bu
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: user/app:latest
           secrets: |
@@ -111,14 +111,9 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@master
-        with:
-          version: latest
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
@@ -129,7 +124,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/386
@@ -195,11 +189,8 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
@@ -211,7 +202,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
@@ -219,6 +209,54 @@ jobs:
           tags: |
             user/app:latest
             user/app:1.0.0
+```
+
+### Local registry
+
+For testing purposes you may need to create a [local registry](https://hub.docker.com/_/registry) to push images into.
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+
+jobs:
+  local-registry:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          driver-opts: network=host
+          #buildkitd-flags: --allow-insecure-entitlement security.insecure # default
+      -
+        name: Build and push to local registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          allow: network.host,security.insecure
+          push: true
+          tags: localhost:5000/name/app:latest
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest
 ```
 
 ### Leverage GitHub cache
@@ -239,7 +277,6 @@ jobs:
     steps:
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@master
       -
         name: Cache Docker layers
@@ -260,7 +297,6 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: user/app:latest
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -317,8 +353,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@master
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
