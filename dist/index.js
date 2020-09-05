@@ -13746,7 +13746,8 @@ function getInputList(name, ignoreComma) {
         }
         return items
             .split(/\r?\n/)
-            .reduce((acc, line) => acc.concat(!ignoreComma ? line.split(',') : line).map(pat => pat.trim()), []);
+            .filter(x => x)
+            .reduce((acc, line) => acc.concat(!ignoreComma ? line.split(',').filter(x => x) : line).map(pat => pat.trim()), []);
     });
 }
 exports.getInputList = getInputList;
