@@ -23,10 +23,10 @@ jobs:
       -
         name: Test
         run: yarn run test
-#      -
-#        name: Upload coverage
-#        uses: codecov/codecov-action@v1.0.7
-#        if: success()
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          file: ./coverage/clover.xml
+      -
+        name: Upload coverage
+        uses: codecov/codecov-action@v1.0.7
+        if: success()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/clover.xml
