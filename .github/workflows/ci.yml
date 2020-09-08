@@ -18,11 +18,12 @@ jobs:
       matrix:
         buildx-version:
           - latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -46,7 +47,6 @@ jobs:
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -73,11 +73,12 @@ jobs:
         buildx-version:
           - ""
           - latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -101,7 +102,6 @@ jobs:
           context: ./test
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -129,11 +129,12 @@ jobs:
         dockerfile:
           - multi
           - multi-sudo
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -158,7 +159,6 @@ jobs:
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -177,11 +177,12 @@ jobs:
 
   github-cache:
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
-      -
-        name: Run local registry
-        run: |
-          docker run -d -p 5000:5000 registry:2
       -
         name: Checkout
         uses: actions/checkout@v2.3.1
@@ -214,7 +215,6 @@ jobs:
           file: ./test/Dockerfile-multi-golang
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
