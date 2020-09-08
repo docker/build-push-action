@@ -239,12 +239,10 @@ jobs:
         uses: docker/setup-buildx-action@master
         with:
           driver-opts: network=host
-          #buildkitd-flags: --allow-insecure-entitlement security.insecure # default
       -
         name: Build and push to local registry
         uses: docker/build-push-action@v2
         with:
-          allow: network.host,security.insecure
           push: true
           tags: localhost:5000/name/app:latest
       -
@@ -288,16 +286,12 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       -
         name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: user/app:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
 ### Complete workflow
@@ -349,7 +343,6 @@ jobs:
         uses: docker/setup-qemu-action@master
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@master
       -
         name: Login to DockerHub
@@ -363,7 +356,6 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/386

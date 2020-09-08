@@ -39,7 +39,6 @@ jobs:
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
-          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         id: docker_build
@@ -48,7 +47,6 @@ jobs:
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -96,7 +94,6 @@ jobs:
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
-          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         id: docker_build
@@ -105,7 +102,6 @@ jobs:
           context: ./test
           file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -154,7 +150,6 @@ jobs:
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
-          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Build and push
         id: docker_build
@@ -164,7 +159,6 @@ jobs:
           file: ./test/Dockerfile-${{ matrix.dockerfile }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
@@ -203,7 +197,6 @@ jobs:
         uses: docker/setup-buildx-action@master
         with:
           driver-opts: network=host
-          buildkitd-flags: --allow-insecure-entitlement security.insecure
       -
         name: Cache Docker layers
         uses: actions/cache@v2
@@ -222,7 +215,6 @@ jobs:
           file: ./test/Dockerfile-multi-golang
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          allow: network.host,security.insecure
           push: true
           tags: |
             localhost:5000/name/app:latest
