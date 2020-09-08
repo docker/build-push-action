@@ -53,10 +53,10 @@ jobs:
     steps:
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
@@ -110,10 +110,10 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
         uses: docker/login-action@v1
@@ -145,10 +145,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
         id: builder1
       -
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
         id: builder2
       -
         name: Builder 1 name
@@ -188,10 +188,10 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
@@ -233,10 +233,10 @@ jobs:
     steps:
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
         with:
           driver-opts: network=host
       -
@@ -269,7 +269,7 @@ jobs:
     steps:
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       -
         name: Cache Docker layers
         uses: actions/cache@v2
@@ -340,10 +340,10 @@ jobs:
           echo ::set-output name=tags::${TAGS}
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
         if: github.event_name != 'pull_request'
