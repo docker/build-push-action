@@ -25,7 +25,7 @@ jobs:
         run: yarn run test
       -
         name: Upload coverage
-        uses: codecov/codecov-action@v1.0.7
+        uses: codecov/codecov-action@v1.0.13
         if: success()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
