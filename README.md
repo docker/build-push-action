@@ -22,6 +22,7 @@ ___
   * [Path context](#path-context)
   * [Isolated builders](#isolated-builders)
   * [Multi-platform image](#multi-platform-image)
+  * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
 * [Customizing](#customizing)
