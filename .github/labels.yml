@@ -1,0 +1,79 @@
+## more info https://github.com/crazy-max/ghaction-github-labeler
+- # automerge
+  name: ":bell: automerge"
+  color: "8f4fbc"
+  description: ""
+- # bot
+  name: ":robot: bot"
+  color: "69cde9"
+  description: ""
+- # bug
+  name: ":bug: bug"
+  color: "b60205"
+  description: ""
+- # dependencies
+  name: ":game_die: dependencies"
+  color: "0366d6"
+  description: ""
+  from_name: "dependencies"
+- # documentation
+  name: ":memo: documentation"
+  color: "c5def5"
+  description: ""
+- # duplicate
+  name: ":busts_in_silhouette: duplicate"
+  color: "cccccc"
+  description: ""
+- # enhancement
+  name: ":sparkles: enhancement"
+  color: "0054ca"
+  description: ""
+- # feature request
+  name: ":bulb: feature request"
+  color: "0e8a16"
+  description: ""
+- # feedback
+  name: ":mega: feedback"
+  color: "03a9f4"
+  description: ""
+- # future maybe
+  name: ":rocket: future maybe"
+  color: "fef2c0"
+  description: ""
+- # good first issue
+  name: ":hatching_chick: good first issue"
+  color: "7057ff"
+  description: ""
+- # help wanted
+  name: ":pray: help wanted"
+  color: "4caf50"
+  description: ""
+- # hold
+  name: ":hand: hold"
+  color: "24292f"
+  description: ""
+- # invalid
+  name: ":no_entry_sign: invalid"
+  color: "e6e6e6"
+  description: ""
+- # maybe bug
+  name: ":interrobang: maybe bug"
+  color: "ff5722"
+  description: ""
+- # needs more info
+  name: ":thinking: needs more info"
+  color: "795548"
+  description: ""
+- # question
+  name: ":question: question"
+  color: "3f51b5"
+  description: ""
+  from_name: "question"
+- # upstream
+  name: ":eyes: upstream"
+  color: "fbca04"
+  description: ""
+- # wontfix
+  name: ":coffin: wontfix"
+  color: "ffffff"
+  description: ""

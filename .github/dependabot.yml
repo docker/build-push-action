@@ -4,9 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - ":game_die: dependencies"
+      - ":robot: bot"
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
     allow:
       - dependency-type: "production"
+    labels:
+      - ":game_die: dependencies"
+      - ":robot: bot"
