@@ -67,6 +67,9 @@ inputs:
     description: "GitHub Token used to authenticate against a repository for Git context"
     default: ${{ github.token }}
     required: false
+  ssh:
+    description: "List of SSH agent socket or keys to expose to the build (eg: default)"
+    required: false
 
 outputs:
   digest:

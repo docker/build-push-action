@@ -12082,7 +12082,8 @@ function getInputs(defaultContext) {
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
             secrets: yield getInputList('secrets', true),
-            githubToken: core.getInput('github-token')
+            githubToken: core.getInput('github-token'),
+            ssh: yield getInputList('ssh')
         };
     });
 }
@@ -12137,6 +12138,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
+        yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--ssh', ssh);
+        }));
         if (inputs.file) {
             args.push('--file', inputs.file);
         }
