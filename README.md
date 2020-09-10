@@ -25,6 +25,7 @@ ___
   * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
+  * [Update DockerHub repo description](#update-dockerhub-repo-description)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -256,7 +257,7 @@ jobs:
 ### Leverage GitHub cache
 
 You can leverage [GitHub cache](https://docs.github.com/en/actions/configuring-and-managing-workflows/caching-dependencies-to-speed-up-workflows)
-using [@actions/cache](https://github.com/actions/cache) with this action.
+using [actions/cache](https://github.com/actions/cache) with this action.
 
 ```yaml
 name: ci
@@ -363,6 +364,50 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/386
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
+```
+
+### Update DockerHub repo description
+
+You can update the [Docker Hub repository description](https://docs.docker.com/docker-hub/repos/) using
+a third-party action called [Docker Hub Description](https://github.com/peter-evans/dockerhub-description)
+with this action.
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: user/app:latest
+      -
+        name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+          DOCKERHUB_REPOSITORY: user/app
 ```
 
 ## Customizing
