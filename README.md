@@ -24,6 +24,7 @@ ___
   * [Multi-platform image](#multi-platform-image)
   * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
+  * [Tags handling](#tags-handling)
   * [Complete workflow](#complete-workflow)
   * [Update DockerHub repo description](#update-dockerhub-repo-description)
 * [Customizing](#customizing)
@@ -297,6 +298,81 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 ```
 
+### Tags handling
+
+If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and you want an
+"automatic" tag management through Git reference, you will have to do it in a dedicated step [for now](https://github.com/docker/build-push-action/issues/116).
+
+The workflow below with the `Prepare` step will generate a
+[`tags` output](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjobs_idoutputs):
+
+* On `pull_request` event with `refs/pull/2/merge` ref and `a123b57` sha:
+  * `user/app:pr-2`
+* On `push` event with `refs/heads/master` ref and `676cae2` sha:
+  * `user/app:sha-676cae2`
+  * `user/app:edge`
+* On `push` event with `refs/heads/dev` ref and `cf20257` sha:
+  * `user/app:sha-cf20257`
+  * `user/app:dev`
+* On `push tags` event with `refs/tags/v1.2.3` ref and `9258794` sha:
+  * `user/app:sha-9258794`
+  * `user/app:v1.2.3`
+  * `user/app:v1.2`
+  * `user/app:v1`
+  * `user/app:latest`
+
+```yaml
+name: ci
+
+on:
+  push:
+    branches: master
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: master
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Prepare
+        id: prep
+        run: |
+          DOCKER_IMAGE=name/app
+          VERSION=edge
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAGS="${DOCKER_IMAGE}:pr-${{ github.event.number }}"
+          else
+            TAGS="${DOCKER_IMAGE}:${VERSION}"
+            TAGS="${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
+          fi
+          if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            MINOR=${VERSION%.*}
+            MAJOR=${MINOR%.*}
+            TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
+          fi
+          echo ::set-output name=tags::${TAGS}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: ${{ steps.prep.outputs.tags }}
+```
+
 ### Complete workflow
 
 * On `pull_request` event, Docker image `name/app:edge` is **built**.
@@ -331,13 +407,13 @@ jobs:
           DOCKER_IMAGE=name/app
           VERSION=edge
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${GITHUB_REF#refs/tags/}
           fi
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
           fi
           TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+          if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
             TAGS="$TAGS,${DOCKER_IMAGE}:latest"
           fi
           echo ::set-output name=tags::${TAGS}
@@ -356,7 +432,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
