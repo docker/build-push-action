@@ -24,7 +24,7 @@ ___
   * [Multi-platform image](#multi-platform-image)
   * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
-  * [Tags handling](#tags-handling)
+  * [Tags and labels handling](#tags-and-labels-handling)
   * [Complete workflow](#complete-workflow)
   * [Update DockerHub repo description](#update-dockerhub-repo-description)
 * [Customizing](#customizing)
@@ -298,17 +298,18 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 ```
 
-### Tags handling
+### Tags and labels handling
 
 If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and you want an
-"automatic" tag management through Git reference, you will have to do it in a dedicated step [for now](https://github.com/docker/build-push-action/issues/116).
+"automatic" tag management through Git reference and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
+for labels, you will have to do it in a dedicated step [for now](https://github.com/docker/build-push-action/issues/116).
 
 The workflow below with the `Prepare` step will generate a
 [`tags` output](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjobs_idoutputs):
 
 * On `pull_request` event with `refs/pull/2/merge` ref and `a123b57` sha:
   * `user/app:pr-2`
-* On `push` event with `refs/heads/master` ref and `676cae2` sha:
+* On `push` event with `refs/heads/<default_branch>` ref and `676cae2` sha:
   * `user/app:sha-676cae2`
   * `user/app:edge`
 * On `push` event with `refs/heads/dev` ref and `cf20257` sha:
@@ -344,22 +345,29 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=name/app
-          VERSION=edge
+          VERSION=noop
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+            if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
+              VERSION=edge
+            fi
+          elif [[ $GITHUB_REF == refs/pull/* ]]; then
+            VERSION=pr-${{ github.event.number }}
           fi
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            TAGS="${DOCKER_IMAGE}:pr-${{ github.event.number }}"
-          else
-            TAGS="${DOCKER_IMAGE}:${VERSION}"
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
             TAGS="${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
           fi
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
           if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
             MINOR=${VERSION%.*}
             MAJOR=${MINOR%.*}
             TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
           fi
+          echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -371,6 +379,12 @@ jobs:
           context: .
           file: ./Dockerfile
           tags: ${{ steps.prep.outputs.tags }}
+          labels: |
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.name }}
 ```
 
 ### Complete workflow
