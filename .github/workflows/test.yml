@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
-      - v2-working-branch # remove when merged to master
   pull_request:
     branches:
       - master
-      - v2-working-branch # remove when merged to master
 
 jobs:
   test:

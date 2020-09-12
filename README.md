@@ -22,6 +22,7 @@ ___
   * [Path context](#path-context)
   * [Isolated builders](#isolated-builders)
   * [Multi-platform image](#multi-platform-image)
+* [Advanced usage](#advanced-usage)
   * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
@@ -41,7 +42,10 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 
 ### Git context
 
-The default behavior of this action is to use the Git context invoked by your workflow (`https://github.com/owner/repo#ref`).
+The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L35).
+
+> :warning: Subdir for this context is [not yet supported](https://github.com/docker/build-push-action/issues/120).
+> For the moment you can use the [path context](#path-context).
 
 ```yaml
 name: ci
@@ -214,6 +218,8 @@ jobs:
             user/app:1.0.0
 ```
 
+## Advanced usage
+
 ### Local registry
 
 For testing purposes you may need to create a [local registry](https://hub.docker.com/_/registry) to push images into.
@@ -299,10 +305,22 @@ jobs:
 
 ### Complete workflow
 
-* On `pull_request` event, Docker image `name/app:edge` is **built**.
-* On `push` event, Docker image `name/app:edge` is **built** and **pushed** to DockerHub.
-* On `schedule` event, Docker image `name/app:nightly` is **built** and **pushed** to DockerHub.
-* On `push tags` event, Docker image `name/app:<version>` and `name/app:latest` is **built** and **pushed** to DockerHub.
+If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and you want an
+"automatic" tag management through Git reference and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
+for labels, you will have to do it in a dedicated step [for now](https://github.com/docker/build-push-action/issues/116).
+
+The following workflow with the `Prepare` step will generate some [outputs](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjobs_idoutputs)
+to handle tags and labels based on GitHub actions events. This is just an example to show many cases that you
+might want to use:
+
+| Event           | Ref                           | Commit SHA | Docker Tag                         | Pushed |
+|-----------------|-------------------------------|------------|------------------------------------|--------|
+| `schedule`      |                               |            | `nightly`                          | Yes    |
+| `pull_request`  | `refs/pull/2/merge`           | `a123b57`  | `pr-2`                             | No     |
+| `push`          | `refs/heads/<default_branch>` | `676cae2`  | `sha-676cae2`, `edge`              | Yes    |
+| `push`          | `/refs/heads/dev`             | `cf20257`  | `sha-676cae2`, `dev`               | Yes    |
+| `push`          | `/refs/heads/my/branch`       | `a5df687`  | `sha-a5df687`, `my-branch`         | Yes    |
+| `push tag`      | `/refs/tags/v1.2.3`           |            | `v1.2.3`, `v1.2`, `v1`, `latest`   | Yes    |
 
 ```yaml
 name: ci
@@ -311,11 +329,11 @@ on:
   schedule:
     - cron: '0 10 * * *' # everyday at 10am
   push:
-    branches: master
+    branches:
+      - '**'
     tags:
       - 'v*.*.*'
   pull_request:
-    branches: master
 
 jobs:
   docker:
@@ -329,18 +347,31 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=name/app
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
+          VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+            if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
+              VERSION=edge
+            fi
+          elif [[ $GITHUB_REF == refs/pull/* ]]; then
+            VERSION=pr-${{ github.event.number }}
+          fi
+          if [[ $GITHUB_REF != refs/tags/* ]] && [[ "${{ github.event_name }}" = "push"  ]]; then
+            TAGS="${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
           fi
           TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:latest"
+          if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            MINOR=${VERSION%.*}
+            MAJOR=${MINOR%.*}
+            TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
           fi
+          echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -364,6 +395,12 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/386
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
+          labels: |
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.name }}
 ```
 
 ### Update DockerHub repo description
