@@ -1,3 +1,5 @@
+# This workflow is provided just as an usage example and not for repo testing/verification
+# See https://github.com/docker/build-push-action#complete-workflow
 name: example
 
 on:
