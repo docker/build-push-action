@@ -2,11 +2,11 @@ name: ci
 
 on:
   push:
-    branches: master
-    tags:
-      - 'v*.*.*'
+    branches:
+      - master
   pull_request:
-    branches: master
+    branches:
+      - master
 
 jobs:
   git-context:
