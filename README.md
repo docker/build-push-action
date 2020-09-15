@@ -395,11 +395,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           labels: |
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses=${{ github.event.repository.license.name }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 ```
 
 ### Update DockerHub repo description
