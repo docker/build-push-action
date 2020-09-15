@@ -68,10 +68,11 @@ jobs:
           tags: ${{ steps.prep.outputs.tags }}
           labels: |
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses=${{ github.event.repository.license.name }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
       -
         name: Build and push to local registry
         uses: ./
@@ -82,10 +83,11 @@ jobs:
           tags: ${{ steps.prep.outputs.tags }}
           labels: |
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses=${{ github.event.repository.license.name }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
       -
         name: Inspect image
         run: |
