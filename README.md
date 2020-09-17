@@ -318,9 +318,9 @@ might want to use:
 | `schedule`      |                               |            | `nightly`                          | Yes    |
 | `pull_request`  | `refs/pull/2/merge`           | `a123b57`  | `pr-2`                             | No     |
 | `push`          | `refs/heads/<default_branch>` | `676cae2`  | `sha-676cae2`, `edge`              | Yes    |
-| `push`          | `/refs/heads/dev`             | `cf20257`  | `sha-676cae2`, `dev`               | Yes    |
-| `push`          | `/refs/heads/my/branch`       | `a5df687`  | `sha-a5df687`, `my-branch`         | Yes    |
-| `push tag`      | `/refs/tags/v1.2.3`           |            | `v1.2.3`, `v1.2`, `v1`, `latest`   | Yes    |
+| `push`          | `refs/heads/dev`              | `cf20257`  | `sha-cf20257`, `dev`               | Yes    |
+| `push`          | `refs/heads/my/branch`        | `a5df687`  | `sha-a5df687`, `my-branch`         | Yes    |
+| `push tag`      | `refs/tags/v1.2.3`            |            | `v1.2.3`, `v1.2`, `v1`, `latest`   | Yes    |
 
 ```yaml
 name: ci
