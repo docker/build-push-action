@@ -5,7 +5,7 @@ about: Create a report to help us improve
 
 ### Troubleshooting
 
-Before sumbitting a bug report please read the [Troubleshooting section](https://github.com/docker/build-push-action#troubleshooting) in the README.
+Before sumbitting a bug report please read the [Troubleshooting doc](https://github.com/docker/build-push-action/blob/master/TROUBLESHOOTING.md).
 
 ### Behaviour
 
