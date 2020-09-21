@@ -30,6 +30,7 @@ ___
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
+* [Troubleshooting](#troubleshooting)
 * [Keep up-to-date with GitHub Dependabot](#keep-up-to-date-with-github-dependabot)
 * [Limitation](#limitation)
 
@@ -44,10 +45,10 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 
 The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L35).
 
-> :warning: Subdir for this context is [not yet supported](https://github.com/docker/build-push-action/issues/120).
-> For the moment you can use the [path context](#path-context).
-
-```yaml
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
 name: ci
 
 on:
@@ -80,7 +81,8 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-```
+  ```
+</details>
 
 If you use this action in a private repository, you have to pass the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
 as a secret named `GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
@@ -97,126 +99,141 @@ as a secret named `GIT_AUTH_TOKEN` to be able to authenticate against it with bu
             GIT_AUTH_TOKEN=${{ github.token }}
 ```
 
+> :warning: Subdir for Git context is [not yet supported](https://github.com/docker/build-push-action/issues/120).
+> For the moment you can use the [path context](#path-context).
+
 ### Path context
 
 You can also use the `PATH` context alongside the [`actions/checkout`](https://github.com/actions/checkout/) action.
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  path-context:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/386
-          push: true
-          tags: user/app:latest
-```
+  jobs:
+    path-context:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Checkout
+          uses: actions/checkout@v2
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        -
+          name: Build and push
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./Dockerfile
+            platforms: linux/amd64,linux/arm64,linux/386
+            push: true
+            tags: user/app:latest
+  ```
+</details>
 
 ### Isolated builders
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  multi-builders:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        uses: docker/setup-buildx-action@v1
-        id: builder1
-      -
-        uses: docker/setup-buildx-action@v1
-        id: builder2
-      -
-        name: Builder 1 name
-        run: echo ${{ steps.builder1.outputs.name }}
-      -
-        name: Builder 2 name
-        run: echo ${{ steps.builder2.outputs.name }}
-      -
-        name: Build against builder1
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder1.outputs.name }}
-          target: mytarget1
-      -
-        name: Build against builder2
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder2.outputs.name }}
-          target: mytarget2
-```
+  jobs:
+    multi-builders:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          uses: docker/setup-buildx-action@v1
+          id: builder1
+        -
+          uses: docker/setup-buildx-action@v1
+          id: builder2
+        -
+          name: Builder 1 name
+          run: echo ${{ steps.builder1.outputs.name }}
+        -
+          name: Builder 2 name
+          run: echo ${{ steps.builder2.outputs.name }}
+        -
+          name: Build against builder1
+          uses: docker/build-push-action@v2
+          with:
+            builder: ${{ steps.builder1.outputs.name }}
+            target: mytarget1
+        -
+          name: Build against builder2
+          uses: docker/build-push-action@v2
+          with:
+            builder: ${{ steps.builder2.outputs.name }}
+            target: mytarget2
+  ```
+</details>
 
 ### Multi-platform image
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  multi:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
-          push: true
-          tags: |
-            user/app:latest
-            user/app:1.0.0
-```
+  jobs:
+    multi:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Checkout
+          uses: actions/checkout@v2
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        -
+          name: Build and push
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./Dockerfile
+            platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+            push: true
+            tags: |
+              user/app:latest
+              user/app:1.0.0
+  ```
+</details>
 
 ## Advanced usage
 
@@ -224,84 +241,92 @@ jobs:
 
 For testing purposes you may need to create a [local registry](https://hub.docker.com/_/registry) to push images into.
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  local-registry:
-    runs-on: ubuntu-latest
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-    steps:
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          driver-opts: network=host
-      -
-        name: Build and push to local registry
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: localhost:5000/name/app:latest
-      -
-        name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
-```
+  jobs:
+    local-registry:
+      runs-on: ubuntu-latest
+      services:
+        registry:
+          image: registry:2
+          ports:
+            - 5000:5000
+      steps:
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+          with:
+            driver-opts: network=host
+        -
+          name: Build and push to local registry
+          uses: docker/build-push-action@v2
+          with:
+            push: true
+            tags: localhost:5000/name/app:latest
+        -
+          name: Inspect
+          run: |
+            docker buildx imagetools inspect localhost:5000/name/app:latest
+  ```
+</details>
 
 ### Leverage GitHub cache
 
 You can leverage [GitHub cache](https://docs.github.com/en/actions/configuring-and-managing-workflows/caching-dependencies-to-speed-up-workflows)
 using [actions/cache](https://github.com/actions/cache) with this action.
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  github-cache:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: user/app:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-```
+  jobs:
+    github-cache:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Cache Docker layers
+          uses: actions/cache@v2
+          with:
+            path: /tmp/.buildx-cache
+            key: ${{ runner.os }}-buildx-${{ github.sha }}
+            restore-keys: |
+              ${{ runner.os }}-buildx-
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        -
+          name: Build and push
+          uses: docker/build-push-action@v2
+          with:
+            push: true
+            tags: user/app:latest
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache
+  ```
+</details>
 
 ### Complete workflow
 
@@ -322,88 +347,92 @@ might want to use:
 | `push`          | `refs/heads/my/branch`        | `a5df687`  | `sha-a5df687`, `my-branch`         | Yes    |
 | `push tag`      | `refs/tags/v1.2.3`            |            | `v1.2.3`, `v1.2`, `v1`, `latest`   | Yes    |
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  schedule:
-    - cron: '0 10 * * *' # everyday at 10am
-  push:
-    branches:
-      - '**'
-    tags:
-      - 'v*.*.*'
-  pull_request:
+  on:
+    schedule:
+      - cron: '0 10 * * *' # everyday at 10am
+    push:
+      branches:
+        - '**'
+      tags:
+        - 'v*.*.*'
+    pull_request:
 
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Prepare
-        id: prep
-        run: |
-          DOCKER_IMAGE=name/app
-          VERSION=noop
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            VERSION=nightly
-          elif [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          elif [[ $GITHUB_REF == refs/heads/* ]]; then
-            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-            if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
-              VERSION=edge
+  jobs:
+    docker:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Checkout
+          uses: actions/checkout@v2
+        -
+          name: Prepare
+          id: prep
+          run: |
+            DOCKER_IMAGE=name/app
+            VERSION=noop
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              VERSION=nightly
+            elif [[ $GITHUB_REF == refs/tags/* ]]; then
+              VERSION=${GITHUB_REF#refs/tags/}
+            elif [[ $GITHUB_REF == refs/heads/* ]]; then
+              VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+              if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
+                VERSION=edge
+              fi
+            elif [[ $GITHUB_REF == refs/pull/* ]]; then
+              VERSION=pr-${{ github.event.number }}
             fi
-          elif [[ $GITHUB_REF == refs/pull/* ]]; then
-            VERSION=pr-${{ github.event.number }}
-          fi
-          TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            MINOR=${VERSION%.*}
-            MAJOR=${MINOR%.*}
-            TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
-          fi
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/386
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.prep.outputs.tags }}
-          labels: |
-            org.opencontainers.image.title=${{ github.event.repository.name }}
-            org.opencontainers.image.description=${{ github.event.repository.description }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
-            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
-```
+            TAGS="${DOCKER_IMAGE}:${VERSION}"
+            if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+              MINOR=${VERSION%.*}
+              MAJOR=${MINOR%.*}
+              TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
+            elif [ "${{ github.event_name }}" = "push" ]; then
+              TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
+            fi
+            echo ::set-output name=version::${VERSION}
+            echo ::set-output name=tags::${TAGS}
+            echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          if: github.event_name != 'pull_request'
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        -
+          name: Build and push
+          id: docker_build
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./Dockerfile
+            platforms: linux/amd64,linux/arm64,linux/386
+            push: ${{ github.event_name != 'pull_request' }}
+            tags: ${{ steps.prep.outputs.tags }}
+            labels: |
+              org.opencontainers.image.title=${{ github.event.repository.name }}
+              org.opencontainers.image.description=${{ github.event.repository.description }}
+              org.opencontainers.image.url=${{ github.event.repository.html_url }}
+              org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+              org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+              org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+              org.opencontainers.image.revision=${{ github.sha }}
+              org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+  ```
+</details>
 
 ### Update DockerHub repo description
 
@@ -411,43 +440,47 @@ You can update the [Docker Hub repository description](https://docs.docker.com/d
 a third-party action called [Docker Hub Description](https://github.com/peter-evans/dockerhub-description)
 with this action.
 
-```yaml
-name: ci
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
 
-on:
-  push:
-    branches: master
+  on:
+    push:
+      branches: master
 
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: user/app:latest
-      -
-        name: Update repo description
-        uses: peter-evans/dockerhub-description@v2
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-          DOCKERHUB_REPOSITORY: user/app
-```
+  jobs:
+    main:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        -
+          name: Build and push
+          uses: docker/build-push-action@v2
+          with:
+            push: true
+            tags: user/app:latest
+        -
+          name: Update repo description
+          uses: peter-evans/dockerhub-description@v2
+          env:
+            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+            DOCKERHUB_REPOSITORY: user/app
+  ```
+</details>
 
 ## Customizing
 
@@ -502,6 +535,34 @@ Following outputs are available
 | Name          | Type    | Description                           |
 |---------------|---------|---------------------------------------|
 | `digest`      | String  | Image content-addressable identifier also called a digest |
+
+## Troubleshooting
+
+While pushing to a registry, you may encounter these kinds of issues:
+
+* `failed commit on ref "layer-sha256:...": invalid content digest in response: invalid checksum digest format`
+* `failed commit on ref "layer-sha256:...": no response`
+* `failed commit on ref "manifest-sha256:...": unexpected status: 401 Unauthorized`
+* `unexpected response: 401 Unauthorized`
+
+These issues are not directly related to this action but are rather linked to [buildx](https://github.com/docker/buildx),
+[buildkit](https://github.com/moby/buildkit), [containerd](https://github.com/containerd/containerd) or the registry
+on which you're pushing your image. The quality of error message depends on the registry and are usually not very informative.
+
+To help you solve this, you should first enable debugging in the
+[setup-buildx action step](https://github.com/docker/setup-buildx-action):
+
+```yaml
+  -
+    name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v1
+    with:
+      buildkitd-flags: --debug
+```
+
+Next you can test pushing with containerd using [this workflow](https://github.com/crazy-max/ghaction-setup-containerd#build-and-push-docker-image).
+Do not forget to set `ctr --debug` for the pushing step. If it works then open an issue on
+[buildkit](https://github.com/moby/buildkit) repository.
 
 ## Keep up-to-date with GitHub Dependabot
 

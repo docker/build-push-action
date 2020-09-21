@@ -3,6 +3,10 @@ name: Bug report
 about: Create a report to help us improve
 ---
 
+### Troubleshooting
+
+Before sumbitting a bug report please read the [Troubleshooting section](https://github.com/docker/build-push-action#troubleshooting) in the README.
+
 ### Behaviour
 
 #### Steps to reproduce this issue
