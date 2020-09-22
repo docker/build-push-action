@@ -7955,6 +7955,12 @@ function convertBody(buffer, headers) {
 	// html4
 	if (!res && str) {
 		res = /<meta[\s]+?http-equiv=(['"])content-type\1[\s]+?content=(['"])(.+?)\2/i.exec(str);
+		if (!res) {
+			res = /<meta[\s]+?content=(['"])(.+?)\1[\s]+?http-equiv=(['"])content-type\3/i.exec(str);
+			if (res) {
+				res.pop(); // drop last quote
+			}
+		}
 
 		if (res) {
 			res = /charset=(.*)/i.exec(res.pop());
@@ -8962,7 +8968,7 @@ function fetch(url, opts) {
 				// HTTP fetch step 5.5
 				switch (request.redirect) {
 					case 'error':
-						reject(new FetchError(`redirect mode is set to error: ${request.url}`, 'no-redirect'));
+						reject(new FetchError(`uri requested responds with a redirect, redirect mode is set to error: ${request.url}`, 'no-redirect'));
 						finalize();
 						return;
 					case 'manual':
@@ -9001,7 +9007,8 @@ function fetch(url, opts) {
 							method: request.method,
 							body: request.body,
 							signal: request.signal,
-							timeout: request.timeout
+							timeout: request.timeout,
+							size: request.size
 						};
 
 						// HTTP-redirect fetch step 9
@@ -13640,11 +13647,11 @@ const buildx = __importStar(__webpack_require__(295));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 exports.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
+const defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`;
 function getInputs() {
     return __awaiter(this, void 0, void 0, function* () {
         return {
-            context: core.getInput('context') ||
-                `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`,
+            context: core.getInput('context') || defaultContext,
             file: core.getInput('file') || 'Dockerfile',
             buildArgs: yield getInputList('build-args'),
             labels: yield getInputList('labels'),
@@ -13660,7 +13667,8 @@ function getInputs() {
             outputs: yield getInputList('outputs', true),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
-            secrets: yield getInputList('secrets', true)
+            secrets: yield getInputList('secrets', true),
+            githubToken: core.getInput('github-token')
         };
     });
 }
@@ -13708,9 +13716,16 @@ function getBuildArgs(inputs, buildxVersion) {
         yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-to', cacheTo);
         }));
+        let hasGitAuthToken = false;
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
+            if (secret.startsWith('GIT_AUTH_TOKEN=')) {
+                hasGitAuthToken = true;
+            }
             args.push('--secret', yield buildx.getSecret(secret));
         }));
+        if (inputs.githubToken && !hasGitAuthToken && inputs.context == defaultContext) {
+            args.push('--secret', yield buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+        }
         if (inputs.file) {
             args.push('--file', inputs.file);
         }
