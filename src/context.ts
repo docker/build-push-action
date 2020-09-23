@@ -6,7 +6,8 @@ import * as buildx from './buildx';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-export const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
+export const tmpDir: string = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
+const defaultContext: string = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`;
 
 export interface Inputs {
   context: string;
@@ -26,13 +27,12 @@ export interface Inputs {
   cacheFrom: string[];
   cacheTo: string[];
   secrets: string[];
+  githubToken: string;
 }
 
 export async function getInputs(): Promise<Inputs> {
   return {
-    context:
-      core.getInput('context') ||
-      `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`,
+    context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
     buildArgs: await getInputList('build-args'),
     labels: await getInputList('labels'),
@@ -48,7 +48,8 @@ export async function getInputs(): Promise<Inputs> {
     outputs: await getInputList('outputs', true),
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
-    secrets: await getInputList('secrets', true)
+    secrets: await getInputList('secrets', true),
+    githubToken: core.getInput('github-token')
   };
 }
 
@@ -92,9 +93,16 @@ async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Arra
   await asyncForEach(inputs.cacheTo, async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
+  let hasGitAuthToken: boolean = false;
   await asyncForEach(inputs.secrets, async secret => {
+    if (secret.startsWith('GIT_AUTH_TOKEN=')) {
+      hasGitAuthToken = true;
+    }
     args.push('--secret', await buildx.getSecret(secret));
   });
+  if (inputs.githubToken && !hasGitAuthToken && inputs.context == defaultContext) {
+    args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+  }
   if (inputs.file) {
     args.push('--file', inputs.file);
   }

@@ -64,6 +64,10 @@ inputs:
   secrets:
     description: "List of secrets to expose to the build (eg. key=value, GIT_AUTH_TOKEN=mytoken)"
     required: false
+  github-token:
+    description: "GitHub Token used to authenticate against a repository for Git context"
+    default: ${{ github.token }}
+    required: false
 
 outputs:
   digest:
