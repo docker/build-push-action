@@ -92,7 +92,7 @@ jobs:
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
           secrets: |
-            GIT_AUTH_TOKEN=01234567890abcdefgh
+            GIT_AUTH_TOKEN=${{ github.token }}
       -
         name: Inspect
         run: |

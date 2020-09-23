@@ -80,8 +80,9 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
-If you want to authenticate against a private repository, you have to use a secret named `GIT_AUTH_TOKEN` to be able
-to authenticate against it with buildx:
+Building from current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
+as provided by `secrets` so it does not need to be passed. But if you want to authenticate against another private
+repository, you have to use a secret named `GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
 
 ```yaml
       -
