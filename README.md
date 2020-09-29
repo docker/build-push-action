@@ -4,10 +4,10 @@
 [![Test workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/test?label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
 [![Codecov](https://img.shields.io/codecov/c/github/docker/build-push-action?logo=codecov&style=flat-square)](https://codecov.io/gh/docker/build-push-action)
 
-## Upgrade
+## Upgrade from v1
 
-`v2` of this action changes drastically and now uses Docker [Buildx](https://github.com/docker/buildx). It works with
-3 new actions ([login](https://github.com/docker/login-action), [setup-buildx](https://github.com/docker/setup-buildx-action)
+`v2` of this action includes significant updates and now uses Docker [Buildx](https://github.com/docker/buildx). It
+works with 3 new optional actions ([login](https://github.com/docker/login-action), [setup-buildx](https://github.com/docker/setup-buildx-action)
 and [setup-qemu](https://github.com/docker/setup-qemu-action)) that we have created. It's also rewritten as a
 [typescript-action](https://github.com/actions/typescript-action/) to be as closed as possible of the
 [GitHub Runner](https://github.com/actions/virtual-environments) during its execution (#71 #92).

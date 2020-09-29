@@ -2,11 +2,12 @@
 
 ## v1 to v2
 
-* Rename `path` input to `context`
-* Rename `dockerfile` input to `file`
-* Rename `always_pull` input to `pull`
+* Input `path` is now called `context` for consistency with other Docker build tools
+* `path` defaults to current git repository so checkout action is not required in a workflow
+* Rename `dockerfile` input to `file` for consistency with other Docker build tools
+* Rename `always_pull` input to `pull` for consistency with other Docker build tools
 * Add `builder` input to be able to choose a builder instance through our [setup-buildx action](https://github.com/docker/setup-buildx-action)
-* Add [`platforms`](https://github.com/docker/buildx#---platformvaluevalue) input
+* Add [`platforms`](https://github.com/docker/buildx#---platformvaluevalue) input to support multi-platform builds
 * Add [`allow`](https://github.com/docker/buildx#--allowentitlement) input
 * Add [`load`](https://github.com/docker/buildx#--load) input
 * Add [`outputs`](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) input
