@@ -13,7 +13,6 @@ inputs:
   context:
     description: "Build's context is the set of files located in the specified PATH or URL"
     required: false
-    default: '.'
   file:
     description: "Path to the Dockerfile"
     required: false

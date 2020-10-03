@@ -13712,7 +13712,7 @@ const buildx = __importStar(__webpack_require__(295));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 exports.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
-const defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`;
+const defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${github.context.ref.replace(/^refs\//, '')}`;
 function getInputs() {
     return __awaiter(this, void 0, void 0, function* () {
         return {

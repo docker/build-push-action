@@ -54,7 +54,7 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 
 ### Git context
 
-The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L35).
+The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L10).
 
 ```yaml
 name: ci
