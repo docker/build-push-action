@@ -254,16 +254,12 @@ jobs:
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
-          cache-from: type=registry,ref=localhost:5000/name/app:cache
-          cache-to: type=registry,ref=localhost:5000/name/app:cache
+          cache-from: type=registry,ref=localhost:5000/name/app
+          cache-to: type=inline
       -
         name: Inspect (1)
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
-      -
-        name: Inspect cache (1)
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:cache
+          docker buildx imagetools inspect localhost:5000/name/app:latest
       -
         name: Image digest (1)
         run: echo ${{ steps.docker_build.outputs.digest }}
@@ -284,16 +280,12 @@ jobs:
           tags: |
             localhost:5000/name/app:latest
             localhost:5000/name/app:1.0.0
-          cache-from: type=registry,ref=localhost:5000/name/app:cache
-          cache-to: type=registry,ref=localhost:5000/name/app:cache
+          cache-from: type=registry,ref=localhost:5000/name/app
+          cache-to: type=inline
       -
         name: Inspect (2)
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
-      -
-        name: Inspect cache (2)
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:cache
+          docker buildx imagetools inspect localhost:5000/name/app:latest
       -
         name: Image digest (2)
         run: echo ${{ steps.docker_build2.outputs.digest }}
