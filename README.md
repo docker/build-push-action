@@ -67,6 +67,9 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+      - 
+        name: Checkout code
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
