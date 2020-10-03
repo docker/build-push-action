@@ -7,7 +7,9 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 export const tmpDir: string = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
-const defaultContext: string = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}#${github.context.ref}`;
+const defaultContext: string = `https://github.com/${github.context.repo.owner}/${
+  github.context.repo.repo
+}.git#${github.context.ref.replace(/^refs\//, '')}`;
 
 export interface Inputs {
   context: string;
