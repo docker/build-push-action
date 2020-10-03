@@ -221,6 +221,8 @@ jobs:
 
   github-cache-first:
     runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.docker_build.outputs.digest }}
     services:
       registry:
         image: registry:2
@@ -334,6 +336,14 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Check digests
+        run: |
+          echo Compare "${{ needs.github-cache-first.outputs.digest }}" with "${{ steps.docker_build.outputs.digest }}"
+          if [ "${{ needs.github-cache-first.outputs.digest }}" != "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digests should be identical"
+            exit 1
+          fi
       -
         name: Cache hit
         run: echo ${{ steps.cache.outputs.cache-hit }}
