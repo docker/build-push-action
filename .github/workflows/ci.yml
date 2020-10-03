@@ -219,6 +219,97 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
+  registry-cache:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.3
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: network=host
+      -
+        name: Build and push (1)
+        id: docker_build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile-multi
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+            localhost:5000/name/app:1.0.0
+          cache-from: type=registry,ref=localhost:5000/name/app:cache
+          cache-to: type=registry,ref=localhost:5000/name/app:cache
+      -
+        name: Inspect (1)
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
+        name: Inspect cache (1)
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:cache
+      -
+        name: Image digest (1)
+        run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Prune
+        run: |
+          docker buildx prune -a -f --verbose
+      -
+        name: Build and push (2)
+        id: docker_build2
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile-multi
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+            localhost:5000/name/app:1.0.0
+          cache-from: type=registry,ref=localhost:5000/name/app:cache
+          cache-to: type=registry,ref=localhost:5000/name/app:cache
+      -
+        name: Inspect (2)
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+      -
+        name: Inspect cache (2)
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:cache
+      -
+        name: Image digest (2)
+        run: echo ${{ steps.docker_build2.outputs.digest }}
+      -
+        name: Check digests
+        run: |
+          echo Compare "${{ steps.docker_build.outputs.digest }}" with "${{ steps.docker_build2.outputs.digest }}"
+          if [ "${{ steps.docker_build.outputs.digest }}" != "${{ steps.docker_build2.outputs.digest }}" ]; then
+            echo "::error::Digests should be identical"
+            exit 1
+          fi
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
   github-cache-first:
     runs-on: ubuntu-latest
     outputs:
