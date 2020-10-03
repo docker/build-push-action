@@ -54,7 +54,7 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 
 ### Git context
 
-The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L10).
+The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L10-L12).
 
 ```yaml
 name: ci
@@ -109,6 +109,8 @@ repository, you have to use a secret named `GIT_AUTH_TOKEN` to be able to authen
 
 > :warning: Subdir for Git context is [not yet supported](https://github.com/docker/build-push-action/issues/120).
 > For the moment you can use the [path context](#path-context).
+
+> More info: https://docs.docker.com/engine/reference/commandline/build/#git-repositories
 
 ### Path context
 
