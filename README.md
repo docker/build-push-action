@@ -458,6 +458,14 @@ might want to use:
           name: Checkout
           uses: actions/checkout@v2
         -
+          name: Repo metadata
+          id: repo
+          uses: actions/github-script@v3
+          with:
+            script: |
+              const repo = await github.repos.get(context.repo)
+              return repo.data
+        -
           name: Prepare
           id: prep
           run: |
@@ -510,14 +518,14 @@ might want to use:
             push: ${{ github.event_name != 'pull_request' }}
             tags: ${{ steps.prep.outputs.tags }}
             labels: |
-              org.opencontainers.image.title=${{ github.event.repository.name }}
-              org.opencontainers.image.description=${{ github.event.repository.description }}
-              org.opencontainers.image.url=${{ github.event.repository.html_url }}
-              org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+              org.opencontainers.image.title=${{ fromJson(steps.repo.outputs.result).name }}
+              org.opencontainers.image.description=${{ fromJson(steps.repo.outputs.result).description }}
+              org.opencontainers.image.url=${{ fromJson(steps.repo.outputs.result).html_url }}
+              org.opencontainers.image.source=${{ fromJson(steps.repo.outputs.result).clone_url }}
               org.opencontainers.image.version=${{ steps.prep.outputs.version }}
               org.opencontainers.image.created=${{ steps.prep.outputs.created }}
               org.opencontainers.image.revision=${{ github.sha }}
-              org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+              org.opencontainers.image.licenses=${{ fromJson(steps.repo.outputs.result).license.spdx_id }}
   ```
 </details>
 
