@@ -233,8 +233,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -247,7 +245,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -266,14 +264,14 @@ jobs:
       -
         name: Prune
         run: |
-          docker buildx prune -a -f --verbose
+          docker buildx prune --builder ${{ steps.buildx.outputs.name }} -a -f --verbose
       -
         name: Build and push (2)
         id: docker_build2
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -318,8 +316,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -344,7 +340,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi-golang
+          file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -380,8 +376,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -403,7 +397,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi-golang
+          file: ./test/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
