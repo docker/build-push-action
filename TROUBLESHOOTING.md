@@ -6,6 +6,7 @@ While pushing to a registry, you may encounter these kinds of issues:
 
 * `failed commit on ref "layer-sha256:...": invalid content digest in response: invalid checksum digest format`
 * `failed commit on ref "layer-sha256:...": no response`
+* `failed commit on ref "manifest-sha256:...": unexpected status: 400 Bad Request`
 * `failed commit on ref "manifest-sha256:...": unexpected status: 401 Unauthorized`
 * `unexpected response: 401 Unauthorized`
 
@@ -24,6 +25,48 @@ To help you solve this, you should first enable debugging in the
       buildkitd-flags: --debug
 ```
 
-Next you can test pushing with containerd using [this workflow](https://github.com/crazy-max/ghaction-setup-containerd#build-and-push-docker-image).
-Do not forget to set `ctr --debug` for the pushing step. If it works then open an issue on
-[buildkit](https://github.com/moby/buildkit) repository.
+Next you can test pushing with [containerd action](https://github.com/crazy-max/ghaction-setup-containerd) using the
+following workflow. If it works then open an issue on [buildkit](https://github.com/moby/buildkit) repository.
+
+```yaml
+name: containerd
+
+on:
+  push:
+
+jobs:
+  containerd:
+    runs-on: ubuntu-latest
+    steps:
+       -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          buildkitd-flags: --debug
+      -
+        name: Set up containerd
+        uses: crazy-max/ghaction-setup-containerd@v1
+      -
+        name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          tags: docker.io/user/app:latest
+          outputs: type=oci,dest=/tmp/image.tar
+      -
+        name: Import image in containerd
+        run: |
+          sudo ctr i import --base-name docker.io/user/app --digests --all-platforms /tmp/image.tar
+      -
+        name: Push image with containerd
+        run: |
+          sudo ctr --debug i push --user "${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}" docker.io/user/app:latest
+```
