@@ -36,6 +36,7 @@ ___
 * [Advanced usage](#advanced-usage)
   * [Push to multi-registries](#push-to-multi-registries)
   * [Cache to registry](#push-to-multi-registries)
+  * [Upload image as an artifact](#upload-image-as-an-artifact)
   * [Local registry](#local-registry)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
@@ -330,6 +331,52 @@ You can import/export cache from a cache manifest or (special) image configurati
             tags: user/app:latest
             cache-from: type=registry,ref=user/app:latest
             cache-to: type=inline
+  ```
+</details>
+
+### Upload image as an artifact
+
+You can export the result image or manifest list as an [OCI image layout](https://github.com/opencontainers/image-spec/blob/master/image-layout.md)
+tarball through [actions/upload-artifact](https://github.com/actions/upload-artifact/) action:
+
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
+
+  on:
+    push:
+      branches: master
+
+  jobs:
+    upload-artifact:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Checkout
+          uses: actions/checkout@v2
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Build and export
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./Dockerfile
+            platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+            tags: name/app:latest
+            outputs: type=oci,dest=/tmp/image.tar
+        -
+          name: Upload artifact
+          uses: actions/upload-artifact@v2
+          with:
+            name: app
+            path: /tmp/image.tar
   ```
 </details>
 
