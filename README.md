@@ -579,10 +579,10 @@ with this action:
         -
           name: Update repo description
           uses: peter-evans/dockerhub-description@v2
-          env:
-            DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-            DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-            DOCKERHUB_REPOSITORY: user/app
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_PASSWORD }}
+            repository: user/app
   ```
 </details>
 
