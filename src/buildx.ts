@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import tmp from 'tmp';
 import * as semver from 'semver';
 import * as context from './context';
 import * as exec from './exec';
 
 export async function getImageIDFile(): Promise<string> {
-  return path.join(context.tmpDir, 'iidfile');
+  return path.join(context.tmpDir(), 'iidfile').split(path.sep).join(path.posix.sep);
 }
 
 export async function getImageID(): Promise<string | undefined> {
@@ -19,8 +18,8 @@ export async function getImageID(): Promise<string | undefined> {
 
 export async function getSecret(kvp: string): Promise<string> {
   const [key, value] = kvp.split('=');
-  const secretFile = tmp.tmpNameSync({
-    tmpdir: context.tmpDir
+  const secretFile = context.tmpNameSync({
+    tmpdir: context.tmpDir()
   });
   await fs.writeFileSync(secretFile, value);
   return `id=${key},src=${secretFile}`;

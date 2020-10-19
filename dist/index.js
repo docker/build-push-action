@@ -70,7 +70,7 @@ module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(747)
-var rp = __webpack_require__(863)
+var rp = __webpack_require__(290)
 var minimatch = __webpack_require__(973)
 var Minimatch = minimatch.Minimatch
 var Glob = __webpack_require__(957).Glob
@@ -2391,12 +2391,13 @@ function run() {
                 core.setFailed(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
                 return;
             }
-            stateHelper.setTmpDir(context.tmpDir);
+            stateHelper.setTmpDir(context.tmpDir());
             const buildxVersion = yield buildx.getVersion();
             core.info(`📣 Buildx version: ${buildxVersion}`);
-            let inputs = yield context.getInputs();
+            const defContext = context.defaultContext();
+            let inputs = yield context.getInputs(defContext);
             core.info(`🏃 Starting build...`);
-            const args = yield context.getArgs(inputs, buildxVersion);
+            const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args);
             const imageID = yield buildx.getImageID();
             if (imageID) {
@@ -5184,6 +5185,79 @@ exports.toCommandValue = toCommandValue;
 
 /***/ }),
 
+/***/ 290:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+module.exports = realpath
+realpath.realpath = realpath
+realpath.sync = realpathSync
+realpath.realpathSync = realpathSync
+realpath.monkeypatch = monkeypatch
+realpath.unmonkeypatch = unmonkeypatch
+
+var fs = __webpack_require__(747)
+var origRealpath = fs.realpath
+var origRealpathSync = fs.realpathSync
+
+var version = process.version
+var ok = /^v[0-5]\./.test(version)
+var old = __webpack_require__(734)
+
+function newError (er) {
+  return er && er.syscall === 'realpath' && (
+    er.code === 'ELOOP' ||
+    er.code === 'ENOMEM' ||
+    er.code === 'ENAMETOOLONG'
+  )
+}
+
+function realpath (p, cache, cb) {
+  if (ok) {
+    return origRealpath(p, cache, cb)
+  }
+
+  if (typeof cache === 'function') {
+    cb = cache
+    cache = null
+  }
+  origRealpath(p, cache, function (er, result) {
+    if (newError(er)) {
+      old.realpath(p, cache, cb)
+    } else {
+      cb(er, result)
+    }
+  })
+}
+
+function realpathSync (p, cache) {
+  if (ok) {
+    return origRealpathSync(p, cache)
+  }
+
+  try {
+    return origRealpathSync(p, cache)
+  } catch (er) {
+    if (newError(er)) {
+      return old.realpathSync(p, cache)
+    } else {
+      throw er
+    }
+  }
+}
+
+function monkeypatch () {
+  fs.realpath = realpath
+  fs.realpathSync = realpathSync
+}
+
+function unmonkeypatch () {
+  fs.realpath = origRealpath
+  fs.realpathSync = origRealpathSync
+}
+
+
+/***/ }),
+
 /***/ 293:
 /***/ (function(module) {
 
@@ -5256,13 +5330,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVersion = exports.getVersion = exports.isAvailable = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
-const tmp_1 = __importDefault(__webpack_require__(517));
 const semver = __importStar(__webpack_require__(383));
 const context = __importStar(__webpack_require__(842));
 const exec = __importStar(__webpack_require__(757));
 function getImageIDFile() {
     return __awaiter(this, void 0, void 0, function* () {
-        return path_1.default.join(context.tmpDir, 'iidfile');
+        return path_1.default.join(context.tmpDir(), 'iidfile').split(path_1.default.sep).join(path_1.default.posix.sep);
     });
 }
 exports.getImageIDFile = getImageIDFile;
@@ -5279,8 +5352,8 @@ exports.getImageID = getImageID;
 function getSecret(kvp) {
     return __awaiter(this, void 0, void 0, function* () {
         const [key, value] = kvp.split('=');
-        const secretFile = tmp_1.default.tmpNameSync({
-            tmpdir: context.tmpDir
+        const secretFile = context.tmpNameSync({
+            tmpdir: context.tmpDir()
         });
         yield fs_1.default.writeFileSync(secretFile, value);
         return `id=${key},src=${secretFile}`;
@@ -5909,6 +5982,13 @@ module.exports = require("assert");
 
 /***/ }),
 
+/***/ 373:
+/***/ (function(module) {
+
+module.exports = require("crypto");
+
+/***/ }),
+
 /***/ 380:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -5943,7 +6023,7 @@ module.exports = {
   patch: __webpack_require__(866),
   prerelease: __webpack_require__(16),
   compare: __webpack_require__(309),
-  rcompare: __webpack_require__(499),
+  rcompare: __webpack_require__(417),
   compareLoose: __webpack_require__(804),
   compareBuild: __webpack_require__(156),
   sort: __webpack_require__(426),
@@ -5969,7 +6049,7 @@ module.exports = {
   ltr: __webpack_require__(323),
   intersects: __webpack_require__(8),
   simplifyRange: __webpack_require__(561),
-  subset: __webpack_require__(807),
+  subset: __webpack_require__(863),
 }
 
 
@@ -6172,9 +6252,12 @@ module.exports = require("stream");
 /***/ }),
 
 /***/ 417:
-/***/ (function(module) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-module.exports = require("crypto");
+const compare = __webpack_require__(309)
+const rcompare = (a, b, loose) => compare(b, a, loose)
+module.exports = rcompare
+
 
 /***/ }),
 
@@ -9274,16 +9357,6 @@ module.exports = [["8740","䏰䰲䘃䖦䕸𧉧䵷䖳𧲱䳢𧳅㮕䜶䝄䱇䱀�
 
 /***/ }),
 
-/***/ 499:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const compare = __webpack_require__(309)
-const rcompare = (a, b, loose) => compare(b, a, loose)
-module.exports = rcompare
-
-
-/***/ }),
-
 /***/ 508:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -9374,7 +9447,7 @@ exports.exec = exec;
 const fs = __webpack_require__(747);
 const os = __webpack_require__(87);
 const path = __webpack_require__(622);
-const crypto = __webpack_require__(417);
+const crypto = __webpack_require__(373);
 const _c = { fs: fs.constants, os: os.constants };
 const rimraf = __webpack_require__(959);
 
@@ -12743,168 +12816,6 @@ module.exports = compareLoose
 
 /***/ }),
 
-/***/ 807:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const Range = __webpack_require__(828)
-const { ANY } = __webpack_require__(532)
-const satisfies = __webpack_require__(55)
-const compare = __webpack_require__(309)
-
-// Complex range `r1 || r2 || ...` is a subset of `R1 || R2 || ...` iff:
-// - Every simple range `r1, r2, ...` is a subset of some `R1, R2, ...`
-//
-// Simple range `c1 c2 ...` is a subset of simple range `C1 C2 ...` iff:
-// - If c is only the ANY comparator
-//   - If C is only the ANY comparator, return true
-//   - Else return false
-// - Let EQ be the set of = comparators in c
-// - If EQ is more than one, return true (null set)
-// - Let GT be the highest > or >= comparator in c
-// - Let LT be the lowest < or <= comparator in c
-// - If GT and LT, and GT.semver > LT.semver, return true (null set)
-// - If EQ
-//   - If GT, and EQ does not satisfy GT, return true (null set)
-//   - If LT, and EQ does not satisfy LT, return true (null set)
-//   - If EQ satisfies every C, return true
-//   - Else return false
-// - If GT
-//   - If GT is lower than any > or >= comp in C, return false
-//   - If GT is >=, and GT.semver does not satisfy every C, return false
-// - If LT
-//   - If LT.semver is greater than that of any > comp in C, return false
-//   - If LT is <=, and LT.semver does not satisfy every C, return false
-// - If any C is a = range, and GT or LT are set, return false
-// - Else return true
-
-const subset = (sub, dom, options) => {
-  sub = new Range(sub, options)
-  dom = new Range(dom, options)
-  let sawNonNull = false
-
-  OUTER: for (const simpleSub of sub.set) {
-    for (const simpleDom of dom.set) {
-      const isSub = simpleSubset(simpleSub, simpleDom, options)
-      sawNonNull = sawNonNull || isSub !== null
-      if (isSub)
-        continue OUTER
-    }
-    // the null set is a subset of everything, but null simple ranges in
-    // a complex range should be ignored.  so if we saw a non-null range,
-    // then we know this isn't a subset, but if EVERY simple range was null,
-    // then it is a subset.
-    if (sawNonNull)
-      return false
-  }
-  return true
-}
-
-const simpleSubset = (sub, dom, options) => {
-  if (sub.length === 1 && sub[0].semver === ANY)
-    return dom.length === 1 && dom[0].semver === ANY
-
-  const eqSet = new Set()
-  let gt, lt
-  for (const c of sub) {
-    if (c.operator === '>' || c.operator === '>=')
-      gt = higherGT(gt, c, options)
-    else if (c.operator === '<' || c.operator === '<=')
-      lt = lowerLT(lt, c, options)
-    else
-      eqSet.add(c.semver)
-  }
-
-  if (eqSet.size > 1)
-    return null
-
-  let gtltComp
-  if (gt && lt) {
-    gtltComp = compare(gt.semver, lt.semver, options)
-    if (gtltComp > 0)
-      return null
-    else if (gtltComp === 0 && (gt.operator !== '>=' || lt.operator !== '<='))
-      return null
-  }
-
-  // will iterate one or zero times
-  for (const eq of eqSet) {
-    if (gt && !satisfies(eq, String(gt), options))
-      return null
-
-    if (lt && !satisfies(eq, String(lt), options))
-      return null
-
-    for (const c of dom) {
-      if (!satisfies(eq, String(c), options))
-        return false
-    }
-    return true
-  }
-
-  let higher, lower
-  let hasDomLT, hasDomGT
-  for (const c of dom) {
-    hasDomGT = hasDomGT || c.operator === '>' || c.operator === '>='
-    hasDomLT = hasDomLT || c.operator === '<' || c.operator === '<='
-    if (gt) {
-      if (c.operator === '>' || c.operator === '>=') {
-        higher = higherGT(gt, c, options)
-        if (higher === c)
-          return false
-      } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options))
-        return false
-    }
-    if (lt) {
-      if (c.operator === '<' || c.operator === '<=') {
-        lower = lowerLT(lt, c, options)
-        if (lower === c)
-          return false
-      } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options))
-        return false
-    }
-    if (!c.operator && (lt || gt) && gtltComp !== 0)
-      return false
-  }
-
-  // if there was a < or >, and nothing in the dom, then must be false
-  // UNLESS it was limited by another range in the other direction.
-  // Eg, >1.0.0 <1.0.1 is still a subset of <2.0.0
-  if (gt && hasDomLT && !lt && gtltComp !== 0)
-    return false
-
-  if (lt && hasDomGT && !gt && gtltComp !== 0)
-    return false
-
-  return true
-}
-
-// >=1.2.3 is lower than >1.2.3
-const higherGT = (a, b, options) => {
-  if (!a)
-    return b
-  const comp = compare(a.semver, b.semver, options)
-  return comp > 0 ? a
-    : comp < 0 ? b
-    : b.operator === '>' && a.operator === '>=' ? b
-    : a
-}
-
-// <=1.2.3 is higher than <1.2.3
-const lowerLT = (a, b, options) => {
-  if (!a)
-    return b
-  const comp = compare(a.semver, b.semver, options)
-  return comp < 0 ? a
-    : comp > 0 ? b
-    : b.operator === '<' && a.operator === '<=' ? b
-    : a
-}
-
-module.exports = subset
-
-
-/***/ }),
-
 /***/ 818:
 /***/ (function(module) {
 
@@ -13703,17 +13614,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpDir = void 0;
+exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
 const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(383));
+const tmp = __importStar(__webpack_require__(517));
 const buildx = __importStar(__webpack_require__(295));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
-exports.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
-const defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${github.context.ref.replace(/^refs\//, '')}`;
-function getInputs() {
+function defaultContext() {
+    var _a, _b;
+    return `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
+}
+exports.defaultContext = defaultContext;
+function tmpDir() {
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+}
+exports.tmpDir = tmpDir;
+function tmpNameSync(options) {
+    return tmp.tmpNameSync(options);
+}
+exports.tmpNameSync = tmpNameSync;
+function getInputs(defaultContext) {
     return __awaiter(this, void 0, void 0, function* () {
         return {
             context: core.getInput('context') || defaultContext,
@@ -13738,17 +13661,17 @@ function getInputs() {
     });
 }
 exports.getInputs = getInputs;
-function getArgs(inputs, buildxVersion) {
+function getArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['buildx'];
-        args.push.apply(args, yield getBuildArgs(inputs, buildxVersion));
+        args.push.apply(args, yield getBuildArgs(inputs, defaultContext, buildxVersion));
         args.push.apply(args, yield getCommonArgs(inputs));
         args.push(inputs.context);
         return args;
     });
 }
 exports.getArgs = getArgs;
-function getBuildArgs(inputs, buildxVersion) {
+function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['build'];
         yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
@@ -13769,12 +13692,17 @@ function getBuildArgs(inputs, buildxVersion) {
         if (inputs.platforms.length > 0) {
             args.push('--platform', inputs.platforms.join(','));
         }
-        if (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2')) {
-            args.push('--iidfile', yield buildx.getImageIDFile());
-        }
+        let isLocalOrTarExporter = false;
         yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
+            if (output.startsWith('type=local') || output.startsWith('type=tar')) {
+                isLocalOrTarExporter = true;
+            }
             args.push('--output', output);
         }));
+        // TODO: Remove platforms length cond when buildx >0.4.2 available on runner (docker/buildx#351)
+        if (inputs.platforms.length == 0 && !isLocalOrTarExporter && semver.satisfies(buildxVersion, '>=0.4.2')) {
+            args.push('--iidfile', yield buildx.getImageIDFile());
+        }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-from', cacheFrom);
         }));
@@ -13856,72 +13784,161 @@ module.exports = clean
 /***/ 863:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-module.exports = realpath
-realpath.realpath = realpath
-realpath.sync = realpathSync
-realpath.realpathSync = realpathSync
-realpath.monkeypatch = monkeypatch
-realpath.unmonkeypatch = unmonkeypatch
+const Range = __webpack_require__(828)
+const { ANY } = __webpack_require__(532)
+const satisfies = __webpack_require__(55)
+const compare = __webpack_require__(309)
 
-var fs = __webpack_require__(747)
-var origRealpath = fs.realpath
-var origRealpathSync = fs.realpathSync
+// Complex range `r1 || r2 || ...` is a subset of `R1 || R2 || ...` iff:
+// - Every simple range `r1, r2, ...` is a subset of some `R1, R2, ...`
+//
+// Simple range `c1 c2 ...` is a subset of simple range `C1 C2 ...` iff:
+// - If c is only the ANY comparator
+//   - If C is only the ANY comparator, return true
+//   - Else return false
+// - Let EQ be the set of = comparators in c
+// - If EQ is more than one, return true (null set)
+// - Let GT be the highest > or >= comparator in c
+// - Let LT be the lowest < or <= comparator in c
+// - If GT and LT, and GT.semver > LT.semver, return true (null set)
+// - If EQ
+//   - If GT, and EQ does not satisfy GT, return true (null set)
+//   - If LT, and EQ does not satisfy LT, return true (null set)
+//   - If EQ satisfies every C, return true
+//   - Else return false
+// - If GT
+//   - If GT is lower than any > or >= comp in C, return false
+//   - If GT is >=, and GT.semver does not satisfy every C, return false
+// - If LT
+//   - If LT.semver is greater than that of any > comp in C, return false
+//   - If LT is <=, and LT.semver does not satisfy every C, return false
+// - If any C is a = range, and GT or LT are set, return false
+// - Else return true
 
-var version = process.version
-var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(734)
+const subset = (sub, dom, options) => {
+  sub = new Range(sub, options)
+  dom = new Range(dom, options)
+  let sawNonNull = false
 
-function newError (er) {
-  return er && er.syscall === 'realpath' && (
-    er.code === 'ELOOP' ||
-    er.code === 'ENOMEM' ||
-    er.code === 'ENAMETOOLONG'
-  )
-}
-
-function realpath (p, cache, cb) {
-  if (ok) {
-    return origRealpath(p, cache, cb)
-  }
-
-  if (typeof cache === 'function') {
-    cb = cache
-    cache = null
-  }
-  origRealpath(p, cache, function (er, result) {
-    if (newError(er)) {
-      old.realpath(p, cache, cb)
-    } else {
-      cb(er, result)
+  OUTER: for (const simpleSub of sub.set) {
+    for (const simpleDom of dom.set) {
+      const isSub = simpleSubset(simpleSub, simpleDom, options)
+      sawNonNull = sawNonNull || isSub !== null
+      if (isSub)
+        continue OUTER
     }
-  })
+    // the null set is a subset of everything, but null simple ranges in
+    // a complex range should be ignored.  so if we saw a non-null range,
+    // then we know this isn't a subset, but if EVERY simple range was null,
+    // then it is a subset.
+    if (sawNonNull)
+      return false
+  }
+  return true
 }
 
-function realpathSync (p, cache) {
-  if (ok) {
-    return origRealpathSync(p, cache)
+const simpleSubset = (sub, dom, options) => {
+  if (sub.length === 1 && sub[0].semver === ANY)
+    return dom.length === 1 && dom[0].semver === ANY
+
+  const eqSet = new Set()
+  let gt, lt
+  for (const c of sub) {
+    if (c.operator === '>' || c.operator === '>=')
+      gt = higherGT(gt, c, options)
+    else if (c.operator === '<' || c.operator === '<=')
+      lt = lowerLT(lt, c, options)
+    else
+      eqSet.add(c.semver)
   }
 
-  try {
-    return origRealpathSync(p, cache)
-  } catch (er) {
-    if (newError(er)) {
-      return old.realpathSync(p, cache)
-    } else {
-      throw er
+  if (eqSet.size > 1)
+    return null
+
+  let gtltComp
+  if (gt && lt) {
+    gtltComp = compare(gt.semver, lt.semver, options)
+    if (gtltComp > 0)
+      return null
+    else if (gtltComp === 0 && (gt.operator !== '>=' || lt.operator !== '<='))
+      return null
+  }
+
+  // will iterate one or zero times
+  for (const eq of eqSet) {
+    if (gt && !satisfies(eq, String(gt), options))
+      return null
+
+    if (lt && !satisfies(eq, String(lt), options))
+      return null
+
+    for (const c of dom) {
+      if (!satisfies(eq, String(c), options))
+        return false
     }
+    return true
   }
+
+  let higher, lower
+  let hasDomLT, hasDomGT
+  for (const c of dom) {
+    hasDomGT = hasDomGT || c.operator === '>' || c.operator === '>='
+    hasDomLT = hasDomLT || c.operator === '<' || c.operator === '<='
+    if (gt) {
+      if (c.operator === '>' || c.operator === '>=') {
+        higher = higherGT(gt, c, options)
+        if (higher === c)
+          return false
+      } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options))
+        return false
+    }
+    if (lt) {
+      if (c.operator === '<' || c.operator === '<=') {
+        lower = lowerLT(lt, c, options)
+        if (lower === c)
+          return false
+      } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options))
+        return false
+    }
+    if (!c.operator && (lt || gt) && gtltComp !== 0)
+      return false
+  }
+
+  // if there was a < or >, and nothing in the dom, then must be false
+  // UNLESS it was limited by another range in the other direction.
+  // Eg, >1.0.0 <1.0.1 is still a subset of <2.0.0
+  if (gt && hasDomLT && !lt && gtltComp !== 0)
+    return false
+
+  if (lt && hasDomGT && !gt && gtltComp !== 0)
+    return false
+
+  return true
 }
 
-function monkeypatch () {
-  fs.realpath = realpath
-  fs.realpathSync = realpathSync
+// >=1.2.3 is lower than >1.2.3
+const higherGT = (a, b, options) => {
+  if (!a)
+    return b
+  const comp = compare(a.semver, b.semver, options)
+  return comp > 0 ? a
+    : comp < 0 ? b
+    : b.operator === '>' && a.operator === '>=' ? b
+    : a
 }
 
-function unmonkeypatch () {
-  fs.realpath = origRealpath
-  fs.realpathSync = origRealpathSync
+// <=1.2.3 is higher than <1.2.3
+const lowerLT = (a, b, options) => {
+  if (!a)
+    return b
+  const comp = compare(a.semver, b.semver, options)
+  return comp < 0 ? a
+    : comp > 0 ? b
+    : b.operator === '<' && a.operator === '<=' ? b
+    : a
 }
+
+module.exports = subset
 
 
 /***/ }),
@@ -14864,7 +14881,7 @@ function wrappy (fn, cb) {
 module.exports = glob
 
 var fs = __webpack_require__(747)
-var rp = __webpack_require__(863)
+var rp = __webpack_require__(290)
 var minimatch = __webpack_require__(973)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(124)

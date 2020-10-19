@@ -2,14 +2,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
+import * as tmp from 'tmp';
 import * as buildx from './buildx';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-
-export const tmpDir: string = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
-const defaultContext: string = `https://github.com/${github.context.repo.owner}/${
-  github.context.repo.repo
-}.git#${github.context.ref.replace(/^refs\//, '')}`;
 
 export interface Inputs {
   context: string;
@@ -32,7 +28,21 @@ export interface Inputs {
   githubToken: string;
 }
 
-export async function getInputs(): Promise<Inputs> {
+export function defaultContext(): string {
+  return `https://github.com/${github.context.repo.owner}/${
+    github.context.repo.repo
+  }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
+}
+
+export function tmpDir(): string {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+}
+
+export function tmpNameSync(options?: tmp.TmpNameOptions): string {
+  return tmp.tmpNameSync(options);
+}
+
+export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
@@ -55,15 +65,15 @@ export async function getInputs(): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
+export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs, buildxVersion));
+  args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
   args.push.apply(args, await getCommonArgs(inputs));
   args.push(inputs.context);
   return args;
 }
 
-async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['build'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -83,12 +93,17 @@ async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Arra
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
   }
-  if (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2')) {
-    args.push('--iidfile', await buildx.getImageIDFile());
-  }
+  let isLocalOrTarExporter: boolean = false;
   await asyncForEach(inputs.outputs, async output => {
+    if (output.startsWith('type=local') || output.startsWith('type=tar')) {
+      isLocalOrTarExporter = true;
+    }
     args.push('--output', output);
   });
+  // TODO: Remove platforms length cond when buildx >0.4.2 available on runner (docker/buildx#351)
+  if (inputs.platforms.length == 0 && !isLocalOrTarExporter && semver.satisfies(buildxVersion, '>=0.4.2')) {
+    args.push('--iidfile', await buildx.getImageIDFile());
+  }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {
     args.push('--cache-from', cacheFrom);
   });

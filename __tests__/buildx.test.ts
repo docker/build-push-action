@@ -1,9 +1,23 @@
-import fs from 'fs';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as semver from 'semver';
 import * as buildx from '../src/buildx';
 import * as exec from '@actions/exec';
+import * as context from '../src/context';
 
 const digest = 'sha256:bfb45ab72e46908183546477a08f8867fc40cebadd00af54b071b097aed127a9';
+
+jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
+  const tmpDir = path.join('/tmp/.docker-build-push-jest').split(path.sep).join(path.posix.sep);
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, {recursive: true});
+  }
+  return tmpDir;
+});
+
+jest.spyOn(context, 'tmpNameSync').mockImplementation((): string => {
+  return path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
+});
 
 describe('getImageID', () => {
   it('matches', async () => {
