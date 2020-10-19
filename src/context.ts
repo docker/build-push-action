@@ -93,15 +93,15 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
   }
-  let isLocalOrTarExporter: boolean = false;
   await asyncForEach(inputs.outputs, async output => {
-    if (output.startsWith('type=local') || output.startsWith('type=tar')) {
-      isLocalOrTarExporter = true;
-    }
     args.push('--output', output);
   });
   // TODO: Remove platforms length cond when buildx >0.4.2 available on runner (docker/buildx#351)
-  if (inputs.platforms.length == 0 && !isLocalOrTarExporter && semver.satisfies(buildxVersion, '>=0.4.2')) {
+  if (
+    inputs.platforms.length == 0 &&
+    !buildx.isLocalOrTarExporter(inputs.outputs) &&
+    semver.satisfies(buildxVersion, '>=0.4.2')
+  ) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {
@@ -110,14 +110,10 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   await asyncForEach(inputs.cacheTo, async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
-  let hasGitAuthToken: boolean = false;
   await asyncForEach(inputs.secrets, async secret => {
-    if (secret.startsWith('GIT_AUTH_TOKEN=')) {
-      hasGitAuthToken = true;
-    }
     args.push('--secret', await buildx.getSecret(secret));
   });
-  if (inputs.githubToken && !hasGitAuthToken && inputs.context == defaultContext) {
+  if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
   if (inputs.file) {

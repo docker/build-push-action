@@ -5327,7 +5327,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseVersion = exports.getVersion = exports.isAvailable = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
+exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(383));
@@ -5360,6 +5360,26 @@ function getSecret(kvp) {
     });
 }
 exports.getSecret = getSecret;
+function isLocalOrTarExporter(outputs) {
+    for (let output of outputs) {
+        for (let [key, value] of output.split(/\s*,\s*/).map(chunk => chunk.split('='))) {
+            if (key == 'type' && (value == 'local' || value == 'tar')) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+exports.isLocalOrTarExporter = isLocalOrTarExporter;
+function hasGitAuthToken(secrets) {
+    for (let secret of secrets) {
+        if (secret.startsWith('GIT_AUTH_TOKEN=')) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.hasGitAuthToken = hasGitAuthToken;
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exec.exec(`docker`, ['buildx'], true).then(res => {
@@ -13692,15 +13712,13 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.platforms.length > 0) {
             args.push('--platform', inputs.platforms.join(','));
         }
-        let isLocalOrTarExporter = false;
         yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-            if (output.startsWith('type=local') || output.startsWith('type=tar')) {
-                isLocalOrTarExporter = true;
-            }
             args.push('--output', output);
         }));
         // TODO: Remove platforms length cond when buildx >0.4.2 available on runner (docker/buildx#351)
-        if (inputs.platforms.length == 0 && !isLocalOrTarExporter && semver.satisfies(buildxVersion, '>=0.4.2')) {
+        if (inputs.platforms.length == 0 &&
+            !buildx.isLocalOrTarExporter(inputs.outputs) &&
+            semver.satisfies(buildxVersion, '>=0.4.2')) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
@@ -13709,14 +13727,10 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-to', cacheTo);
         }));
-        let hasGitAuthToken = false;
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
-            if (secret.startsWith('GIT_AUTH_TOKEN=')) {
-                hasGitAuthToken = true;
-            }
             args.push('--secret', yield buildx.getSecret(secret));
         }));
-        if (inputs.githubToken && !hasGitAuthToken && inputs.context == defaultContext) {
+        if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
         if (inputs.file) {

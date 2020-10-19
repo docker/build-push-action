@@ -25,6 +25,26 @@ export async function getSecret(kvp: string): Promise<string> {
   return `id=${key},src=${secretFile}`;
 }
 
+export function isLocalOrTarExporter(outputs: string[]): Boolean {
+  for (let output of outputs) {
+    for (let [key, value] of output.split(/\s*,\s*/).map(chunk => chunk.split('='))) {
+      if (key == 'type' && (value == 'local' || value == 'tar')) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function hasGitAuthToken(secrets: string[]): Boolean {
+  for (let secret of secrets) {
+    if (secret.startsWith('GIT_AUTH_TOKEN=')) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function isAvailable(): Promise<Boolean> {
   return await exec.exec(`docker`, ['buildx'], true).then(res => {
     if (res.stderr != '' && !res.success) {
