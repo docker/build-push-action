@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import csvparse from 'csv-parse/lib/sync';
 import * as semver from 'semver';
 import * as context from './context';
 import * as exec from './exec';
@@ -26,8 +27,13 @@ export async function getSecret(kvp: string): Promise<string> {
 }
 
 export function isLocalOrTarExporter(outputs: string[]): Boolean {
-  for (let output of outputs) {
-    for (let [key, value] of output.split(/\s*,\s*/).map(chunk => chunk.split('='))) {
+  for (let output of csvparse(outputs.join(`\n`), {
+    delimiter: ',',
+    trim: true,
+    columns: false,
+    relax_column_count: true
+  })) {
+    for (let [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
       if (key == 'type' && (value == 'local' || value == 'tar')) {
         return true;
       }

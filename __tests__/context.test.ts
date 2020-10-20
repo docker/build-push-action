@@ -39,10 +39,8 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
-        '--iidfile',
-        '/tmp/.docker-build-push-jest/iidfile',
-        '--file',
-        'Dockerfile',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]
     ],
@@ -81,10 +79,8 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
-        '--iidfile',
-        '/tmp/.docker-build-push-jest/iidfile',
-        '--secret',
-        'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', 'Dockerfile',
         '.'
       ]
@@ -92,15 +88,15 @@ describe('getArgs', () => {
     [
       '0.4.2',
       new Map<string, string>([
-        ['github-token', 'abcdefghijklmno0123456789']
+        ['github-token', 'abcdefghijklmno0123456789'],
+        ['outputs', '.']
       ]),
       [
         'buildx',
         'build',
-        '--iidfile',
-        '/tmp/.docker-build-push-jest/iidfile',
-        '--secret',
-        'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--output', '.',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]

@@ -30,6 +30,66 @@ describe('getImageID', () => {
   });
 });
 
+describe('isLocalOrTarExporter', () => {
+  // prettier-ignore
+  test.each([
+    [
+      [
+        'type=registry,ref=user/app',
+      ],
+      false
+    ],
+    [
+      [
+        'type=docker',
+      ],
+      false
+    ],
+    [
+      [
+        'type=local,dest=./release-out'
+      ],
+      true
+    ],
+    [
+      [
+        'type=tar,dest=/tmp/image.tar'
+      ],
+      true
+    ],
+    [
+      [
+        'type=docker',
+        'type=tar,dest=/tmp/image.tar'
+      ],
+      true
+    ],
+    [
+      [
+        '"type=tar","dest=/tmp/image.tar"'
+      ],
+      true
+    ],
+    [
+      [
+        '" type= local" , dest=./release-out'
+      ],
+      true
+    ],
+    [
+      [
+        '.'
+      ],
+      false
+    ],
+  ])(
+    'given %p returns %p',
+    async (outputs: Array<string>, expected: boolean) => {
+      expect(buildx.isLocalOrTarExporter(outputs)).toEqual(expected);
+    }
+  );
+});
+
 describe('getVersion', () => {
   it('valid', async () => {
     await exec.exec('docker', ['buildx', 'version']);

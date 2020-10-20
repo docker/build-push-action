@@ -261,6 +261,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
+          # TODO: Remove image=moby/buildkit:buildx-stable-1 when moby/buildkit#1727 fixed
           driver-opts: |
             network=host
             image=moby/buildkit:buildx-stable-1
@@ -348,6 +349,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
+          # TODO: Remove image=moby/buildkit:buildx-stable-1 when moby/buildkit#1727 fixed
           driver-opts: |
             network=host
             image=moby/buildkit:buildx-stable-1
@@ -412,6 +414,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
+          # TODO: Remove image=moby/buildkit:buildx-stable-1 when moby/buildkit#1727 fixed
           driver-opts: |
             network=host
             image=moby/buildkit:buildx-stable-1
