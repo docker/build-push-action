@@ -31,10 +31,12 @@
     "@actions/core": "^1.2.6",
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
+    "csv-parse": "^4.12.0",
     "semver": "^7.3.2",
     "tmp": "^0.2.1"
   },
   "devDependencies": {
+    "@types/csv-parse": "^1.2.2",
     "@types/jest": "^26.0.3",
     "@types/node": "^14.0.14",
     "@types/tmp": "^0.2.0",

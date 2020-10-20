@@ -1,4 +1,120 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as context from '../src/context';
+import * as buildx from '../src/buildx';
+
+jest.spyOn(context, 'defaultContext').mockImplementation((): string => {
+  return 'https://github.com/docker/build-push-action.git#test-jest';
+});
+
+jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
+  const tmpDir = path.join('/tmp/.docker-build-push-jest').split(path.sep).join(path.posix.sep);
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, {recursive: true});
+  }
+  return tmpDir;
+});
+
+jest.spyOn(context, 'tmpNameSync').mockImplementation((): string => {
+  return path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
+});
+
+describe('getArgs', () => {
+  beforeEach(() => {
+    process.env = Object.keys(process.env).reduce((object, key) => {
+      if (!key.startsWith('INPUT_')) {
+        object[key] = process.env[key];
+      }
+      return object;
+    }, {});
+  });
+
+  // prettier-ignore
+  test.each([
+    [
+      '0.4.2',
+      new Map<string, string>([
+        // noop
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        'https://github.com/docker/build-push-action.git#test-jest'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['outputs', 'type=local,dest=./release-out']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--output', 'type=local,dest=./release-out',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.1',
+      new Map<string, string>([
+        ['context', '.']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno0123456789'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['github-token', 'abcdefghijklmno0123456789'],
+        ['outputs', '.']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--output', '.',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--file', 'Dockerfile',
+        'https://github.com/docker/build-push-action.git#test-jest'
+      ]
+    ]
+  ])(
+    'given %p with %p as inputs, returns %p',
+    async (buildxVersion: string, inputs: Map<string, any>, expected: Array<string>) => {
+      await inputs.forEach((value: string, name: string) => {
+        setInput(name, value);
+      });
+      const defContext = context.defaultContext();
+      const inp = await context.getInputs(defContext);
+      console.log(inp);
+      const res = await context.getArgs(inp, defContext, buildxVersion);
+      console.log(res);
+      expect(res).toEqual(expected);
+    }
+  );
+});
 
 describe('getInputList', () => {
   it('handles single line correctly', async () => {
