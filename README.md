@@ -592,44 +592,36 @@ with this action:
 
 Following inputs can be used as `step.with` keys
 
-| Name                | Type    | Description                        |
-|---------------------|---------|------------------------------------|
-| `builder`           | String  | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
-| `context`           | String  | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
-| `file`              | String  | Path to the Dockerfile (default `Dockerfile`) |
-| `build-args`        | List    | List of build-time variables |
-| `labels`            | List    | List of metadata for an image |
-| `tags`              | List    | List of tags |
-| `pull`              | Bool    | Always attempt to pull a newer version of the image (default `false`) |
-| `target`            | String  | Sets the target stage to build |
-| `allow`             | List    | List of [extra privileged entitlement](https://github.com/docker/buildx#--allowentitlement) (eg. `network.host,security.insecure`) |
-| `no-cache`          | Bool    | Do not use cache when building the image (default `false`) |
-| `platforms`         | List    | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
-| `load`              | Bool    | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
-| `push`              | Bool    | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
-| `outputs`           | CSV     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
-| `cache-from`        | CSV     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
-| `cache-to`          | CSV     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
-| `secrets`           | CSV     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
+| Name                | Type     | Description                        |
+|---------------------|----------|------------------------------------|
+| `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
+| `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
+| `file`              | String   | Path to the Dockerfile (default `Dockerfile`) |
+| `build-args`        | List     | List of build-time variables |
+| `labels`            | List     | List of metadata for an image |
+| `tags`              | List/CSV | List of tags |
+| `pull`              | Bool     | Always attempt to pull a newer version of the image (default `false`) |
+| `target`            | String   | Sets the target stage to build |
+| `allow`             | List/CSV | List of [extra privileged entitlement](https://github.com/docker/buildx#--allowentitlement) (eg. `network.host,security.insecure`) |
+| `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
+| `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
+| `load`              | Bool     | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
+| `push`              | Bool     | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
+| `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
+| `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
+| `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
+| `secrets`           | List     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
 
-> `List` type can be a comma or newline-delimited string
-> ```yaml
-> tags: name/app:latest,name/app:1.0.0
-> ```
-> ```yaml
-> tags: |
->   name/app:latest
->   name/app:1.0.0
-> ```
-
-> `CSV` type must be a newline-delimited string
-> ```yaml
-> cache-from: user/app:cache
-> ```
+> `List` type is a newline-delimited string
 > ```yaml
 > cache-from: |
 >   user/app:cache
 >   type=local,src=path/to/dir
+> ```
+
+> `CSV` type is a comma-delimited string
+> ```yaml
+> tags: name/app:latest,name/app:1.0.0
 > ```
 
 ### outputs

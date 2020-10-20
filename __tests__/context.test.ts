@@ -34,11 +34,13 @@ describe('getArgs', () => {
     [
       '0.4.2',
       new Map<string, string>([
-        // noop
+        ['build-args', 'MY_ARG=val1,val2,val3\nARG=val'],
       ]),
       [
         'buildx',
         'build',
+        '--build-arg', 'MY_ARG=val1,val2,val3',
+        '--build-arg', 'ARG=val',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
@@ -48,11 +50,14 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
+        ['labels', 'org.opencontainers.image.title=buildkit\norg.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit'],
         ['outputs', 'type=local,dest=./release-out']
       ]),
       [
         'buildx',
         'build',
+        '--label', 'org.opencontainers.image.title=buildkit',
+        '--label', 'org.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit',
         '--output', 'type=local,dest=./release-out',
         '--file', 'Dockerfile',
         '.'
