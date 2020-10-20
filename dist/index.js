@@ -5368,6 +5368,11 @@ function isLocalOrTarExporter(outputs) {
         columns: false,
         relax_column_count: true
     })) {
+        // Local if no type is defined
+        // https://github.com/docker/buildx/blob/d2bf42f8b4784d83fde17acb3ed84703ddc2156b/build/output.go#L29-L43
+        if (output.length == 1 && !output[0].startsWith('type=')) {
+            return true;
+        }
         for (let [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
             if (key == 'type' && (value == 'local' || value == 'tar')) {
                 return true;

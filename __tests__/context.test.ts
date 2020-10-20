@@ -95,7 +95,6 @@ describe('getArgs', () => {
         'buildx',
         'build',
         '--output', '.',
-        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'

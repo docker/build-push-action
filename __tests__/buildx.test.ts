@@ -80,7 +80,7 @@ describe('isLocalOrTarExporter', () => {
       [
         '.'
       ],
-      false
+      true
     ],
   ])(
     'given %p returns %p',
