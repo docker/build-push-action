@@ -46,8 +46,8 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
-    buildArgs: await getInputList('build-args'),
-    labels: await getInputList('labels'),
+    buildArgs: await getInputList('build-args', true),
+    labels: await getInputList('labels', true),
     tags: await getInputList('tags'),
     pull: /true/i.test(core.getInput('pull')),
     target: core.getInput('target'),

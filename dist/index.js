@@ -14867,8 +14867,8 @@ function getInputs(defaultContext) {
         return {
             context: core.getInput('context') || defaultContext,
             file: core.getInput('file') || 'Dockerfile',
-            buildArgs: yield getInputList('build-args'),
-            labels: yield getInputList('labels'),
+            buildArgs: yield getInputList('build-args', true),
+            labels: yield getInputList('labels', true),
             tags: yield getInputList('tags'),
             pull: /true/i.test(core.getInput('pull')),
             target: core.getInput('target'),
