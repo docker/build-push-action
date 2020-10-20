@@ -64,7 +64,7 @@ export async function getArgs(inputs: Inputs, buildxVersion: string): Promise<Ar
 }
 
 async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['build'];
+  let args: Array<string> = ['build', '--progress', 'plain'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
   });
