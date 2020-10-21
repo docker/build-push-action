@@ -7,7 +7,7 @@ export interface ExecResult {
   stderr: string;
 }
 
-export const exec = async (command: string, args: string[] = [], silent: boolean): Promise<ExecResult> => {
+export const exec = async (command: string, args: string[] = [], silent?: boolean): Promise<ExecResult> => {
   let stdout: string = '';
   let stderr: string = '';
 

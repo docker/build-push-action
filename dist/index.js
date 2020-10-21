@@ -2377,19 +2377,17 @@ const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const buildx = __importStar(__webpack_require__(295));
 const context = __importStar(__webpack_require__(842));
+const exec = __importStar(__webpack_require__(757));
 const stateHelper = __importStar(__webpack_require__(647));
 const core = __importStar(__webpack_require__(186));
-const exec = __importStar(__webpack_require__(514));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (os.platform() !== 'linux') {
-                core.setFailed('Only supported on linux platform');
-                return;
+                throw new Error(`Only supported on linux platform`);
             }
             if (!(yield buildx.isAvailable())) {
-                core.setFailed(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
-                return;
+                throw new Error(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
             }
             stateHelper.setTmpDir(context.tmpDir());
             const buildxVersion = yield buildx.getVersion();
@@ -2398,7 +2396,11 @@ function run() {
             let inputs = yield context.getInputs(defContext);
             core.info(`🏃 Starting build...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
-            yield exec.exec('docker', args);
+            yield exec.exec('docker', args).then(res => {
+                if (res.stderr != '' && !res.success) {
+                    throw new Error(`buildx call failed with: ${res.stderr.match(/(.*)\s*$/)[0]}`);
+                }
+            });
             const imageID = yield buildx.getImageID();
             if (imageID) {
                 core.info('🛒 Extracting digest...');
