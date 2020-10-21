@@ -104,6 +104,28 @@ describe('getArgs', () => {
         '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['tag', 'localhost:5000/name/app:latest'],
+        ['platforms', 'linux/amd64,linux/arm64'],
+        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno0123456789'],
+        ['file', './test/Dockerfile'],
+        ['builder', 'builder-git-context-2'],
+        ['push', 'true']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--platform', 'linux/amd64,linux/arm64',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--file', './test/Dockerfile',
+        '--builder', 'builder-git-context-2',
+        '--push',
+        'https://github.com/docker/build-push-action.git#heads/master'
+      ]
     ]
   ])(
     'given %p with %p as inputs, returns %p',
