@@ -32,6 +32,19 @@ describe('getArgs', () => {
   // prettier-ignore
   test.each([
     [
+      '0.4.1',
+      new Map<string, string>([
+        ['context', '.'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
       '0.4.2',
       new Map<string, string>([
         ['build-args', 'MY_ARG=val1,val2,val3\nARG=val'],
@@ -66,11 +79,26 @@ describe('getArgs', () => {
     [
       '0.4.1',
       new Map<string, string>([
+        ['context', '.'],
+        ['platforms', 'linux/amd64,linux/arm64']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--platform', 'linux/amd64,linux/arm64',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.1',
+      new Map<string, string>([
         ['context', '.']
       ]),
       [
         'buildx',
         'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--file', 'Dockerfile',
         '.'
       ]
@@ -120,6 +148,7 @@ describe('getArgs', () => {
         'buildx',
         'build',
         '--platform', 'linux/amd64,linux/arm64',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
