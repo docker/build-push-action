@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as context from '../src/context';
 import * as buildx from '../src/buildx';
+import * as context from '../src/context';
 
 jest.spyOn(context, 'defaultContext').mockImplementation((): string => {
   return 'https://github.com/docker/build-push-action.git#test-jest';
