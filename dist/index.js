@@ -14849,13 +14849,20 @@ const tmp = __importStar(__webpack_require__(517));
 const buildx = __importStar(__webpack_require__(295));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
+let _defaultContext, _tmpDir;
 function defaultContext() {
     var _a, _b;
-    return `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
+    if (!_defaultContext) {
+        _defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
+    }
+    return _defaultContext;
 }
 exports.defaultContext = defaultContext;
 function tmpDir() {
-    return fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+    if (!_tmpDir) {
+        _tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+    }
+    return _tmpDir;
 }
 exports.tmpDir = tmpDir;
 function tmpNameSync(options) {

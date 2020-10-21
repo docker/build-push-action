@@ -179,6 +179,13 @@ jobs:
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       -
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1

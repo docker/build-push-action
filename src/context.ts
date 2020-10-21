@@ -7,6 +7,8 @@ import * as buildx from './buildx';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
+let _defaultContext, _tmpDir: string;
+
 export interface Inputs {
   context: string;
   file: string;
@@ -29,13 +31,19 @@ export interface Inputs {
 }
 
 export function defaultContext(): string {
-  return `https://github.com/${github.context.repo.owner}/${
-    github.context.repo.repo
-  }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
+  if (!_defaultContext) {
+    _defaultContext = `https://github.com/${github.context.repo.owner}/${
+      github.context.repo.repo
+    }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
+  }
+  return _defaultContext;
 }
 
 export function tmpDir(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+  if (!_tmpDir) {
+    _tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+  }
+  return _tmpDir;
 }
 
 export function tmpNameSync(options?: tmp.TmpNameOptions): string {
