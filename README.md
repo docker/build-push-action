@@ -88,6 +88,9 @@ jobs:
         with:
           push: true
           tags: user/app:latest
+          build-args: |
+            arg1=value1
+            arg2=value2
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
@@ -540,8 +543,8 @@ might want to use:
 
 ### Update DockerHub repo description
 
-You can update the [Docker Hub repository description](https://docs.docker.com/docker-hub/repos/) using
-a third-party action called [Docker Hub Description](https://github.com/peter-evans/dockerhub-description)
+You can update the [DockerHub repository description](https://docs.docker.com/docker-hub/repos/) using
+a third-party action called [DockerHub Description](https://github.com/peter-evans/dockerhub-description)
 with this action:
 
 <details>
