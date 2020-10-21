@@ -92,7 +92,6 @@ describe('isLocalOrTarExporter', () => {
 
 describe('getVersion', () => {
   it('valid', async () => {
-    await exec.exec('docker', ['buildx', 'version']);
     const version = await buildx.getVersion();
     console.log(`version: ${version}`);
     expect(semver.valid(version)).not.toBeNull();
