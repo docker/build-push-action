@@ -46,8 +46,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -75,6 +73,13 @@ jobs:
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       -
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
@@ -95,14 +100,11 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
-          version: ${{ matrix.buildx-version }}
           driver-opts: network=host
       -
         name: Build and push
@@ -125,6 +127,13 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
       -
         name: Dump context
         if: always()
@@ -150,8 +159,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -213,8 +220,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -243,6 +248,13 @@ jobs:
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       -
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
@@ -261,8 +273,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -295,6 +305,13 @@ jobs:
         name: Image digest (1)
         run: echo ${{ steps.docker_build.outputs.digest }}
       -
+        name: Check digest (1)
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
         name: Prune
         run: |
           docker buildx prune -a -f --verbose
@@ -321,7 +338,14 @@ jobs:
         name: Image digest (2)
         run: echo ${{ steps.docker_build2.outputs.digest }}
       -
-        name: Check digests
+        name: Check digest (2)
+        run: |
+          if [ -z "${{ steps.docker_build2.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
+        name: Compare digests
         run: |
           echo Compare "${{ steps.docker_build.outputs.digest }}" with "${{ steps.docker_build2.outputs.digest }}"
           if [ "${{ steps.docker_build.outputs.digest }}" != "${{ steps.docker_build2.outputs.digest }}" ]; then
@@ -349,8 +373,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -378,7 +400,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi-golang
+          file: ./test/Dockerfile-multi
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -394,6 +416,13 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+      -
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
       -
         name: Dump context
         if: always()
@@ -414,8 +443,6 @@ jobs:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       -
         name: Set up Docker Buildx
         id: buildx
@@ -440,7 +467,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi-golang
+          file: ./test/Dockerfile-multi
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -457,7 +484,14 @@ jobs:
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       -
-        name: Check digests
+        name: Check digest
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
+        name: Compare digests
         run: |
           echo Compare "${{ needs.github-cache-first.outputs.digest }}" with "${{ steps.docker_build.outputs.digest }}"
           if [ "${{ needs.github-cache-first.outputs.digest }}" != "${{ steps.docker_build.outputs.digest }}" ]; then

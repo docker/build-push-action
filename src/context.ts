@@ -104,11 +104,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
   });
-  // TODO: Remove platforms length cond when buildx >0.4.2 available on runner (docker/buildx#351)
   if (
-    inputs.platforms.length == 0 &&
     !buildx.isLocalOrTarExporter(inputs.outputs) &&
-    semver.satisfies(buildxVersion, '>=0.4.2')
+    (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2'))
   ) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
