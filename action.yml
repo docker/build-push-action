@@ -20,7 +20,7 @@ inputs:
     description: Server address of Docker registry. If not set then will default to Docker Hub
     required: false
   repository:
-    deprecationMessage: 'v2 beta is now available through docker/build-push-action@v2'
+    deprecationMessage: 'v2 is now available through docker/build-push-action@v2'
     description: Docker repository to tag the image with
     required: true
   tags:
