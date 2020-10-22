@@ -7,10 +7,10 @@
 ## Upgrade from v1
 
 `v2` of this action includes significant updates and now uses Docker [Buildx](https://github.com/docker/buildx). It
-works with 3 new optional actions ([login](https://github.com/docker/login-action), [setup-buildx](https://github.com/docker/setup-buildx-action)
+works with 3 new actions ([login](https://github.com/docker/login-action), [setup-buildx](https://github.com/docker/setup-buildx-action)
 and [setup-qemu](https://github.com/docker/setup-qemu-action)) that we have created. It's also rewritten as a
 [typescript-action](https://github.com/actions/typescript-action/) to be as closed as possible of the
-[GitHub Runner](https://github.com/actions/virtual-environments) during its execution (#71 #92).
+[GitHub Runner](https://github.com/actions/virtual-environments) during its execution.
 
 [Upgrade notes](UPGRADE.md) and many [usage examples](#usage) have been added to handle most use cases but `v1` is
 still available through [`releases/v1` branch](https://github.com/docker/build-push-action/tree/releases/v1).
@@ -37,6 +37,7 @@ ___
   * [Push to multi-registries](#push-to-multi-registries)
   * [Cache to registry](#push-to-multi-registries)
   * [Local registry](#local-registry)
+  * [Export image to Docker](#export-image-to-docker)
   * [Leverage GitHub cache](#leverage-github-cache)
   * [Complete workflow](#complete-workflow)
   * [Update DockerHub repo description](#update-dockerhub-repo-description)
@@ -56,7 +57,8 @@ build-secrets, remote cache, etc. and different builder deployment/namespacing o
 
 ### Git context
 
-The default behavior of this action is to use the [Git context invoked by your workflow](https://github.com/docker/build-push-action/blob/master/src/context.ts#L31-L35).
+The default behavior of this action is to use the [Git context invoked](https://github.com/docker/build-push-action/blob/master/src/context.ts#L31-L35)
+by your workflow.
 
 ```yaml
 name: ci
@@ -380,6 +382,46 @@ For testing purposes you may need to create a [local registry](https://hub.docke
   ```
 </details>
 
+### Export image to Docker
+
+You may want your build result to be available in the Docker client through `docker images` to be able to use it
+in another step of your workflow:
+
+<details>
+  <summary><b>Show workflow</b></summary>
+  
+  ```yaml
+  name: ci
+
+  on:
+    push:
+      branches: master
+
+  jobs:
+    export-docker:
+      runs-on: ubuntu-latest
+      steps:
+        -
+          name: Checkout
+          uses: actions/checkout@v2
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Build
+          uses: docker/build-push-action@v2
+          with:
+            context: .
+            file: ./Dockerfile
+            load: true
+            tags: myimage:latest
+        -
+          name: Inspect
+          run: |
+            docker image inspect myimage:latest
+  ```
+</details>
+
 ### Leverage GitHub cache
 
 You can leverage [GitHub cache](https://docs.github.com/en/actions/configuring-and-managing-workflows/caching-dependencies-to-speed-up-workflows)
@@ -427,15 +469,20 @@ using [actions/cache](https://github.com/actions/cache) with this action:
   ```
 </details>
 
+> If you want to [export layers for all stages](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue),
+> you have to specify `mode=max` attribute in `cache-to`.
+
 ### Complete workflow
 
-If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and you want an
+If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and want an
 "automatic" tag management through Git reference and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
-for labels, you will have to do it in a dedicated step [for now](https://github.com/docker/build-push-action/issues/116).
+for labels, you will have to do it in a dedicated step.
 
 The following workflow with the `Prepare` step will generate some [outputs](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjobs_idoutputs)
-to handle tags and labels based on GitHub actions events. This is just an example to show many cases that you
-might want to use:
+to handle tags and labels based on GitHub actions events.
+
+This is just an example to show many cases that you might want to use and that you will have to adapt according
+to your needs:
 
 <details>
   <summary><b>Show workflow</b></summary>
@@ -595,6 +642,18 @@ with this action:
 
 Following inputs can be used as `step.with` keys
 
+> `List` type is a newline-delimited string
+> ```yaml
+> cache-from: |
+>   user/app:cache
+>   type=local,src=path/to/dir
+> ```
+
+> `CSV` type is a comma-delimited string
+> ```yaml
+> tags: name/app:latest,name/app:1.0.0
+> ```
+
 | Name                | Type     | Description                        |
 |---------------------|----------|------------------------------------|
 | `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
@@ -614,18 +673,6 @@ Following inputs can be used as `step.with` keys
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
-
-> `List` type is a newline-delimited string
-> ```yaml
-> cache-from: |
->   user/app:cache
->   type=local,src=path/to/dir
-> ```
-
-> `CSV` type is a comma-delimited string
-> ```yaml
-> tags: name/app:latest,name/app:1.0.0
-> ```
 
 ### outputs
 
