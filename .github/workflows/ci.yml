@@ -1,6 +1,7 @@
 name: ci
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -211,6 +212,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       -
         name: Build
+        id: docker_build
         continue-on-error: true
         uses: ./
         with:
@@ -219,6 +221,14 @@ jobs:
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
           tags: localhost:5000/name/app:latest
+      -
+        name: Check
+        run: |
+          echo "${{ toJson(steps.docker_build) }}"
+          if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
+            echo "::error::Should have failed"
+            exit 1
+          fi
       -
         name: Dump context
         if: always()
@@ -243,6 +253,7 @@ jobs:
         uses: actions/checkout@v2.3.3
       -
         name: Build
+        id: docker_build
         continue-on-error: ${{ matrix.push }}
         uses: ./
         with:
@@ -250,6 +261,17 @@ jobs:
           file: ./test/Dockerfile
           push: ${{ matrix.push }}
           tags: localhost:5000/name/app:latest
+      -
+        name: Check
+        run: |
+          echo "${{ toJson(steps.docker_build) }}"
+          if [ "${{ matrix.push }}" = "false" ]; then
+            exit 0
+          fi
+          if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
+            echo "::error::Should have failed"
+            exit 1
+          fi
       -
         name: Dump context
         if: always()
