@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as buildx from '../src/buildx';
 import * as context from '../src/context';
 
 jest.spyOn(context, 'defaultContext').mockImplementation((): string => {
@@ -107,7 +106,7 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
-        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno0123456789'],
+        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
       ]),
       [
         'buildx',
@@ -139,7 +138,7 @@ describe('getArgs', () => {
         ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
         ['platforms', 'linux/amd64,linux/arm64'],
-        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno0123456789'],
+        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
         ['push', 'true']

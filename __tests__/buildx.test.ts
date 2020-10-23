@@ -2,9 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as buildx from '../src/buildx';
-import * as exec from '@actions/exec';
 import * as context from '../src/context';
 
+const tmpNameSync = path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
 const digest = 'sha256:bfb45ab72e46908183546477a08f8867fc40cebadd00af54b071b097aed127a9';
 
 jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
@@ -16,7 +16,7 @@ jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
 });
 
 jest.spyOn(context, 'tmpNameSync').mockImplementation((): string => {
-  return path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
+  return tmpNameSync;
 });
 
 describe('getImageID', () => {
@@ -105,5 +105,18 @@ describe('parseVersion', () => {
     ['github.com/docker/buildx v0.4.2 fb7b670b764764dc4716df3eba07ffdae4cc47b2', '0.4.2']
   ])('given %p', async (stdout, expected) => {
     expect(await buildx.parseVersion(stdout)).toEqual(expected);
+  });
+});
+
+describe('getSecret', () => {
+  it('writes correct secret content', async () => {
+    const key = 'MY_KEY';
+    const secret = 'c3RyaW5nLXdpdGgtZXF1YWxzCg==';
+    const secretArgs = await buildx.getSecret(`${key}=${secret}`);
+    console.log(`secretArgs: ${secretArgs}`);
+    expect(secretArgs).toEqual(`id=${key},src=${tmpNameSync}`);
+    const secretContent = await fs.readFileSync(tmpNameSync, 'utf-8');
+    console.log(`secretValue: ${secretContent}`);
+    expect(secretContent).toEqual(secret);
   });
 });
