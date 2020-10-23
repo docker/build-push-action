@@ -2,31 +2,34 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as buildx from './buildx';
 import * as context from './context';
+import * as exec from './exec';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
 
 async function run(): Promise<void> {
   try {
     if (os.platform() !== 'linux') {
-      core.setFailed('Only supported on linux platform');
-      return;
+      throw new Error(`Only supported on linux platform`);
     }
 
     if (!(await buildx.isAvailable())) {
-      core.setFailed(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
-      return;
+      throw new Error(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
     }
-    stateHelper.setTmpDir(context.tmpDir);
+    stateHelper.setTmpDir(context.tmpDir());
 
     const buildxVersion = await buildx.getVersion();
     core.info(`📣 Buildx version: ${buildxVersion}`);
 
-    let inputs: context.Inputs = await context.getInputs();
+    const defContext = context.defaultContext();
+    let inputs: context.Inputs = await context.getInputs(defContext);
 
     core.info(`🏃 Starting build...`);
-    const args: string[] = await context.getArgs(inputs, buildxVersion);
-    await exec.exec('docker', args);
+    const args: string[] = await context.getArgs(inputs, defContext, buildxVersion);
+    await exec.exec('docker', args).then(res => {
+      if (res.stderr != '' && !res.success) {
+        throw new Error(`buildx call failed with: ${res.stderr.match(/(.*)\s*$/)![0]}`);
+      }
+    });
 
     const imageID = await buildx.getImageID();
     if (imageID) {

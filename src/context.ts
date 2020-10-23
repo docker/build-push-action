@@ -2,14 +2,12 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
+import * as tmp from 'tmp';
 import * as buildx from './buildx';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-export const tmpDir: string = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-'));
-const defaultContext: string = `https://github.com/${github.context.repo.owner}/${
-  github.context.repo.repo
-}.git#${github.context.ref.replace(/^refs\//, '')}`;
+let _defaultContext, _tmpDir: string;
 
 export interface Inputs {
   context: string;
@@ -32,12 +30,32 @@ export interface Inputs {
   githubToken: string;
 }
 
-export async function getInputs(): Promise<Inputs> {
+export function defaultContext(): string {
+  if (!_defaultContext) {
+    _defaultContext = `https://github.com/${github.context.repo.owner}/${
+      github.context.repo.repo
+    }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
+  }
+  return _defaultContext;
+}
+
+export function tmpDir(): string {
+  if (!_tmpDir) {
+    _tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-')).split(path.sep).join(path.posix.sep);
+  }
+  return _tmpDir;
+}
+
+export function tmpNameSync(options?: tmp.TmpNameOptions): string {
+  return tmp.tmpNameSync(options);
+}
+
+export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
-    buildArgs: await getInputList('build-args'),
-    labels: await getInputList('labels'),
+    buildArgs: await getInputList('build-args', true),
+    labels: await getInputList('labels', true),
     tags: await getInputList('tags'),
     pull: /true/i.test(core.getInput('pull')),
     target: core.getInput('target'),
@@ -55,15 +73,15 @@ export async function getInputs(): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
+export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs, buildxVersion));
+  args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
   args.push.apply(args, await getCommonArgs(inputs));
   args.push(inputs.context);
   return args;
 }
 
-async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['build'];
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -83,26 +101,25 @@ async function getBuildArgs(inputs: Inputs, buildxVersion: string): Promise<Arra
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
   }
-  if (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2')) {
-    args.push('--iidfile', await buildx.getImageIDFile());
-  }
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
   });
+  if (
+    !buildx.isLocalOrTarExporter(inputs.outputs) &&
+    (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2'))
+  ) {
+    args.push('--iidfile', await buildx.getImageIDFile());
+  }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {
     args.push('--cache-from', cacheFrom);
   });
   await asyncForEach(inputs.cacheTo, async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
-  let hasGitAuthToken: boolean = false;
   await asyncForEach(inputs.secrets, async secret => {
-    if (secret.startsWith('GIT_AUTH_TOKEN=')) {
-      hasGitAuthToken = true;
-    }
     args.push('--secret', await buildx.getSecret(secret));
   });
-  if (inputs.githubToken && !hasGitAuthToken && inputs.context == defaultContext) {
+  if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
   if (inputs.file) {

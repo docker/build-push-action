@@ -65,7 +65,9 @@ steps:
       file: ./Dockerfile
       pull: true
       push: true
-      build-args: arg1=value1,arg2=value2
+      build-args: |
+        arg1=value1
+        arg2=value2
       cache-from: type=registry,ref=myorg/myrepository:latest
       cache-to: type=inline
       tags: myorg/myrepository:latest

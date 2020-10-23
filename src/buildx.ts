@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import tmp from 'tmp';
+import csvparse from 'csv-parse/lib/sync';
 import * as semver from 'semver';
 import * as context from './context';
 import * as exec from './exec';
 
 export async function getImageIDFile(): Promise<string> {
-  return path.join(context.tmpDir, 'iidfile');
+  return path.join(context.tmpDir(), 'iidfile').split(path.sep).join(path.posix.sep);
 }
 
 export async function getImageID(): Promise<string | undefined> {
@@ -19,11 +19,41 @@ export async function getImageID(): Promise<string | undefined> {
 
 export async function getSecret(kvp: string): Promise<string> {
   const [key, value] = kvp.split('=');
-  const secretFile = tmp.tmpNameSync({
-    tmpdir: context.tmpDir
+  const secretFile = context.tmpNameSync({
+    tmpdir: context.tmpDir()
   });
   await fs.writeFileSync(secretFile, value);
   return `id=${key},src=${secretFile}`;
+}
+
+export function isLocalOrTarExporter(outputs: string[]): Boolean {
+  for (let output of csvparse(outputs.join(`\n`), {
+    delimiter: ',',
+    trim: true,
+    columns: false,
+    relax_column_count: true
+  })) {
+    // Local if no type is defined
+    // https://github.com/docker/buildx/blob/d2bf42f8b4784d83fde17acb3ed84703ddc2156b/build/output.go#L29-L43
+    if (output.length == 1 && !output[0].startsWith('type=')) {
+      return true;
+    }
+    for (let [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
+      if (key == 'type' && (value == 'local' || value == 'tar')) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function hasGitAuthToken(secrets: string[]): Boolean {
+  for (let secret of secrets) {
+    if (secret.startsWith('GIT_AUTH_TOKEN=')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export async function isAvailable(): Promise<Boolean> {
