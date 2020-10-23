@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as buildx from '../src/buildx';
+import * as docker from '../src/docker';
 import * as context from '../src/context';
 
 const tmpNameSync = path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
@@ -91,11 +92,18 @@ describe('isLocalOrTarExporter', () => {
 });
 
 describe('getVersion', () => {
-  it('valid', async () => {
-    const version = await buildx.getVersion();
-    console.log(`version: ${version}`);
-    expect(semver.valid(version)).not.toBeNull();
-  }, 100000);
+  async function isDaemonRunning() {
+    return await docker.isDaemonRunning();
+  }
+  (isDaemonRunning() ? it : it.skip)(
+    'valid',
+    async () => {
+      const version = await buildx.getVersion();
+      console.log(`version: ${version}`);
+      expect(semver.valid(version)).not.toBeNull();
+    },
+    100000
+  );
 });
 
 describe('parseVersion', () => {
