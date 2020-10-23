@@ -117,9 +117,11 @@ describe('parseVersion', () => {
 });
 
 describe('getSecret', () => {
-  it('writes correct secret content', async () => {
-    const key = 'MY_KEY';
-    const secret = 'c3RyaW5nLXdpdGgtZXF1YWxzCg==';
+  test.each([
+    ['A_SECRET', 'abcdef0123456789'],
+    ['GIT_AUTH_TOKEN', 'abcdefghijklmno=0123456789'],
+    ['MY_KEY', 'c3RyaW5nLXdpdGgtZXF1YWxzCg==']
+  ])('given %p key and %p secret', async (key, secret) => {
     const secretArgs = await buildx.getSecret(`${key}=${secret}`);
     console.log(`secretArgs: ${secretArgs}`);
     expect(secretArgs).toEqual(`id=${key},src=${tmpNameSync}`);
