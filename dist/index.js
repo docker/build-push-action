@@ -4248,7 +4248,9 @@ function getImageID() {
 exports.getImageID = getImageID;
 function getSecret(kvp) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [key, value] = kvp.split('=');
+        const delimiterIndex = kvp.indexOf('=');
+        const key = kvp.substring(0, delimiterIndex);
+        const value = kvp.substring(delimiterIndex + 1);
         const secretFile = context.tmpNameSync({
             tmpdir: context.tmpDir()
         });
