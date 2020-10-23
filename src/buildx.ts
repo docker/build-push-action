@@ -18,9 +18,9 @@ export async function getImageID(): Promise<string | undefined> {
 }
 
 export async function getSecret(kvp: string): Promise<string> {
-  const sepIndex = kvp.indexOf('=');
-  const key = kvp.substr(0, sepIndex);
-  const value = kvp.substr(sepIndex + 1);
+  const delimiterIndex = kvp.indexOf('=');
+  const key = kvp.substring(0, delimiterIndex);
+  const value = kvp.substring(delimiterIndex + 1);
   const secretFile = context.tmpNameSync({
     tmpdir: context.tmpDir()
   });
