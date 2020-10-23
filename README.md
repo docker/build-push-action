@@ -9,7 +9,7 @@
 `v2` of this action includes significant updates and now uses Docker [Buildx](https://github.com/docker/buildx). It
 works with 3 new actions ([login](https://github.com/docker/login-action), [setup-buildx](https://github.com/docker/setup-buildx-action)
 and [setup-qemu](https://github.com/docker/setup-qemu-action)) that we have created. It's also rewritten as a
-[typescript-action](https://github.com/actions/typescript-action/) to be as closed as possible of the
+[typescript-action](https://github.com/actions/typescript-action/) to be as close as possible of the
 [GitHub Runner](https://github.com/actions/virtual-environments) during its execution.
 
 [Upgrade notes](UPGRADE.md) and many [usage examples](#usage) have been added to handle most use cases but `v1` is
