@@ -673,6 +673,7 @@ Following inputs can be used as `step.with` keys
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
+| `ssh`               | List     | List of SSH agent socket or keys to expose to the build (eg: `default|<id>[=<socket>|<key>[,<key>]]`) |
 
 ### outputs
 

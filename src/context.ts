@@ -3,9 +3,11 @@ import * as os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as tmp from 'tmp';
-import * as buildx from './buildx';
+
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+
+import * as buildx from './buildx';
 
 let _defaultContext, _tmpDir: string;
 
@@ -28,6 +30,7 @@ export interface Inputs {
   cacheTo: string[];
   secrets: string[];
   githubToken: string;
+  ssh: string[];
 }
 
 export function defaultContext(): string {
@@ -69,7 +72,8 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
     secrets: await getInputList('secrets', true),
-    githubToken: core.getInput('github-token')
+    githubToken: core.getInput('github-token'),
+    ssh: await getInputList('ssh')
   };
 }
 
@@ -122,6 +126,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
+  await asyncForEach(inputs.ssh, async ssh => {
+    args.push('--ssh', ssh);
+  });
   if (inputs.file) {
     args.push('--file', inputs.file);
   }
