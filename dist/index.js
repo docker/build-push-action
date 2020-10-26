@@ -12039,9 +12039,9 @@ const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(383));
 const tmp = __importStar(__webpack_require__(517));
-const buildx = __importStar(__webpack_require__(295));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
+const buildx = __importStar(__webpack_require__(295));
 let _defaultContext, _tmpDir;
 function defaultContext() {
     var _a, _b;
