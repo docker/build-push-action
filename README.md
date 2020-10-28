@@ -39,7 +39,7 @@ ___
   * [Local registry](#local-registry)
   * [Export image to Docker](#export-image-to-docker)
   * [Leverage GitHub cache](#leverage-github-cache)
-  * [Complete workflow](#complete-workflow)
+  * [Handle tags and labels](#handle-tags-and-labels)
   * [Update DockerHub repo description](#update-dockerhub-repo-description)
 * [Customizing](#customizing)
   * [inputs](#inputs)
@@ -472,17 +472,12 @@ using [actions/cache](https://github.com/actions/cache) with this action:
 > If you want to [export layers for all stages](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue),
 > you have to specify `mode=max` attribute in `cache-to`.
 
-### Complete workflow
+### Handle tags and labels
 
 If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and want an
-"automatic" tag management through Git reference and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
-for labels, you will have to do it in a dedicated step.
-
-The following workflow with the `Prepare` step will generate some [outputs](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjobs_idoutputs)
-to handle tags and labels based on GitHub actions events.
-
-This is just an example to show many cases that you might want to use and that you will have to adapt according
-to your needs:
+"automatic" tag management and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
+for labels, you can do it in a dedicated step. The following workflow will use the [Docker meta action](https://github.com/crazy-max/ghaction-docker-meta)
+to handle tags and labels based on GitHub actions events and Git metadata.
 
 <details>
   <summary><b>Show workflow</b></summary>
@@ -508,42 +503,12 @@ to your needs:
           name: Checkout
           uses: actions/checkout@v2
         -
-          name: Repo metadata
-          id: repo
-          uses: actions/github-script@v3
+          name: Docker meta
+          id: docker_meta
+          uses: crazy-max/ghaction-docker-meta@v1
           with:
-            script: |
-              const repo = await github.repos.get(context.repo)
-              return repo.data
-        -
-          name: Prepare
-          id: prep
-          run: |
-            DOCKER_IMAGE=name/app
-            VERSION=noop
-            if [ "${{ github.event_name }}" = "schedule" ]; then
-              VERSION=nightly
-            elif [[ $GITHUB_REF == refs/tags/* ]]; then
-              VERSION=${GITHUB_REF#refs/tags/}
-            elif [[ $GITHUB_REF == refs/heads/* ]]; then
-              VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-              if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
-                VERSION=edge
-              fi
-            elif [[ $GITHUB_REF == refs/pull/* ]]; then
-              VERSION=pr-${{ github.event.number }}
-            fi
-            TAGS="${DOCKER_IMAGE}:${VERSION}"
-            if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-              MINOR=${VERSION%.*}
-              MAJOR=${MINOR%.*}
-              TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
-            elif [ "${{ github.event_name }}" = "push" ]; then
-              TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
-            fi
-            echo ::set-output name=version::${VERSION}
-            echo ::set-output name=tags::${TAGS}
-            echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            images: name/app # list of Docker images to use as base name for tags
+            tag-sha: true # add git short SHA as Docker tag
         -
           name: Set up QEMU
           uses: docker/setup-qemu-action@v1
@@ -566,27 +531,10 @@ to your needs:
             file: ./Dockerfile
             platforms: linux/amd64,linux/arm64,linux/386
             push: ${{ github.event_name != 'pull_request' }}
-            tags: ${{ steps.prep.outputs.tags }}
-            labels: |
-              org.opencontainers.image.title=${{ fromJson(steps.repo.outputs.result).name }}
-              org.opencontainers.image.description=${{ fromJson(steps.repo.outputs.result).description }}
-              org.opencontainers.image.url=${{ fromJson(steps.repo.outputs.result).html_url }}
-              org.opencontainers.image.source=${{ fromJson(steps.repo.outputs.result).clone_url }}
-              org.opencontainers.image.version=${{ steps.prep.outputs.version }}
-              org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-              org.opencontainers.image.revision=${{ github.sha }}
-              org.opencontainers.image.licenses=${{ fromJson(steps.repo.outputs.result).license.spdx_id }}
+            tags: ${{ steps.docker_meta.outputs.tags }}
+            labels: ${{ steps.docker_meta.outputs.labels }}
   ```
 </details>
-
-| Event           | Ref                           | Commit SHA | Docker Tag                         | Pushed |
-|-----------------|-------------------------------|------------|------------------------------------|--------|
-| `schedule`      |                               |            | `nightly`                          | Yes    |
-| `pull_request`  | `refs/pull/2/merge`           | `a123b57`  | `pr-2`                             | No     |
-| `push`          | `refs/heads/<default_branch>` | `676cae2`  | `sha-676cae2`, `edge`              | Yes    |
-| `push`          | `refs/heads/dev`              | `cf20257`  | `sha-cf20257`, `dev`               | Yes    |
-| `push`          | `refs/heads/my/branch`        | `a5df687`  | `sha-a5df687`, `my-branch`         | Yes    |
-| `push tag`      | `refs/tags/v1.2.3`            |            | `v1.2.3`, `v1.2`, `v1`, `latest`   | Yes    |
 
 ### Update DockerHub repo description
 
@@ -673,7 +621,7 @@ Following inputs can be used as `step.with` keys
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
-| `ssh`               | List     | List of SSH agent socket or keys to expose to the build (eg: `default|<id>[=<socket>|<key>[,<key>]]`) |
+| `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
 
 ### outputs
 

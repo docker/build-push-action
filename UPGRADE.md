@@ -91,6 +91,7 @@ steps:
       push: ${{ github.event_name != 'pull_request' }}
       tag_with_ref: true
       tag_with_sha: true
+      add_git_labels: true
 ```
 
 ```yaml
@@ -142,3 +143,6 @@ steps:
         org.opencontainers.image.created=${{ steps.prep.outputs.created }}
         org.opencontainers.image.revision=${{ github.sha }}
 ```
+
+> You can also use the [Docker meta action](https://github.com/crazy-max/ghaction-docker-meta) to handle tags and
+> labels based on GitHub actions events and Git metadata. A workflow example is available in the [README](README.md#handle-tags-and-labels).
