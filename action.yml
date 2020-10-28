@@ -68,7 +68,7 @@ inputs:
     default: ${{ github.token }}
     required: false
   ssh:
-    description: "List of SSH agent socket or keys to expose to the build (eg: default)"
+    description: "List of SSH agent socket or keys to expose to the build"
     required: false
 
 outputs:
