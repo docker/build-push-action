@@ -2373,6 +2373,7 @@ const context = __importStar(__webpack_require__(842));
 const exec = __importStar(__webpack_require__(757));
 const stateHelper = __importStar(__webpack_require__(647));
 const core = __importStar(__webpack_require__(186));
+const github = __importStar(__webpack_require__(438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2387,6 +2388,9 @@ function run() {
             core.info(`📣 Buildx version: ${buildxVersion}`);
             const defContext = context.defaultContext();
             let inputs = yield context.getInputs(defContext);
+            //Add dockerfile path to label
+            let dockerfilePath = core.getInput('file') || 'Dockerfile';
+            inputs.labels.push(`org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/${dockerfilePath}`);
             core.info(`🏃 Starting build...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args).then(res => {
