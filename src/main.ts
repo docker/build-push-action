@@ -27,8 +27,9 @@ async function run(): Promise<void> {
     //Add dockerfile path to label
     let dockerfilePath = core.getInput('file') || 'Dockerfile';
     inputs.labels.push(
-      `org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/${dockerfilePath}`
+      `org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`
     );
+    inputs.labels.push(`dockerfilePath=${dockerfilePath}`);
 
     core.info(`🏃 Starting build...`);
     const args: string[] = await context.getArgs(inputs, defContext, buildxVersion);

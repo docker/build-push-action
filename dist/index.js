@@ -2390,7 +2390,8 @@ function run() {
             let inputs = yield context.getInputs(defContext);
             //Add dockerfile path to label
             let dockerfilePath = core.getInput('file') || 'Dockerfile';
-            inputs.labels.push(`org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/${dockerfilePath}`);
+            inputs.labels.push(`org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`);
+            inputs.labels.push(`dockerfilePath=${dockerfilePath}`);
             core.info(`🏃 Starting build...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args).then(res => {
