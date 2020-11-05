@@ -76,17 +76,22 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     ssh: await getInputList('ssh')
   };
 
-  //Add repo as source-label if not already supplied by user
-  const sourceLabelKey = 'org.opencontainers.image.source';
-  if (userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true) == null) {
-    userInputs.labels.push(
-      `${sourceLabelKey}=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`
-    );
-  }
+  if (
+    userInputs.load == true ||
+    userInputs.push == true ||
+    userInputs.outputs.find(val => val.indexOf('type=image') > -1 || val.indexOf('type=registry') > -1)
+  ) {
+    //Add repo as source-label if not already supplied by user
+    const sourceLabelKey = 'org.opencontainers.image.source';
+    if (userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true) == null) {
+      const githubOwnerRepoUrl = defaultContext.split('#')[0];
+      userInputs.labels.push(`${sourceLabelKey}=${githubOwnerRepoUrl}`);
+    }
 
-  //Add dockerfile path as label
-  let dockerfilePath = userInputs.file;
-  userInputs.labels.push(`dockerfile-path=${dockerfilePath}`);
+    //Add dockerfile path as label
+    let dockerfilePath = userInputs.file;
+    userInputs.labels.push(`dockerfile-path=${dockerfilePath}`);
+  }
 
   return userInputs;
 }

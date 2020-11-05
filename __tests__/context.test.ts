@@ -10,6 +10,7 @@ jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
   const tmpDir = path.join('/tmp/.docker-build-push-jest').split(path.sep).join(path.posix.sep);
   if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, {recursive: true});
+    2;
   }
   return tmpDir;
 });
@@ -146,6 +147,8 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
+        '--label', 'org.opencontainers.image.source=https://github.com/docker/build-push-action.git',
+        '--label', 'dockerfile-path=./test/Dockerfile',
         '--platform', 'linux/amd64,linux/arm64',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
@@ -153,6 +156,59 @@ describe('getArgs', () => {
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#heads/master'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['labels', 'org.opencontainers.image.source=UserProvidedSourceLabel'],
+        ['outputs', 'type=image,dest=./release-out']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--label', 'org.opencontainers.image.source=UserProvidedSourceLabel',
+        '--label', 'dockerfile-path=Dockerfile',
+        '--output', 'type=image,dest=./release-out',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['outputs', 'type=registry,dest=./release-out']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--label', 'org.opencontainers.image.source=https://github.com/docker/build-push-action.git',
+        '--label', 'dockerfile-path=Dockerfile',
+        '--output', 'type=registry,dest=./release-out',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        '.'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['labels', 'org.opencontainers.image.source=UserProvidedSourceLabel'],
+        ['load', 'true']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--label', 'org.opencontainers.image.source=UserProvidedSourceLabel',
+        '--label', 'dockerfile-path=Dockerfile',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        '--load',
+        '.'
       ]
     ]
   ])(
