@@ -54,7 +54,6 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
 }
 
 export async function getInputs(defaultContext: string): Promise<Inputs> {
-  
   let userInputs = {
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
@@ -79,7 +78,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 
   //Add repo as source-label if not already supplied by user
   const sourceLabelKey = 'org.opencontainers.image.source';
-  if( userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true ) == null){
+  if (userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true) == null) {
     userInputs.labels.push(
       `${sourceLabelKey}=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`
     );

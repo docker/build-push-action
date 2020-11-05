@@ -2373,7 +2373,6 @@ const context = __importStar(__webpack_require__(842));
 const exec = __importStar(__webpack_require__(757));
 const stateHelper = __importStar(__webpack_require__(647));
 const core = __importStar(__webpack_require__(186));
-const github = __importStar(__webpack_require__(438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2388,10 +2387,6 @@ function run() {
             core.info(`📣 Buildx version: ${buildxVersion}`);
             const defContext = context.defaultContext();
             let inputs = yield context.getInputs(defContext);
-            //Add dockerfile path to label
-            let dockerfilePath = core.getInput('file') || 'Dockerfile';
-            inputs.labels.push(`org.opencontainers.image.source=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`);
-            inputs.labels.push(`dockerfile-path=${dockerfilePath}`);
             core.info(`🏃 Starting build...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args).then(res => {
@@ -12069,7 +12064,7 @@ function tmpNameSync(options) {
 exports.tmpNameSync = tmpNameSync;
 function getInputs(defaultContext) {
     return __awaiter(this, void 0, void 0, function* () {
-        return {
+        let userInputs = {
             context: core.getInput('context') || defaultContext,
             file: core.getInput('file') || 'Dockerfile',
             buildArgs: yield getInputList('build-args', true),
@@ -12090,6 +12085,15 @@ function getInputs(defaultContext) {
             githubToken: core.getInput('github-token'),
             ssh: yield getInputList('ssh')
         };
+        //Add repo as source-label if not already supplied by user
+        const sourceLabelKey = 'org.opencontainers.image.source';
+        if (userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true) == null) {
+            userInputs.labels.push(`${sourceLabelKey}=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`);
+        }
+        //Add dockerfile path as label
+        let dockerfilePath = userInputs.file;
+        userInputs.labels.push(`dockerfile-path=${dockerfilePath}`);
+        return userInputs;
     });
 }
 exports.getInputs = getInputs;
