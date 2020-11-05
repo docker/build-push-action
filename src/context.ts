@@ -54,7 +54,8 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
 }
 
 export async function getInputs(defaultContext: string): Promise<Inputs> {
-  return {
+  
+  let userInputs = {
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file') || 'Dockerfile',
     buildArgs: await getInputList('build-args', true),
@@ -75,6 +76,20 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     githubToken: core.getInput('github-token'),
     ssh: await getInputList('ssh')
   };
+
+  //Add repo as source-label if not already supplied by user
+  const sourceLabelKey = 'org.opencontainers.image.source';
+  if( userInputs.labels.find(val => val.startsWith(sourceLabelKey) == true ) == null){
+    userInputs.labels.push(
+      `${sourceLabelKey}=https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`
+    );
+  }
+
+  //Add dockerfile path as label
+  let dockerfilePath = userInputs.file;
+  userInputs.labels.push(`dockerfile-path=${dockerfilePath}`);
+
+  return userInputs;
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
