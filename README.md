@@ -606,7 +606,7 @@ Following inputs can be used as `step.with` keys
 |---------------------|----------|------------------------------------|
 | `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
 | `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
-| `file`              | String   | Path to the Dockerfile (default `Dockerfile`) |
+| `file`              | String   | Path to the Dockerfile (default `./Dockerfile`) |
 | `build-args`        | List     | List of build-time variables |
 | `labels`            | List     | List of metadata for an image |
 | `tags`              | List/CSV | List of tags |
