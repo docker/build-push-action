@@ -140,7 +140,7 @@ steps:
       push: ${{ github.event_name != 'pull_request' }}
       tags: ${{ steps.prep.outputs.tags }}
       labels: |
-        org.opencontainers.image.source=https://github.com/${{ github.repository }}
+        org.opencontainers.image.source=${{ github.event.repository.html_url }}
         org.opencontainers.image.created=${{ steps.prep.outputs.created }}
         org.opencontainers.image.revision=${{ github.sha }}
 ```
