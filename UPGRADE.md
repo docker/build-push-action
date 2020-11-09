@@ -39,7 +39,7 @@ steps:
       repository: myorg/myrepository
       always_pull: true
       build_args: arg1=value1,arg2=value2
-      cache_froms: myorg/myrepository:latest
+      cache_from: myorg/myrepository:latest
       tags: latest
 ```
 
