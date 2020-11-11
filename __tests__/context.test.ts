@@ -147,8 +147,31 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
-        '--label', 'org.opencontainers.image.source=https://github.com/docker/build-push-action.git',
-        '--label', 'dockerfile-path=./test/Dockerfile',
+        '--platform', 'linux/amd64,linux/arm64',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--file', './test/Dockerfile',
+        '--builder', 'builder-git-context-2',
+        '--push',
+        'https://github.com/docker/build-push-action.git#heads/master'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['tag', 'localhost:5000/name/app:latest'],
+        ['platforms', 'linux/amd64,linux/arm64'],
+        ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
+        ['file', './test/Dockerfile'],
+        ['builder', 'builder-git-context-2'],
+        ['push', 'true'],
+        ['trace-data', 'true']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--label', 'dockerfile-path=https://github.com/docker/build-push-action.git#test-jest/./test/Dockerfile',
         '--platform', 'linux/amd64,linux/arm64',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
@@ -162,14 +185,13 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
-        ['labels', 'org.opencontainers.image.source=UserProvidedSourceLabel'],
-        ['outputs', 'type=image,dest=./release-out']
+        ['outputs', 'type=image,dest=./release-out'],
+        ['trace-data', 'true']
       ]),
       [
         'buildx',
         'build',
-        '--label', 'org.opencontainers.image.source=UserProvidedSourceLabel',
-        '--label', 'dockerfile-path=Dockerfile',
+        '--label', 'dockerfile-path=https://github.com/docker/build-push-action.git#test-jest/Dockerfile',
         '--output', 'type=image,dest=./release-out',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--file', 'Dockerfile',
@@ -180,13 +202,13 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
-        ['outputs', 'type=registry,dest=./release-out']
+        ['outputs', 'type=registry,dest=./release-out'],
+        ['trace-data', 'true']
       ]),
       [
         'buildx',
         'build',
-        '--label', 'org.opencontainers.image.source=https://github.com/docker/build-push-action.git',
-        '--label', 'dockerfile-path=Dockerfile',
+        '--label', 'dockerfile-path=https://github.com/docker/build-push-action.git#test-jest/Dockerfile',
         '--output', 'type=registry,dest=./release-out',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--file', 'Dockerfile',
@@ -197,14 +219,13 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
-        ['labels', 'org.opencontainers.image.source=UserProvidedSourceLabel'],
-        ['load', 'true']
+        ['load', 'true'],
+        ['trace-data', 'true']
       ]),
       [
         'buildx',
         'build',
-        '--label', 'org.opencontainers.image.source=UserProvidedSourceLabel',
-        '--label', 'dockerfile-path=Dockerfile',
+        '--label', 'dockerfile-path=https://github.com/docker/build-push-action.git#test-jest/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--file', 'Dockerfile',
         '--load',
