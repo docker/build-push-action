@@ -85,7 +85,8 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   ) {
     //Add link to dockerfile as label
     let dockerfilePath = userInputs.file;
-    userInputs.labels.push(`dockerfile-path=${defaultContext}/${dockerfilePath}`);
+    let repoPath = defaultContext.replace('#head', '/blob');
+    userInputs.labels.push(`dockerfile-path=${repoPath}/${dockerfilePath}`);
   }
 
   return userInputs;
