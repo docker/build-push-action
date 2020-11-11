@@ -70,7 +70,10 @@ inputs:
   ssh:
     description: "List of SSH agent socket or keys to expose to the build"
     required: false
-
+  trace-data:
+    description: "Flag to indicate whether link to dockerfile is added to image labels or not"
+    default: 'false'
+    required: false
 outputs:
   digest:
     description: 'Image content-addressable identifier also called a digest'
