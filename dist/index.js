@@ -4224,9 +4224,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
+const sync_1 = __importDefault(__webpack_require__(750));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
-const sync_1 = __importDefault(__webpack_require__(750));
 const semver = __importStar(__webpack_require__(383));
 const context = __importStar(__webpack_require__(842));
 const exec = __importStar(__webpack_require__(757));
@@ -4251,6 +4251,9 @@ function getSecret(kvp) {
         const delimiterIndex = kvp.indexOf('=');
         const key = kvp.substring(0, delimiterIndex);
         const value = kvp.substring(delimiterIndex + 1);
+        if (key.length == 0 || value.length == 0) {
+            throw new Error(`${kvp} is not a valid secret`);
+        }
         const secretFile = context.tmpNameSync({
             tmpdir: context.tmpDir()
         });
@@ -4264,7 +4267,7 @@ function isLocalOrTarExporter(outputs) {
         delimiter: ',',
         trim: true,
         columns: false,
-        relax_column_count: true
+        relaxColumnCount: true
     })) {
         // Local if no type is defined
         // https://github.com/docker/buildx/blob/d2bf42f8b4784d83fde17acb3ed84703ddc2156b/build/output.go#L29-L43
@@ -12096,8 +12099,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
+const sync_1 = __importDefault(__webpack_require__(750));
 const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
@@ -12197,7 +12204,12 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
             args.push('--cache-to', cacheTo);
         }));
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--secret', yield buildx.getSecret(secret));
+            try {
+                args.push('--secret', yield buildx.getSecret(secret));
+            }
+            catch (err) {
+                core.warning(err.message);
+            }
         }));
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
@@ -12234,14 +12246,27 @@ function getCommonArgs(inputs) {
 }
 function getInputList(name, ignoreComma) {
     return __awaiter(this, void 0, void 0, function* () {
+        let res = [];
         const items = core.getInput(name);
         if (items == '') {
-            return [];
+            return res;
         }
-        return items
-            .split(/\r?\n/)
-            .filter(x => x)
-            .reduce((acc, line) => acc.concat(!ignoreComma ? line.split(',').filter(x => x) : line).map(pat => pat.trim()), []);
+        for (let output of (yield sync_1.default(items, {
+            columns: false,
+            relaxColumnCount: true,
+            skipLinesWithEmptyValues: true
+        }))) {
+            if (output.length == 1) {
+                res.push(output[0]);
+                continue;
+            }
+            else if (!ignoreComma) {
+                res.push(...output);
+                continue;
+            }
+            res.push(output.join(','));
+        }
+        return res.filter(item => item);
     });
 }
 exports.getInputList = getInputList;

@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
+
 import * as buildx from '../src/buildx';
-import * as docker from '../src/docker';
 import * as context from '../src/context';
+import * as docker from '../src/docker';
 
 const tmpNameSync = path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
 const digest = 'sha256:bfb45ab72e46908183546477a08f8867fc40cebadd00af54b071b097aed127a9';
@@ -118,15 +119,23 @@ describe('parseVersion', () => {
 
 describe('getSecret', () => {
   test.each([
-    ['A_SECRET', 'abcdef0123456789'],
-    ['GIT_AUTH_TOKEN', 'abcdefghijklmno=0123456789'],
-    ['MY_KEY', 'c3RyaW5nLXdpdGgtZXF1YWxzCg==']
-  ])('given %p key and %p secret', async (key, secret) => {
-    const secretArgs = await buildx.getSecret(`${key}=${secret}`);
-    console.log(`secretArgs: ${secretArgs}`);
-    expect(secretArgs).toEqual(`id=${key},src=${tmpNameSync}`);
-    const secretContent = await fs.readFileSync(tmpNameSync, 'utf-8');
-    console.log(`secretValue: ${secretContent}`);
-    expect(secretContent).toEqual(secret);
+    ['A_SECRET=abcdef0123456789', 'A_SECRET', 'abcdef0123456789', false],
+    ['GIT_AUTH_TOKEN=abcdefghijklmno=0123456789', 'GIT_AUTH_TOKEN', 'abcdefghijklmno=0123456789', false],
+    ['MY_KEY=c3RyaW5nLXdpdGgtZXF1YWxzCg==', 'MY_KEY', 'c3RyaW5nLXdpdGgtZXF1YWxzCg==', false],
+    ['aaaaaaaa', '', '', true],
+    ['aaaaaaaa=', '', '', true],
+    ['=bbbbbbb', '', '', true]
+  ])('given %p key and %p secret', async (kvp, key, secret, invalid) => {
+    try {
+      const secretArgs = await buildx.getSecret(kvp);
+      expect(true).toBe(!invalid);
+      console.log(`secretArgs: ${secretArgs}`);
+      expect(secretArgs).toEqual(`id=${key},src=${tmpNameSync}`);
+      const secretContent = await fs.readFileSync(tmpNameSync, 'utf-8');
+      console.log(`secretValue: ${secretContent}`);
+      expect(secretContent).toEqual(secret);
+    } catch (err) {
+      expect(true).toBe(invalid);
+    }
   });
 });
