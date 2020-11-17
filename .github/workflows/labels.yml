@@ -14,7 +14,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2
       -
         name: Run Labeler
-        uses: crazy-max/ghaction-github-labeler@v3.1.0
+        uses: crazy-max/ghaction-github-labeler@v3
