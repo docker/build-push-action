@@ -44,6 +44,8 @@ ___
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
+* [Notes](#notes)
+  * [Multi-line secret value](#multi-line-secret-value)
 * [Troubleshooting](#troubleshooting)
 * [Keep up-to-date with GitHub Dependabot](#keep-up-to-date-with-github-dependabot)
 * [Limitation](#limitation)
@@ -630,6 +632,36 @@ Following outputs are available
 | Name          | Type    | Description                           |
 |---------------|---------|---------------------------------------|
 | `digest`      | String  | Image content-addressable identifier also called a digest |
+
+## Notes
+
+### Multi-line secret value
+
+To handle multi-line value for a secret, you will need to place the key-value pair between quotes:
+
+```yaml
+secrets: |
+  "MYSECRET=${{ secrets.GPG_KEY }}"
+  GIT_AUTH_TOKEN=abcdefghi,jklmno=0123456789
+  "MYSECRET=aaaaaaaa
+  bbbbbbb
+  ccccccccc"
+  FOO=bar
+  "EMPTYLINE=aaaa
+  
+  bbbb
+  ccc"
+```
+
+| Key                | Value                                            |
+|--------------------|--------------------------------------------------|
+| `MYSECRET`         | `***********************` |
+| `GIT_AUTH_TOKEN`   | `abcdefghi,jklmno=0123456789` |
+| `MYSECRET`         | `aaaaaaaa\nbbbbbbb\nccccccccc` |
+| `FOO`              | `bar` |
+| `EMPTYLINE`        | `aaaa\n\nbbbb\nccc` |
+
+> Note: all quote signs need to be doubled for escaping.
 
 ## Troubleshooting
 

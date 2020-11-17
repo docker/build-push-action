@@ -1,3 +1,4 @@
+import csvparse from 'csv-parse/lib/sync';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -121,7 +122,11 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
     args.push('--cache-to', cacheTo);
   });
   await asyncForEach(inputs.secrets, async secret => {
-    args.push('--secret', await buildx.getSecret(secret));
+    try {
+      args.push('--secret', await buildx.getSecret(secret));
+    } catch (err) {
+      core.warning(err.message);
+    }
   });
   if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
@@ -156,17 +161,29 @@ async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
 }
 
 export async function getInputList(name: string, ignoreComma?: boolean): Promise<string[]> {
+  let res: Array<string> = [];
+
   const items = core.getInput(name);
   if (items == '') {
-    return [];
+    return res;
   }
-  return items
-    .split(/\r?\n/)
-    .filter(x => x)
-    .reduce<string[]>(
-      (acc, line) => acc.concat(!ignoreComma ? line.split(',').filter(x => x) : line).map(pat => pat.trim()),
-      []
-    );
+
+  for (let output of (await csvparse(items, {
+    columns: false,
+    relaxColumnCount: true,
+    skipLinesWithEmptyValues: true
+  })) as Array<string[]>) {
+    if (output.length == 1) {
+      res.push(output[0]);
+      continue;
+    } else if (!ignoreComma) {
+      res.push(...output);
+      continue;
+    }
+    res.push(output.join(','));
+  }
+
+  return res.filter(item => item);
 }
 
 export const asyncForEach = async (array, callback) => {
