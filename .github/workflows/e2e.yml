@@ -13,23 +13,25 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    matrix:
-      include:
-        -
-          registry: ''
-          slug: ghactionstest/ghactionstest
-          username_secret: DOCKERHUB_USERNAME
-          password_secret: DOCKERHUB_TOKEN
-        -
-          registry: ghcr.io
-          slug: ghcr.io/docker-ghactiontest/test
-          username_secret: GHCR_USERNAME
-          password_secret: GHCR_PAT
-        -
-          registry: registry.gitlab.com
-          slug: registry.gitlab.com/test1716/test
-          username_secret: GITLAB_USERNAME
-          password_secret: GITLAB_TOKEN
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          -
+            registry: ''
+            slug: ghactionstest/ghactionstest
+            username_secret: DOCKERHUB_USERNAME
+            password_secret: DOCKERHUB_TOKEN
+          -
+            registry: ghcr.io
+            slug: ghcr.io/docker-ghactiontest/test
+            username_secret: GHCR_USERNAME
+            password_secret: GHCR_PAT
+          -
+            registry: registry.gitlab.com
+            slug: registry.gitlab.com/test1716/test
+            username_secret: GITLAB_USERNAME
+            password_secret: GITLAB_TOKEN
     steps:
       -
         name: Checkout
