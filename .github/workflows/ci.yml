@@ -15,7 +15,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
         with:
           path: action
       -
@@ -41,7 +41,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
         with:
           path: action
       -
@@ -95,7 +95,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
         with:
           path: action
       -
@@ -121,6 +121,14 @@ jobs:
             localhost:5000/name/app:1.0.0
           secrets: |
             GIT_AUTH_TOKEN=${{ github.token }}
+            "MYSECRET=aaaaaaaa
+            bbbbbbb
+            ccccccccc"
+            FOO=bar
+            "EMPTYLINE=aaaa
+
+            bbbb
+            ccc"
       -
         name: Inspect
         run: |
@@ -156,7 +164,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -203,7 +211,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -250,7 +258,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Build
         id: docker_build
@@ -282,7 +290,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Build
         uses: ./
@@ -319,7 +327,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -372,7 +380,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -470,7 +478,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -538,7 +546,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1

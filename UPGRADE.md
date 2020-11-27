@@ -13,6 +13,7 @@
 * Add [`outputs`](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) input
 * Add [`cache-from`](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) input (`cache_froms` removed)
 * Add [`cache-to`](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) input
+* Rename `build_args` input to `build-args` for consistency with other Docker build tools
 * Add `secrets` input
 * Review `tags` input
 * Remove `repository` input. See [Simple workflow](#simple-workflow) for migration
@@ -139,7 +140,7 @@ steps:
       push: ${{ github.event_name != 'pull_request' }}
       tags: ${{ steps.prep.outputs.tags }}
       labels: |
-        org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+        org.opencontainers.image.source=${{ github.event.repository.html_url }}
         org.opencontainers.image.created=${{ steps.prep.outputs.created }}
         org.opencontainers.image.revision=${{ github.sha }}
 ```

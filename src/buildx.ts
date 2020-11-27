@@ -1,7 +1,8 @@
+import csvparse from 'csv-parse/lib/sync';
 import fs from 'fs';
 import path from 'path';
-import csvparse from 'csv-parse/lib/sync';
 import * as semver from 'semver';
+
 import * as context from './context';
 import * as exec from './exec';
 
@@ -21,6 +22,9 @@ export async function getSecret(kvp: string): Promise<string> {
   const delimiterIndex = kvp.indexOf('=');
   const key = kvp.substring(0, delimiterIndex);
   const value = kvp.substring(delimiterIndex + 1);
+  if (key.length == 0 || value.length == 0) {
+    throw new Error(`${kvp} is not a valid secret`);
+  }
   const secretFile = context.tmpNameSync({
     tmpdir: context.tmpDir()
   });
@@ -33,7 +37,7 @@ export function isLocalOrTarExporter(outputs: string[]): Boolean {
     delimiter: ',',
     trim: true,
     columns: false,
-    relax_column_count: true
+    relaxColumnCount: true
   })) {
     // Local if no type is defined
     // https://github.com/docker/buildx/blob/d2bf42f8b4784d83fde17acb3ed84703ddc2156b/build/output.go#L29-L43
