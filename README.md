@@ -651,6 +651,7 @@ secrets: |
   
   bbbb
   ccc"
+  "JSON_SECRET={""key1"":""value1"",""key2"":""value2""}"
 ```
 
 | Key                | Value                                            |
@@ -660,6 +661,7 @@ secrets: |
 | `MYSECRET`         | `aaaaaaaa\nbbbbbbb\nccccccccc` |
 | `FOO`              | `bar` |
 | `EMPTYLINE`        | `aaaa\n\nbbbb\nccc` |
+| `JSON_SECRET`      | `{"key1":"value1","key2":"value2"}` |
 
 > Note: all quote signs need to be doubled for escaping.
 
