@@ -661,7 +661,7 @@ secrets: |
 | `FOO`              | `bar` |
 | `EMPTYLINE`        | `aaaa\n\nbbbb\nccc` |
 
-> Note: all quote signs need to be doubled for escaping.
+> Note: all quote signs need to be doubled for escaping. This is, for a secret `SECRET={"key":"value"}`, you'll need to provide `"SECRET={""key"":""value""}"`.
 
 ## Troubleshooting
 
