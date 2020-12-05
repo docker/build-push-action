@@ -169,6 +169,21 @@ describe('getArgs', () => {
     [
       '0.4.2',
       new Map<string, string>([
+        ['tags', 'name/app:7.4, name/app:latest'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--tag', 'name/app:7.4',
+        '--tag', 'name/app:latest',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--file', 'Dockerfile',
+        'https://github.com/docker/build-push-action.git#test-jest'
+      ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
         ['context', '.'],
         ['labels', 'org.opencontainers.image.title=buildkit\norg.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit'],
         ['outputs', 'type=local,dest=./release-out']
