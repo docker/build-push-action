@@ -183,7 +183,7 @@ export async function getInputList(name: string, ignoreComma?: boolean): Promise
     res.push(output.join(','));
   }
 
-  return res.filter(item => item);
+  return res.filter(item => item).map(pat => pat.trim());
 }
 
 export const asyncForEach = async (array, callback) => {

@@ -12266,7 +12266,7 @@ function getInputList(name, ignoreComma) {
             }
             res.push(output.join(','));
         }
-        return res.filter(item => item);
+        return res.filter(item => item).map(pat => pat.trim());
     });
 }
 exports.getInputList = getInputList;
