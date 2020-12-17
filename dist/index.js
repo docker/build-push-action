@@ -12406,37 +12406,34 @@ class Parser extends Transform {
     }
     if(recordLength !== this.state.expectedRecordLength){
       const err = columns === false ?
-        this.__error(
-          // Todo: rename CSV_INCONSISTENT_RECORD_LENGTH to
-          // CSV_RECORD_INCONSISTENT_FIELDS_LENGTH
-          new CsvError('CSV_INCONSISTENT_RECORD_LENGTH', [
-            'Invalid Record Length:',
-            `expect ${this.state.expectedRecordLength},`,
-            `got ${recordLength} on line ${this.info.lines}`,
-          ], this.options, this.__context(), {
-            record: record,
-          })
-        )
+        // Todo: rename CSV_INCONSISTENT_RECORD_LENGTH to
+        // CSV_RECORD_INCONSISTENT_FIELDS_LENGTH
+        new CsvError('CSV_INCONSISTENT_RECORD_LENGTH', [
+          'Invalid Record Length:',
+          `expect ${this.state.expectedRecordLength},`,
+          `got ${recordLength} on line ${this.info.lines}`,
+        ], this.options, this.__context(), {
+          record: record,
+        })
       :
-        this.__error(
-          // Todo: rename CSV_RECORD_DONT_MATCH_COLUMNS_LENGTH to
-          // CSV_RECORD_INCONSISTENT_COLUMNS
-          new CsvError('CSV_RECORD_DONT_MATCH_COLUMNS_LENGTH', [
-            'Invalid Record Length:',
-            `columns length is ${columns.length},`, // rename columns
-            `got ${recordLength} on line ${this.info.lines}`,
-          ], this.options, this.__context(), {
-            record: record,
-          })
-        )
+        // Todo: rename CSV_RECORD_DONT_MATCH_COLUMNS_LENGTH to
+        // CSV_RECORD_INCONSISTENT_COLUMNS
+        new CsvError('CSV_RECORD_DONT_MATCH_COLUMNS_LENGTH', [
+          'Invalid Record Length:',
+          `columns length is ${columns.length},`, // rename columns
+          `got ${recordLength} on line ${this.info.lines}`,
+        ], this.options, this.__context(), {
+          record: record,
+        })
       if(relax_column_count === true || 
         (relax_column_count_less === true && recordLength < this.state.expectedRecordLength) ||
         (relax_column_count_more === true && recordLength > this.state.expectedRecordLength) ){
         this.info.invalid_field_length++
         this.state.error = err
       // Error is undefined with skip_lines_with_error
-      }else if(err !== undefined){
-        return err
+      }else{
+        const finalErr = this.__error(err)
+        if(finalErr) return finalErr
       }
     }
     if(skip_lines_with_empty_values === true){
