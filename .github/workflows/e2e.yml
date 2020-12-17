@@ -32,6 +32,16 @@ jobs:
             slug: registry.gitlab.com/test1716/test
             username_secret: GITLAB_USERNAME
             password_secret: GITLAB_TOKEN
+          -
+            registry: 175142243308.dkr.ecr.us-east-2.amazonaws.com
+            slug: 175142243308.dkr.ecr.us-east-2.amazonaws.com/sandbox/test-docker-action
+            username_secret: AWS_ACCESS_KEY_ID
+            password_secret: AWS_SECRET_ACCESS_KEY
+          -
+            registry: public.ecr.aws
+            slug: public.ecr.aws/q3b5f1u4/sandbox/test-docker-action
+            username_secret: AWS_ACCESS_KEY_ID
+            password_secret: AWS_SECRET_ACCESS_KEY
     steps:
       -
         name: Checkout
