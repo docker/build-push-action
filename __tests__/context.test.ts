@@ -147,7 +147,6 @@ describe('getArgs', () => {
         'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        '--file', 'Dockerfile',
         '.'
       ]
     ],
@@ -162,7 +161,6 @@ describe('getArgs', () => {
         '--build-arg', 'MY_ARG=val1,val2,val3',
         '--build-arg', 'ARG=val',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]
     ],
@@ -177,7 +175,6 @@ describe('getArgs', () => {
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]
     ],
@@ -194,7 +191,6 @@ describe('getArgs', () => {
         '--label', 'org.opencontainers.image.title=buildkit',
         '--label', 'org.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit',
         '--output', 'type=local,dest=./release-out',
-        '--file', 'Dockerfile',
         '.'
       ]
     ],
@@ -208,7 +204,6 @@ describe('getArgs', () => {
         'buildx',
         'build',
         '--platform', 'linux/amd64,linux/arm64',
-        '--file', 'Dockerfile',
         '.'
       ]
     ],
@@ -221,7 +216,6 @@ describe('getArgs', () => {
         'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        '--file', 'Dockerfile',
         '.'
       ]
     ],
@@ -236,7 +230,6 @@ describe('getArgs', () => {
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        '--file', 'Dockerfile',
         '.'
       ]
     ],
@@ -251,7 +244,6 @@ describe('getArgs', () => {
         'build',
         '--output', '.',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        '--file', 'Dockerfile',
         'https://github.com/docker/build-push-action.git#test-jest'
       ]
     ],
