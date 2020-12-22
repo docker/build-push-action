@@ -43,6 +43,11 @@ jobs:
             username_secret: AWS_ACCESS_KEY_ID
             password_secret: AWS_SECRET_ACCESS_KEY
           -
+            registry: us-east4-docker.pkg.dev
+            slug: us-east4-docker.pkg.dev/sandbox-298914/docker-official-github-actions/test-docker-action
+            username_secret: GAR_USERNAME
+            password_secret: GAR_JSON_KEY
+          -
             registry: gcr.io
             slug: gcr.io/sandbox-298914/test-docker-action
             username_secret: GCR_USERNAME
