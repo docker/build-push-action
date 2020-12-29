@@ -57,7 +57,7 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
 export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     context: core.getInput('context') || defaultContext,
-    file: core.getInput('file') || 'Dockerfile',
+    file: core.getInput('file'),
     buildArgs: await getInputList('build-args', true),
     labels: await getInputList('labels', true),
     tags: await getInputList('tags'),

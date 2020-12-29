@@ -16,7 +16,6 @@ inputs:
   file:
     description: "Path to the Dockerfile"
     required: false
-    default: './Dockerfile'
   build-args:
     description: "List of build-time variables"
     required: false
