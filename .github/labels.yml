@@ -68,7 +68,6 @@
   name: ":question: question"
   color: "3f51b5"
   description: ""
-  from_name: "question"
 - # upstream
   name: ":eyes: upstream"
   color: "fbca04"
@@ -76,4 +75,37 @@
 - # wontfix
   name: ":coffin: wontfix"
   color: "ffffff"
+  description: ""
+
+- # registry-aws-ecr
+  name: "registry-aws-ecr"
+  color: "84858A"
+  description: ""
+- # registry-azure-acr
+  name: "registry-azure-acr"
+  color: "84858A"
+  description: ""
+- # registry-dockerhub
+  name: "registry-dockerhub"
+  color: "84858A"
+  description: ""
+- # registry-github
+  name: "registry-github"
+  color: "84858A"
+  description: ""
+- # registry-google-gar
+  name: "registry-google-gar"
+  color: "84858A"
+  description: ""
+- # registry-google-gcr
+  name: "registry-google-gcr"
+  color: "84858A"
+  description: ""
+- # registry-nexus
+  name: "registry-nexus"
+  color: "84858A"
+  description: ""
+- # registry-quay
+  name: "registry-quay"
+  color: "84858A"
   description: ""
