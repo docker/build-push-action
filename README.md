@@ -35,7 +35,7 @@ ___
   * [Multi-platform image](#multi-platform-image)
 * [Advanced usage](#advanced-usage)
   * [Push to multi-registries](#push-to-multi-registries)
-  * [Cache to registry](#push-to-multi-registries)
+  * [Cache to registry](#cache-to-registry)
   * [Local registry](#local-registry)
   * [Export image to Docker](#export-image-to-docker)
   * [Leverage GitHub cache](#leverage-github-cache)
