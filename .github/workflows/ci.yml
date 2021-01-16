@@ -244,12 +244,6 @@ jobs:
 
   docker-driver:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        push:
-          - true
-          - false
     services:
       registry:
         image: registry:2
@@ -262,24 +256,12 @@ jobs:
       -
         name: Build
         id: docker_build
-        continue-on-error: ${{ matrix.push }}
         uses: ./
         with:
           context: ./test
           file: ./test/Dockerfile
-          push: ${{ matrix.push }}
+          push: true
           tags: localhost:5000/name/app:latest
-      -
-        name: Check
-        run: |
-          echo "${{ toJson(steps.docker_build) }}"
-          if [ "${{ matrix.push }}" = "false" ]; then
-            exit 0
-          fi
-          if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
-            echo "::error::Should have failed"
-            exit 1
-          fi
       -
         name: Dump context
         if: always()
