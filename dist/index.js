@@ -11668,10 +11668,14 @@ additional information.
 const { Transform } = __webpack_require__(413)
 const ResizeableBuffer = __webpack_require__(942)
 
+// white space characters
+// https://en.wikipedia.org/wiki/Whitespace_character
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#Types
+// \f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
 const tab = 9
-const nl = 10
+const nl = 10 // \n, 0x0A in hexadecimal, 10 in decimal
 const np = 12
-const cr = 13
+const cr = 13 // \r, 0x0D in hexadécimal, 13 in decimal
 const space = 32
 const boms = {
   // Note, the following are equals:
@@ -11859,6 +11863,27 @@ class Parser extends Transform {
       }else{
         throw new Error(`Invalid Option: from_line must be an integer, got ${JSON.stringify(opts.from_line)}`)
       }
+    }
+    // Normalize options `ignore_last_delimiters`
+    if(options.ignore_last_delimiters === undefined || options.ignore_last_delimiters === null){
+      options.ignore_last_delimiters = false
+    }else if(typeof options.ignore_last_delimiters === 'number'){
+      options.ignore_last_delimiters = Math.floor(options.ignore_last_delimiters)
+      if(options.ignore_last_delimiters === 0){
+        options.ignore_last_delimiters = false
+      }
+    }else if(typeof options.ignore_last_delimiters !== 'boolean'){
+      throw new CsvError('CSV_INVALID_OPTION_IGNORE_LAST_DELIMITERS', [
+        'Invalid option `ignore_last_delimiters`:',
+        'the value must be a boolean value or an integer,',
+        `got ${JSON.stringify(options.ignore_last_delimiters)}`
+      ], options)
+    }
+    if(options.ignore_last_delimiters === true && options.columns === false){
+      throw new CsvError('CSV_IGNORE_LAST_DELIMITERS_REQUIRES_COLUMNS', [
+        'The option `ignore_last_delimiters`',
+        'requires the activation of the `columns` option'
+      ], options)
     }
     // Normalize option `info`
     if(options.info === undefined || options.info === null || options.info === false){
@@ -12177,7 +12202,7 @@ class Parser extends Transform {
       }
       // Auto discovery of record_delimiter, unix, mac and windows supported
       if(this.state.quoting === false && record_delimiter.length === 0){
-        const record_delimiterCount = this.__autoDiscoverRowDelimiter(buf, pos)
+        const record_delimiterCount = this.__autoDiscoverRecordDelimiter(buf, pos)
         if(record_delimiterCount){
           record_delimiter = this.options.record_delimiter
         }
@@ -12218,12 +12243,12 @@ class Parser extends Transform {
             const isNextChrTrimable = rtrim && this.__isCharTrimable(nextChr)
             const isNextChrComment = comment !== null && this.__compareBytes(comment, buf, pos+quote.length, nextChr)
             const isNextChrDelimiter = this.__isDelimiter(buf, pos+quote.length, nextChr)
-            const isNextChrRowDelimiter = record_delimiter.length === 0 ? this.__autoDiscoverRowDelimiter(buf, pos+quote.length) : this.__isRecordDelimiter(nextChr, buf, pos+quote.length)
+            const isNextChrRecordDelimiter = record_delimiter.length === 0 ? this.__autoDiscoverRecordDelimiter(buf, pos+quote.length) : this.__isRecordDelimiter(nextChr, buf, pos+quote.length)
             // Escape a quote
             // Treat next char as a regular character
             if(escape !== null && this.__isEscape(buf, pos, chr) && this.__isQuote(buf, pos + escape.length)){
               pos += escape.length - 1
-            }else if(!nextChr || isNextChrDelimiter || isNextChrRowDelimiter || isNextChrComment || isNextChrTrimable){
+            }else if(!nextChr || isNextChrDelimiter || isNextChrRecordDelimiter || isNextChrComment || isNextChrTrimable){
               this.state.quoting = false
               this.state.wasQuoting = true
               pos += quote.length - 1
@@ -12234,7 +12259,7 @@ class Parser extends Transform {
                   'Invalid Closing Quote:',
                   `got "${String.fromCharCode(nextChr)}"`,
                   `at line ${this.info.lines}`,
-                  'instead of delimiter, row delimiter, trimable character',
+                  'instead of delimiter, record delimiter, trimable character',
                   '(if activated) or comment',
                 ], this.options, this.__context())
               )
@@ -12275,25 +12300,24 @@ class Parser extends Transform {
               this.info.comment_lines++
               // Skip full comment line
             }else{
+              // Activate records emition if above from_line
+              if(this.state.enabled === false && this.info.lines + (this.state.wasRowDelimiter === true ? 1: 0) >= from_line){
+                this.state.enabled = true
+                this.__resetField()
+                this.__resetRecord()
+                pos += recordDelimiterLength - 1
+                continue
+              }
               // Skip if line is empty and skip_empty_lines activated
               if(skip_empty_lines === true && this.state.wasQuoting === false && this.state.record.length === 0 && this.state.field.length === 0){
                 this.info.empty_lines++
                 pos += recordDelimiterLength - 1
                 continue
               }
-              // Activate records emition if above from_line
-              if(this.state.enabled === false && this.info.lines + (this.state.wasRowDelimiter === true ? 1: 0 ) >= from_line){
-                this.state.enabled = true
-                this.__resetField()
-                this.__resetRow()
-                pos += recordDelimiterLength - 1
-                continue
-              }else{
-                const errField = this.__onField()
-                if(errField !== undefined) return errField
-                const errRecord = this.__onRow()
-                if(errRecord !== undefined) return errRecord
-              }
+              const errField = this.__onField()
+              if(errField !== undefined) return errField
+              const errRecord = this.__onRecord()
+              if(errRecord !== undefined) return errRecord
               if(to !== -1 && this.info.records >= to){
                 this.state.stop = true
                 this.push(null)
@@ -12366,7 +12390,7 @@ class Parser extends Transform {
         if(this.state.wasQuoting === true || this.state.record.length !== 0 || this.state.field.length !== 0){
           const errField = this.__onField()
           if(errField !== undefined) return errField
-          const errRecord = this.__onRow()
+          const errRecord = this.__onRecord()
           if(errRecord !== undefined) return errRecord
         }else if(this.state.wasRowDelimiter === true){
           this.info.empty_lines++
@@ -12382,21 +12406,17 @@ class Parser extends Transform {
       this.state.wasRowDelimiter = false
     }
   }
-  // Helper to test if a character is a space or a line delimiter
-  __isCharTrimable(chr){
-    return chr === space || chr === tab || chr === cr || chr === nl || chr === np
-  }
-  __onRow(){
+  __onRecord(){
     const {columns, columns_duplicates_to_array, encoding, info, from, relax_column_count, relax_column_count_less, relax_column_count_more, raw, skip_lines_with_empty_values} = this.options
     const {enabled, record} = this.state
     if(enabled === false){
-      return this.__resetRow()
+      return this.__resetRecord()
     }
     // Convert the first line into column names
     const recordLength = record.length
     if(columns === true){
       if(isRecordEmpty(record)){
-        this.__resetRow()
+        this.__resetRecord()
         return
       }
       return this.__firstLineToColumns(record)
@@ -12438,12 +12458,12 @@ class Parser extends Transform {
     }
     if(skip_lines_with_empty_values === true){
       if(isRecordEmpty(record)){
-        this.__resetRow()
+        this.__resetRecord()
         return
       }
     }
     if(this.state.recordHasError === true){
-      this.__resetRow()
+      this.__resetRecord()
       this.state.recordHasError = false
       return
     }
@@ -12517,7 +12537,7 @@ class Parser extends Transform {
         }
       }
     }
-    this.__resetRow()
+    this.__resetRecord()
   }
   __firstLineToColumns(record){
     const {firstLineToHeaders} = this.state
@@ -12537,13 +12557,13 @@ class Parser extends Transform {
       const normalizedHeaders = normalizeColumnsArray(headers)
       this.state.expectedRecordLength = normalizedHeaders.length
       this.options.columns = normalizedHeaders
-      this.__resetRow()
+      this.__resetRecord()
       return
     }catch(err){
       return err
     }
   }
-  __resetRow(){
+  __resetRecord(){
     if(this.options.raw === true){
       this.state.rawBuffer.reset()
     }
@@ -12616,6 +12636,10 @@ class Parser extends Transform {
     }
     return [undefined, field]
   }
+  // Helper to test if a character is a space or a line delimiter
+  __isCharTrimable(chr){
+    return chr === space || chr === tab || chr === cr || chr === nl || chr === np
+  }
   // Keep it in case we implement the `cast_int` option
   // __isInt(value){
   //   // return Number.isInteger(parseInt(value))
@@ -12642,14 +12666,19 @@ class Parser extends Transform {
       needMoreDataSize,
       // Skip if the remaining buffer smaller than record delimiter
       recordDelimiterMaxLength,
-      // Skip if the remaining buffer can be row delimiter following the closing quote
+      // Skip if the remaining buffer can be record delimiter following the closing quote
       // 1 is for quote.length
       quoting ? (quote.length + recordDelimiterMaxLength) : 0,
     )
     return numOfCharLeft < requiredLength
   }
   __isDelimiter(buf, pos, chr){
-    const {delimiter} = this.options
+    const {delimiter, ignore_last_delimiters} = this.options
+    if(ignore_last_delimiters === true && this.state.record.length === this.options.columns.length - 1){
+      return 0
+    }else if(ignore_last_delimiters !== false && typeof ignore_last_delimiters === 'number' && this.state.record.length === ignore_last_delimiters - 1){
+      return 0
+    }
     loop1: for(let i = 0; i < delimiter.length; i++){
       const del = delimiter[i]
       if(del[0] === chr){
@@ -12704,7 +12733,7 @@ class Parser extends Transform {
     }
     return true
   }
-  __autoDiscoverRowDelimiter(buf, pos){
+  __autoDiscoverRecordDelimiter(buf, pos){
     const {encoding} = this.options
     const chr = buf[pos]
     if(chr === cr){
