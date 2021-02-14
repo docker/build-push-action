@@ -23,7 +23,7 @@ FROM deps AS test
 COPY --from=docker /usr/local/bin/docker /usr/bin/
 ARG TARGETOS
 ARG TARGETARCH
-ARG BUILDX_VERSION=v0.4.2
+ARG BUILDX_VERSION=v0.5.1
 ENV RUNNER_TEMP=/tmp/github_runner
 ENV RUNNER_TOOL_CACHE=/tmp/github_tool_cache
 RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
