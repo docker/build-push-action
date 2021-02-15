@@ -18,10 +18,16 @@ jobs:
           - ubuntu-16.04
     steps:
       -
+        name: List install packages
+        run: apt list --installed
+      -
         name: Docker info
         run: docker info
       -
-        name: Docker buildx version
+        name: Docker version
+        run: docker version
+      -
+        name: buildx version
         run: docker buildx version
       -
         name: containerd version
