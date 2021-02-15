@@ -337,6 +337,27 @@ ccc`],
         '--push',
         'https://github.com/docker/build-push-action.git#heads/master'
       ]
+    ],
+    [
+      '0.5.1',
+      new Map<string, string>([
+        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['tag', 'localhost:5000/name/app:latest'],
+        ['secret-files', `MY_SECRET=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`],
+        ['file', './test/Dockerfile'],
+        ['builder', 'builder-git-context-2'],
+        ['push', 'true']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=MY_SECRET,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--file', './test/Dockerfile',
+        '--builder', 'builder-git-context-2',
+        '--push',
+        'https://github.com/docker/build-push-action.git#heads/master'
+      ]
     ]
   ])(
     'given %p with %p as inputs, returns %p',

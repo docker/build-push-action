@@ -119,21 +119,34 @@ describe('parseVersion', () => {
 
 describe('getSecret', () => {
   test.each([
-    ['A_SECRET=abcdef0123456789', 'A_SECRET', 'abcdef0123456789', false],
-    ['GIT_AUTH_TOKEN=abcdefghijklmno=0123456789', 'GIT_AUTH_TOKEN', 'abcdefghijklmno=0123456789', false],
-    ['MY_KEY=c3RyaW5nLXdpdGgtZXF1YWxzCg==', 'MY_KEY', 'c3RyaW5nLXdpdGgtZXF1YWxzCg==', false],
-    ['aaaaaaaa', '', '', true],
-    ['aaaaaaaa=', '', '', true],
-    ['=bbbbbbb', '', '', true]
-  ])('given %p key and %p secret', async (kvp, key, secret, invalid) => {
+    ['A_SECRET=abcdef0123456789', false, 'A_SECRET', 'abcdef0123456789', false],
+    ['GIT_AUTH_TOKEN=abcdefghijklmno=0123456789', false, 'GIT_AUTH_TOKEN', 'abcdefghijklmno=0123456789', false],
+    ['MY_KEY=c3RyaW5nLXdpdGgtZXF1YWxzCg==', false, 'MY_KEY', 'c3RyaW5nLXdpdGgtZXF1YWxzCg==', false],
+    ['aaaaaaaa', false, '', '', true],
+    ['aaaaaaaa=', false, '', '', true],
+    ['=bbbbbbb', false, '', '', true],
+    [
+      `foo=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`,
+      true,
+      'foo',
+      'bar',
+      false
+    ],
+    [`notfound=secret`, true, '', '', true]
+  ])('given %p key and %p secret', async (kvp, file, exKey, exValue, invalid) => {
     try {
-      const secretArgs = await buildx.getSecret(kvp);
+      let secret: string;
+      if (file) {
+        secret = await buildx.getSecretFile(kvp);
+      } else {
+        secret = await buildx.getSecretString(kvp);
+      }
       expect(true).toBe(!invalid);
-      console.log(`secretArgs: ${secretArgs}`);
-      expect(secretArgs).toEqual(`id=${key},src=${tmpNameSync}`);
-      const secretContent = await fs.readFileSync(tmpNameSync, 'utf-8');
-      console.log(`secretValue: ${secretContent}`);
-      expect(secretContent).toEqual(secret);
+      console.log(`secret: ${secret}`);
+      expect(secret).toEqual(`id=${exKey},src=${tmpNameSync}`);
+      const secretValue = await fs.readFileSync(tmpNameSync, 'utf-8');
+      console.log(`secretValue: ${secretValue}`);
+      expect(secretValue).toEqual(exValue);
     } catch (err) {
       expect(true).toBe(invalid);
     }

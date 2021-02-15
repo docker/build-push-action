@@ -18,17 +18,34 @@ export async function getImageID(): Promise<string | undefined> {
   return fs.readFileSync(iidFile, {encoding: 'utf-8'});
 }
 
-export async function getSecret(kvp: string): Promise<string> {
+export async function getSecretString(kvp: string): Promise<string> {
+  return getSecret(kvp, false);
+}
+
+export async function getSecretFile(kvp: string): Promise<string> {
+  return getSecret(kvp, true);
+}
+
+export async function getSecret(kvp: string, file: boolean): Promise<string> {
   const delimiterIndex = kvp.indexOf('=');
   const key = kvp.substring(0, delimiterIndex);
-  const value = kvp.substring(delimiterIndex + 1);
+  let value = kvp.substring(delimiterIndex + 1);
   if (key.length == 0 || value.length == 0) {
     throw new Error(`${kvp} is not a valid secret`);
   }
+
+  if (file) {
+    if (!fs.existsSync(value)) {
+      throw new Error(`secret file ${value} not found`);
+    }
+    value = fs.readFileSync(value, {encoding: 'utf-8'});
+  }
+
   const secretFile = context.tmpNameSync({
     tmpdir: context.tmpDir()
   });
-  await fs.writeFileSync(secretFile, value);
+  fs.writeFileSync(secretFile, value);
+
   return `id=${key},src=${secretFile}`;
 }
 
