@@ -471,9 +471,6 @@ using [actions/cache](https://github.com/actions/cache) with this action:
   ```
 </details>
 
-> If you want to [export layers for all stages](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue),
-> you have to specify `mode=max` attribute in `cache-to`.
-
 ### Handle tags and labels
 
 If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and want an
@@ -622,7 +619,8 @@ Following inputs can be used as `step.with` keys
 | `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
-| `secrets`           | List     | List of secrets to expose to the build (eg. `key=value`, `GIT_AUTH_TOKEN=mytoken`) |
+| `secrets`           | List     | List of secrets to expose to the build (eg. `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
+| `secret-files`      | List     | List of secret files to expose to the build (eg. `key=filename`, `MY_SECRET=./secret.txt`) |
 | `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
 
 ### outputs

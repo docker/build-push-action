@@ -60,14 +60,17 @@ inputs:
     description: "List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
     required: false
   secrets:
-    description: "List of secrets to expose to the build (eg. key=value, GIT_AUTH_TOKEN=mytoken)"
+    description: "List of secrets to expose to the build (eg. key=string, GIT_AUTH_TOKEN=mytoken)"
+    required: false
+  secret-files:
+    description: "List of secret files to expose to the build (eg. key=filename, MY_SECRET=./secret.txt)"
+    required: false
+  ssh:
+    description: "List of SSH agent socket or keys to expose to the build"
     required: false
   github-token:
     description: "GitHub Token used to authenticate against a repository for Git context"
     default: ${{ github.token }}
-    required: false
-  ssh:
-    description: "List of SSH agent socket or keys to expose to the build"
     required: false
 
 outputs:

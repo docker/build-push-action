@@ -30,6 +30,7 @@ export interface Inputs {
   cacheFrom: string[];
   cacheTo: string[];
   secrets: string[];
+  secretFiles: string[];
   githubToken: string;
   ssh: string[];
 }
@@ -73,6 +74,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
     secrets: await getInputList('secrets', true),
+    secretFiles: await getInputList('secret-files', true),
     githubToken: core.getInput('github-token'),
     ssh: await getInputList('ssh')
   };
@@ -123,13 +125,20 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   });
   await asyncForEach(inputs.secrets, async secret => {
     try {
-      args.push('--secret', await buildx.getSecret(secret));
+      args.push('--secret', await buildx.getSecretString(secret));
+    } catch (err) {
+      core.warning(err.message);
+    }
+  });
+  await asyncForEach(inputs.secretFiles, async secretFile => {
+    try {
+      args.push('--secret', await buildx.getSecretFile(secretFile));
     } catch (err) {
       core.warning(err.message);
     }
   });
   if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
-    args.push('--secret', await buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+    args.push('--secret', await buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
   await asyncForEach(inputs.ssh, async ssh => {
     args.push('--ssh', ssh);

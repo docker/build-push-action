@@ -4581,7 +4581,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getImageID = exports.getImageIDFile = void 0;
+exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getImageID = exports.getImageIDFile = void 0;
 const sync_1 = __importDefault(__webpack_require__(750));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
@@ -4604,18 +4604,36 @@ function getImageID() {
     });
 }
 exports.getImageID = getImageID;
-function getSecret(kvp) {
+function getSecretString(kvp) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return getSecret(kvp, false);
+    });
+}
+exports.getSecretString = getSecretString;
+function getSecretFile(kvp) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return getSecret(kvp, true);
+    });
+}
+exports.getSecretFile = getSecretFile;
+function getSecret(kvp, file) {
     return __awaiter(this, void 0, void 0, function* () {
         const delimiterIndex = kvp.indexOf('=');
         const key = kvp.substring(0, delimiterIndex);
-        const value = kvp.substring(delimiterIndex + 1);
+        let value = kvp.substring(delimiterIndex + 1);
         if (key.length == 0 || value.length == 0) {
             throw new Error(`${kvp} is not a valid secret`);
+        }
+        if (file) {
+            if (!fs_1.default.existsSync(value)) {
+                throw new Error(`secret file ${value} not found`);
+            }
+            value = fs_1.default.readFileSync(value, { encoding: 'utf-8' });
         }
         const secretFile = context.tmpNameSync({
             tmpdir: context.tmpDir()
         });
-        yield fs_1.default.writeFileSync(secretFile, value);
+        fs_1.default.writeFileSync(secretFile, value);
         return `id=${key},src=${secretFile}`;
     });
 }
@@ -13032,6 +13050,7 @@ function getInputs(defaultContext) {
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
             secrets: yield getInputList('secrets', true),
+            secretFiles: yield getInputList('secret-files', true),
             githubToken: core.getInput('github-token'),
             ssh: yield getInputList('ssh')
         };
@@ -13084,14 +13103,22 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         }));
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
             try {
-                args.push('--secret', yield buildx.getSecret(secret));
+                args.push('--secret', yield buildx.getSecretString(secret));
+            }
+            catch (err) {
+                core.warning(err.message);
+            }
+        }));
+        yield exports.asyncForEach(inputs.secretFiles, (secretFile) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                args.push('--secret', yield buildx.getSecretFile(secretFile));
             }
             catch (err) {
                 core.warning(err.message);
             }
         }));
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
-            args.push('--secret', yield buildx.getSecret(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+            args.push('--secret', yield buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
         yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
             args.push('--ssh', ssh);
