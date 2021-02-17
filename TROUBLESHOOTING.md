@@ -59,8 +59,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64
           tags: docker.io/user/app:latest
           outputs: type=oci,dest=/tmp/image.tar
       -
