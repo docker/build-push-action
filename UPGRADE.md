@@ -63,7 +63,6 @@ steps:
     uses: docker/build-push-action@v2
     with:
       context: .
-      file: ./Dockerfile
       pull: true
       push: true
       build-args: |
@@ -136,7 +135,6 @@ steps:
     uses: docker/build-push-action@v2
     with:
       context: .
-      file: ./Dockerfile
       push: ${{ github.event_name != 'pull_request' }}
       tags: ${{ steps.prep.outputs.tags }}
       labels: |
@@ -145,5 +143,5 @@ steps:
         org.opencontainers.image.revision=${{ github.sha }}
 ```
 
-> You can also use the [Docker meta action](https://github.com/crazy-max/ghaction-docker-meta) to handle tags and
-> labels based on GitHub actions events and Git metadata. A workflow example is available in the [README](README.md#handle-tags-and-labels).
+> You can also use the [Docker meta action to handle tags and labels](docs/advanced/tags-labels.md) based on GitHub
+> actions events and Git metadata.
