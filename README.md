@@ -69,7 +69,7 @@ default the `docker-container` [builder driver](https://github.com/docker/buildx
 **not required but recommended** using it to be able to build multi-platform images, export cache, etc.
 * [`setup-qemu`](https://github.com/docker/setup-qemu-action) action can be useful if you want
 to add emulation support with QEMU to be able to build against more platforms. 
-* [`login`](https://github.com/docker/setup-qemu-action) action will take care to log in against a Docker registry.
+* [`login`](https://github.com/docker/login-action) action will take care to log in against a Docker registry.
 
 ### Git context
 
