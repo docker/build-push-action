@@ -50,8 +50,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            user/app:latest
-            user/app:1.0.0
             ghcr.io/user/app:latest
             ghcr.io/user/app:1.0.0
 ```
