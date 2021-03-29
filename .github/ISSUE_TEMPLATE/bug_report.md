@@ -34,4 +34,4 @@ Before sumbitting a bug report please read the [Troubleshooting doc](https://git
 
 ### Logs
 
-> Download the [log file of your build](https://help.github.com/en/actions/configuring-and-managing-workflows/managing-a-workflow-run#downloading-logs) and [attach it](https://help.github.com/en/github/managing-your-work-on-github/file-attachments-on-issues-and-pull-requests) to this issue.
+> Download the [log file of your build](https://docs.github.com/en/actions/managing-workflow-runs/using-workflow-run-logs#downloading-logs) and [attach it](https://docs.github.com/en/github/managing-your-work-on-github/file-attachments-on-issues-and-pull-requests) to this issue.

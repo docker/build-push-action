@@ -326,7 +326,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-${{ matrix.dockerfile }}
+          file: ./test/${{ matrix.dockerfile }}.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -379,7 +379,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/multi.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -412,7 +412,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/multi.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -489,7 +489,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/multi.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -554,7 +554,7 @@ jobs:
         uses: ./
         with:
           context: ./test
-          file: ./test/Dockerfile-multi
+          file: ./test/multi.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
