@@ -58,8 +58,8 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        id: meta
+        uses: crazy-max/ghaction-docker-meta@v2
         with:
           images: ${{ matrix.slug }}
       -
@@ -84,21 +84,21 @@ jobs:
           file: ./test/Dockerfile-multi
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ matrix.slug }}:master
           cache-to: type=inline
       -
         name: Inspect image
         if: github.event_name != 'pull_request'
         run: |
-          docker pull ${{ matrix.slug }}:${{ steps.docker_meta.outputs.version }}
-          docker image inspect ${{ matrix.slug }}:${{ steps.docker_meta.outputs.version }}
+          docker pull ${{ matrix.slug }}:${{ steps.meta.outputs.version }}
+          docker image inspect ${{ matrix.slug }}:${{ steps.meta.outputs.version }}
       -
         name: Check manifest
         if: github.event_name != 'pull_request'
         run: |
-          docker buildx imagetools inspect ${{ matrix.slug }}:${{ steps.docker_meta.outputs.version }}
+          docker buildx imagetools inspect ${{ matrix.slug }}:${{ steps.meta.outputs.version }}
       -
         name: Dump context
         if: always()
