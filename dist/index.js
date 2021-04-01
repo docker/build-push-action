@@ -13014,7 +13014,7 @@ let _defaultContext, _tmpDir;
 function defaultContext() {
     var _a, _b;
     if (!_defaultContext) {
-        _defaultContext = `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
+        _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
     }
     return _defaultContext;
 }
