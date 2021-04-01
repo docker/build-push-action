@@ -37,7 +37,7 @@ export interface Inputs {
 
 export function defaultContext(): string {
   if (!_defaultContext) {
-    _defaultContext = `https://github.com/${github.context.repo.owner}/${
+    _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${
       github.context.repo.repo
     }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
   }
