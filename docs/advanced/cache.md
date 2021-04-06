@@ -3,7 +3,7 @@
 * [Registry cache](#registry-cache)
 * [GitHub cache](#github-cache)
 
-> More info about buildx cache: https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue
+> More info about buildx cache: https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-from
 
 ## Registry cache
 

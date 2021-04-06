@@ -19,11 +19,6 @@ GitHub Action to build and push Docker images with [Buildx](https://github.com/d
 features provided by [Moby BuildKit](https://github.com/moby/buildkit) builder toolkit. This includes multi-platform
 build, secrets, remote cache, etc. and different builder deployment/namespacing options.
 
-> :bulb: See also:
-> * [login](https://github.com/docker/login-action) action
-> * [setup-buildx](https://github.com/docker/setup-buildx-action) action
-> * [setup-qemu](https://github.com/docker/setup-qemu-action) action
-
 ![Screenshot](.github/build-push-action.png)
 
 ___
@@ -65,8 +60,8 @@ this restriction.
 In the examples below we are using 3 other actions:
 
 * [`setup-buildx`](https://github.com/docker/setup-buildx-action) action will create and boot a builder using by 
-default the `docker-container` [builder driver](https://github.com/docker/buildx#--driver-driver). This is
-**not required but recommended** using it to be able to build multi-platform images, export cache, etc.
+default the `docker-container` [builder driver](https://github.com/docker/buildx/blob/master/docs/reference/buildx_create.md#driver).
+This is **not required but recommended** using it to be able to build multi-platform images, export cache, etc.
 * [`setup-qemu`](https://github.com/docker/setup-qemu-action) action can be useful if you want
 to add emulation support with QEMU to be able to build against more platforms. 
 * [`login`](https://github.com/docker/login-action) action will take care to log in against a Docker registry.
@@ -208,14 +203,14 @@ Following inputs can be used as `step.with` keys
 | `tags`              | List/CSV | List of tags |
 | `pull`              | Bool     | Always attempt to pull a newer version of the image (default `false`) |
 | `target`            | String   | Sets the target stage to build |
-| `allow`             | List/CSV | List of [extra privileged entitlement](https://github.com/docker/buildx#--allowentitlement) (eg. `network.host,security.insecure`) |
+| `allow`             | List/CSV | List of [extra privileged entitlement](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#allow) (eg. `network.host,security.insecure`) |
 | `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
-| `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx#---platformvaluevalue) for build |
-| `load`              | Bool     | [Load](https://github.com/docker/buildx#--load) is a shorthand for `--output=type=docker` (default `false`) |
-| `push`              | Bool     | [Push](https://github.com/docker/buildx#--push) is a shorthand for `--output=type=registry` (default `false`) |
-| `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx#-o---outputpath-typetypekeyvalue) (format: `type=local,dest=path`) |
-| `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx#--cache-fromnametypetypekeyvalue) (eg. `type=local,src=path/to/dir`) |
-| `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx#--cache-tonametypetypekeyvalue) (eg. `type=local,dest=path/to/dir`) |
+| `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |
+| `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
+| `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
+| `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
+| `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-from) (eg. `type=local,src=path/to/dir`) |
+| `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-to) (eg. `type=local,dest=path/to/dir`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of secret files to expose to the build (eg. `key=filename`, `MY_SECRET=./secret.txt`) |
 | `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
