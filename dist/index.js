@@ -13042,6 +13042,7 @@ function getInputs(defaultContext) {
             file: core.getInput('file'),
             labels: yield getInputList('labels', true),
             load: /true/i.test(core.getInput('load')),
+            network: core.getInput('network'),
             noCache: /true/i.test(core.getInput('no-cache')),
             outputs: yield getInputList('outputs', true),
             platforms: yield getInputList('platforms'),
@@ -13143,6 +13144,9 @@ function getCommonArgs(inputs) {
         }
         if (inputs.load) {
             args.push('--load');
+        }
+        if (inputs.network) {
+            args.push('--network', inputs.network);
         }
         if (inputs.push) {
             args.push('--push');

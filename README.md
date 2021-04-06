@@ -204,6 +204,7 @@ Following inputs can be used as `step.with` keys
 | `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
 | `labels`            | List     | List of metadata for an image |
 | `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
+| `network`           | String   | Set the networking mode for the `RUN` instructions during build |
 | `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
 | `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
 | `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |

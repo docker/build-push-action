@@ -35,6 +35,9 @@ inputs:
     description: "Load is a shorthand for --output=type=docker"
     required: false
     default: 'false'
+  network:
+    description: "Set the networking mode for the RUN instructions during build"
+    required: false
   no-cache:
     description: "Do not use cache when building the image"
     required: false

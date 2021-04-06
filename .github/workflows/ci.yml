@@ -290,6 +290,30 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
+  network:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: List networks
+        run: docker network ls
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          tags: name/app:latest
+          network: host
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
   multi:
     runs-on: ubuntu-latest
     strategy:

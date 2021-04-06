@@ -346,6 +346,7 @@ ccc`],
         ['secret-files', `MY_SECRET=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
+        ['network', 'host'],
         ['push', 'true']
       ]),
       [
@@ -355,6 +356,7 @@ ccc`],
         '--secret', 'id=MY_SECRET,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
+        '--network', 'host',
         '--push',
         'https://github.com/docker/build-push-action.git#heads/master'
       ]
