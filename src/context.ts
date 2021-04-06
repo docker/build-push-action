@@ -22,6 +22,7 @@ export interface Inputs {
   file: string;
   labels: string[];
   load: boolean;
+  network: string;
   noCache: boolean;
   outputs: string[];
   platforms: string[];
@@ -66,6 +67,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     file: core.getInput('file'),
     labels: await getInputList('labels', true),
     load: /true/i.test(core.getInput('load')),
+    network: core.getInput('network'),
     noCache: /true/i.test(core.getInput('no-cache')),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
@@ -162,6 +164,9 @@ async function getCommonArgs(inputs: Inputs): Promise<Array<string>> {
   }
   if (inputs.load) {
     args.push('--load');
+  }
+  if (inputs.network) {
+    args.push('--network', inputs.network);
   }
   if (inputs.push) {
     args.push('--push');
