@@ -13033,26 +13033,26 @@ exports.tmpNameSync = tmpNameSync;
 function getInputs(defaultContext) {
     return __awaiter(this, void 0, void 0, function* () {
         return {
-            context: core.getInput('context') || defaultContext,
-            file: core.getInput('file'),
-            buildArgs: yield getInputList('build-args', true),
-            labels: yield getInputList('labels', true),
-            tags: yield getInputList('tags'),
-            pull: /true/i.test(core.getInput('pull')),
-            target: core.getInput('target'),
             allow: yield getInputList('allow'),
-            noCache: /true/i.test(core.getInput('no-cache')),
+            buildArgs: yield getInputList('build-args', true),
             builder: core.getInput('builder'),
-            platforms: yield getInputList('platforms'),
-            load: /true/i.test(core.getInput('load')),
-            push: /true/i.test(core.getInput('push')),
-            outputs: yield getInputList('outputs', true),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
+            context: core.getInput('context') || defaultContext,
+            file: core.getInput('file'),
+            labels: yield getInputList('labels', true),
+            load: /true/i.test(core.getInput('load')),
+            noCache: /true/i.test(core.getInput('no-cache')),
+            outputs: yield getInputList('outputs', true),
+            platforms: yield getInputList('platforms'),
+            pull: /true/i.test(core.getInput('pull')),
+            push: /true/i.test(core.getInput('push')),
             secrets: yield getInputList('secrets', true),
             secretFiles: yield getInputList('secret-files', true),
-            githubToken: core.getInput('github-token'),
-            ssh: yield getInputList('ssh')
+            ssh: yield getInputList('ssh'),
+            tags: yield getInputList('tags'),
+            target: core.getInput('target'),
+            githubToken: core.getInput('github-token')
         };
     });
 }

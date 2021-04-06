@@ -195,25 +195,25 @@ Following inputs can be used as `step.with` keys
 
 | Name                | Type     | Description                        |
 |---------------------|----------|------------------------------------|
-| `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
-| `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
-| `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
-| `build-args`        | List     | List of build-time variables |
-| `labels`            | List     | List of metadata for an image |
-| `tags`              | List/CSV | List of tags |
-| `pull`              | Bool     | Always attempt to pull a newer version of the image (default `false`) |
-| `target`            | String   | Sets the target stage to build |
 | `allow`             | List/CSV | List of [extra privileged entitlement](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#allow) (eg. `network.host,security.insecure`) |
-| `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
-| `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |
-| `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
-| `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
-| `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
+| `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
+| `build-args`        | List     | List of build-time variables |
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-from) (eg. `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-to) (eg. `type=local,dest=path/to/dir`) |
+| `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
+| `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
+| `labels`            | List     | List of metadata for an image |
+| `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
+| `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
+| `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
+| `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |
+| `pull`              | Bool     | Always attempt to pull a newer version of the image (default `false`) |
+| `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of secret files to expose to the build (eg. `key=filename`, `MY_SECRET=./secret.txt`) |
 | `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
+| `tags`              | List/CSV | List of tags |
+| `target`            | String   | Sets the target stage to build |
 
 ### outputs
 

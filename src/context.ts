@@ -13,26 +13,26 @@ import * as buildx from './buildx';
 let _defaultContext, _tmpDir: string;
 
 export interface Inputs {
-  context: string;
-  file: string;
-  buildArgs: string[];
-  labels: string[];
-  tags: string[];
-  pull: boolean;
-  target: string;
   allow: string[];
-  noCache: boolean;
+  buildArgs: string[];
   builder: string;
-  platforms: string[];
-  load: boolean;
-  push: boolean;
-  outputs: string[];
   cacheFrom: string[];
   cacheTo: string[];
+  context: string;
+  file: string;
+  labels: string[];
+  load: boolean;
+  noCache: boolean;
+  outputs: string[];
+  platforms: string[];
+  pull: boolean;
+  push: boolean;
   secrets: string[];
   secretFiles: string[];
-  githubToken: string;
   ssh: string[];
+  tags: string[];
+  target: string;
+  githubToken: string;
 }
 
 export function defaultContext(): string {
@@ -57,26 +57,26 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
 
 export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
-    context: core.getInput('context') || defaultContext,
-    file: core.getInput('file'),
-    buildArgs: await getInputList('build-args', true),
-    labels: await getInputList('labels', true),
-    tags: await getInputList('tags'),
-    pull: /true/i.test(core.getInput('pull')),
-    target: core.getInput('target'),
     allow: await getInputList('allow'),
-    noCache: /true/i.test(core.getInput('no-cache')),
+    buildArgs: await getInputList('build-args', true),
     builder: core.getInput('builder'),
-    platforms: await getInputList('platforms'),
-    load: /true/i.test(core.getInput('load')),
-    push: /true/i.test(core.getInput('push')),
-    outputs: await getInputList('outputs', true),
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
+    context: core.getInput('context') || defaultContext,
+    file: core.getInput('file'),
+    labels: await getInputList('labels', true),
+    load: /true/i.test(core.getInput('load')),
+    noCache: /true/i.test(core.getInput('no-cache')),
+    outputs: await getInputList('outputs', true),
+    platforms: await getInputList('platforms'),
+    pull: /true/i.test(core.getInput('pull')),
+    push: /true/i.test(core.getInput('push')),
     secrets: await getInputList('secrets', true),
     secretFiles: await getInputList('secret-files', true),
-    githubToken: core.getInput('github-token'),
-    ssh: await getInputList('ssh')
+    ssh: await getInputList('ssh'),
+    tags: await getInputList('tags'),
+    target: core.getInput('target'),
+    githubToken: core.getInput('github-token')
   };
 }
 
