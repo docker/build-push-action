@@ -9,6 +9,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 import * as buildx from './buildx';
+import {ImageReference} from './image-reference';
 
 let _defaultContext, _tmpDir: string;
 
@@ -97,7 +98,7 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
     args.push('--label', label);
   });
   await asyncForEach(inputs.tags, async tag => {
-    args.push('--tag', tag);
+    args.push('--tag', ImageReference.sanitize(tag));
   });
   if (inputs.target) {
     args.push('--target', inputs.target);
