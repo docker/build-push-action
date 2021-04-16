@@ -31,7 +31,7 @@
     "@actions/core": "^1.2.7",
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
-    "csv-parse": "^4.15.3",
+    "csv-parse": "^4.15.4",
     "semver": "^7.3.5",
     "tmp": "^0.2.1"
   },
