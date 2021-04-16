@@ -12463,7 +12463,7 @@ class Parser extends Transform {
         ], this.options, this.__context(), {
           record: record,
         })
-      if(relax_column_count === true || 
+      if(relax_column_count === true ||
         (relax_column_count_less === true && recordLength < this.state.expectedRecordLength) ||
         (relax_column_count_more === true && recordLength > this.state.expectedRecordLength) ){
         this.info.invalid_field_length++
@@ -12493,7 +12493,7 @@ class Parser extends Transform {
         for(let i = 0, l = record.length; i < l; i++){
           if(columns[i] === undefined || columns[i].disabled) continue
           // Turn duplicate columns into an array
-          if (columns_duplicates_to_array === true && obj[columns[i].name]) {
+          if (columns_duplicates_to_array === true && obj[columns[i].name] !== undefined) {
             if (Array.isArray(obj[columns[i].name])) {
               obj[columns[i].name] = obj[columns[i].name].concat(record[i])
             } else {
