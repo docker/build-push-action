@@ -16,16 +16,8 @@ These issues are not directly related to this action but are rather linked to [b
 [buildkit](https://github.com/moby/buildkit), [containerd](https://github.com/containerd/containerd) or the registry
 on which you're pushing your image. The quality of error message depends on the registry and are usually not very informative.
 
-To help you solve this, you should first enable debugging in the
-[setup-buildx action step](https://github.com/docker/setup-buildx-action):
-
-```yaml
-  -
-    name: Set up Docker Buildx
-    uses: docker/setup-buildx-action@v1
-    with:
-      buildkitd-flags: --debug
-```
+To help you solve this, you have to [enable debugging in the setup-buildx](https://github.com/docker/setup-buildx-action#buildkit-container-logs)
+action step and attach BuildKit container logs to your issue.
 
 Next you can test pushing with [containerd action](https://github.com/crazy-max/ghaction-setup-containerd) using the
 following workflow. If it works then open an issue on [buildkit](https://github.com/moby/buildkit) repository.
