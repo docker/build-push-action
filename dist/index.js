@@ -13013,9 +13013,15 @@ const github = __importStar(__webpack_require__(438));
 const buildx = __importStar(__webpack_require__(295));
 let _defaultContext, _tmpDir;
 function defaultContext() {
-    var _a, _b;
     if (!_defaultContext) {
-        _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}.git#${(_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.ref) === null || _b === void 0 ? void 0 : _b.replace(/^refs\//, '')}`;
+        let ref = github.context.ref;
+        if (github.context.sha && ref && !ref.startsWith('refs/')) {
+            ref = `refs/heads/${github.context.ref}`;
+        }
+        if (github.context.sha && !ref.startsWith(`refs/pull/`)) {
+            ref = github.context.sha;
+        }
+        _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}.git#${ref}`;
     }
     return _defaultContext;
 }
