@@ -1,6 +1,8 @@
 # Troubleshooting
 
 * [Cannot push to a registry](#cannot-push-to-a-registry)
+  * [BuildKit container logs](#buildkit-container-logs)
+  * [With containerd](#with-containerd)
 
 ## Cannot push to a registry
 
@@ -16,8 +18,12 @@ These issues are not directly related to this action but are rather linked to [b
 [buildkit](https://github.com/moby/buildkit), [containerd](https://github.com/containerd/containerd) or the registry
 on which you're pushing your image. The quality of error message depends on the registry and are usually not very informative.
 
+### BuildKit container logs
+
 To help you solve this, you have to [enable debugging in the setup-buildx](https://github.com/docker/setup-buildx-action#buildkit-container-logs)
 action step and attach BuildKit container logs to your issue.
+
+### With containerd
 
 Next you can test pushing with [containerd action](https://github.com/crazy-max/ghaction-setup-containerd) using the
 following workflow. If it works then open an issue on [buildkit](https://github.com/moby/buildkit) repository.

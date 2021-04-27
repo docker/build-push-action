@@ -43,7 +43,6 @@ ___
   * [outputs](#outputs)
 * [Troubleshooting](#troubleshooting)
 * [Keep up-to-date with GitHub Dependabot](#keep-up-to-date-with-github-dependabot)
-* [Limitation](#limitation)
 
 ## Usage
 
@@ -243,7 +242,3 @@ updates:
     schedule:
       interval: "daily"
 ```
-
-## Limitation
-
-This action is only available for Linux [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).

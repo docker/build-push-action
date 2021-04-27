@@ -2387,7 +2387,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(__webpack_require__(747));
-const os = __importStar(__webpack_require__(87));
 const buildx = __importStar(__webpack_require__(295));
 const context = __importStar(__webpack_require__(842));
 const exec = __importStar(__webpack_require__(757));
@@ -2396,18 +2395,20 @@ const core = __importStar(__webpack_require__(186));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            if (os.platform() !== 'linux') {
-                throw new Error(`Only supported on linux platform`);
-            }
+            core.startGroup(`Docker info`);
+            yield exec.exec('docker', ['version']);
+            yield exec.exec('docker', ['info']);
+            core.endGroup();
             if (!(yield buildx.isAvailable())) {
-                throw new Error(`Buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
+                core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
+                return;
             }
             stateHelper.setTmpDir(context.tmpDir());
             const buildxVersion = yield buildx.getVersion();
-            core.info(`📣 Buildx version: ${buildxVersion}`);
+            core.info(`Using buildx ${buildxVersion}`);
             const defContext = context.defaultContext();
             let inputs = yield context.getInputs(defContext);
-            core.info(`🏃 Starting build...`);
+            core.info(`Building...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args).then(res => {
                 if (res.stderr != '' && !res.success) {
@@ -2416,9 +2417,10 @@ function run() {
             });
             const imageID = yield buildx.getImageID();
             if (imageID) {
-                core.info('🛒 Extracting digest...');
+                core.startGroup(`Extracting digest`);
                 core.info(`${imageID}`);
                 core.setOutput('digest', imageID);
+                core.endGroup();
             }
         }
         catch (error) {
@@ -2429,8 +2431,9 @@ function run() {
 function cleanup() {
     return __awaiter(this, void 0, void 0, function* () {
         if (stateHelper.tmpDir.length > 0) {
-            core.info(`🚿 Removing temp folder ${stateHelper.tmpDir}`);
+            core.startGroup(`Removing temp folder ${stateHelper.tmpDir}`);
             fs.rmdirSync(stateHelper.tmpDir, { recursive: true });
+            core.endGroup();
         }
     });
 }
@@ -4695,7 +4698,7 @@ function parseVersion(stdout) {
     return __awaiter(this, void 0, void 0, function* () {
         const matches = /\sv?([0-9.]+)/.exec(stdout);
         if (!matches) {
-            throw new Error(`Cannot parse Buildx version`);
+            throw new Error(`Cannot parse buildx version`);
         }
         return semver.clean(matches[1]);
     });
