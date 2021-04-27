@@ -36,7 +36,7 @@ async function run(): Promise<void> {
     if (imageID) {
       core.startGroup(`Extracting digest`);
       core.info(`${imageID}`);
-      core.setOutput('digest', imageID);
+      context.setOutput('digest', imageID);
       core.endGroup();
     }
   } catch (error) {
