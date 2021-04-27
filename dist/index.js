@@ -2419,7 +2419,7 @@ function run() {
             if (imageID) {
                 core.startGroup(`Extracting digest`);
                 core.info(`${imageID}`);
-                core.setOutput('digest', imageID);
+                context.setOutput('digest', imageID);
                 core.endGroup();
             }
         }
@@ -13004,7 +13004,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
+exports.setOutput = exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
 const sync_1 = __importDefault(__webpack_require__(750));
 const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
@@ -13012,6 +13012,7 @@ const path = __importStar(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(383));
 const tmp = __importStar(__webpack_require__(517));
 const core = __importStar(__webpack_require__(186));
+const command_1 = __webpack_require__(351);
 const github = __importStar(__webpack_require__(438));
 const buildx = __importStar(__webpack_require__(295));
 let _defaultContext, _tmpDir;
@@ -13189,6 +13190,11 @@ exports.asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, fu
         yield callback(array[index], index, array);
     }
 });
+// FIXME: Temp fix https://github.com/actions/toolkit/issues/777
+function setOutput(name, value) {
+    command_1.issueCommand('set-output', { name }, value);
+}
+exports.setOutput = setOutput;
 //# sourceMappingURL=context.js.map
 
 /***/ }),

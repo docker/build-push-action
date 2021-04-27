@@ -6,6 +6,7 @@ import * as semver from 'semver';
 import * as tmp from 'tmp';
 
 import * as core from '@actions/core';
+import {issueCommand} from '@actions/core/lib/command';
 import * as github from '@actions/github';
 
 import * as buildx from './buildx';
@@ -205,3 +206,8 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+// FIXME: Temp fix https://github.com/actions/toolkit/issues/777
+export function setOutput(name: string, value: any): void {
+  issueCommand('set-output', {name}, value);
+}
