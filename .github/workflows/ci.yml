@@ -213,6 +213,37 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
+        name: Stop docker
+        run: |
+          sudo systemctl stop docker
+      -
+        name: Build
+        id: docker_build
+        continue-on-error: true
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+      -
+        name: Check
+        run: |
+          echo "${{ toJson(steps.docker_build) }}"
+          if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
+            echo "::error::Should have failed"
+            exit 1
+          fi
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  error-buildx:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       -
