@@ -2,7 +2,7 @@
 
 If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and want an
 "automatic" tag management and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
-for labels, you can do it in a dedicated step. The following workflow will use the [Docker meta action](https://github.com/crazy-max/ghaction-docker-meta)
+for labels, you can do it in a dedicated step. The following workflow will use the [Docker metadata action](https://github.com/docker/metadata-action)
 to handle tags and labels based on GitHub actions events and Git metadata.
 
 ```yaml
@@ -30,7 +30,7 @@ jobs:
       -
         name: Docker meta
         id: meta
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v3
         with:
           # list of Docker images to use as base name for tags
           images: |
