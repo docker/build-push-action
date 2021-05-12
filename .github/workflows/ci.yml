@@ -20,7 +20,7 @@ jobs:
           path: action
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
       -
         name: Build
         uses: ./action
@@ -50,7 +50,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           version: latest
           driver-opts: network=host
@@ -104,7 +104,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           driver-opts: network=host
       -
@@ -171,7 +171,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
@@ -248,7 +248,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
       -
         name: Build
         id: docker_build
@@ -329,7 +329,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
       -
         name: List networks
         run: docker network ls
@@ -371,7 +371,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
@@ -424,7 +424,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           driver-opts: |
             network=host
@@ -522,7 +522,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           driver-opts: |
             network=host
@@ -590,7 +590,7 @@ jobs:
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.3.0
         with:
           driver-opts: |
             network=host
