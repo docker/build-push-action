@@ -29,7 +29,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   git-context:
     runs-on: ubuntu-latest
@@ -83,7 +83,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   git-context-secret:
     runs-on: ubuntu-latest
@@ -146,7 +146,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   path-context:
     runs-on: ubuntu-latest
@@ -204,7 +204,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   error:
     runs-on: ubuntu-latest
@@ -235,7 +235,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   error-buildx:
     runs-on: ubuntu-latest
@@ -271,7 +271,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   docker-driver:
     runs-on: ubuntu-latest
@@ -296,7 +296,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   export-docker:
     runs-on: ubuntu-latest
@@ -319,7 +319,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   network:
     runs-on: ubuntu-latest
@@ -343,7 +343,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   multi:
     runs-on: ubuntu-latest
@@ -405,7 +405,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   registry-cache:
     runs-on: ubuntu-latest
@@ -501,7 +501,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   github-cache-first:
     runs-on: ubuntu-latest
@@ -570,7 +570,7 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
 
   github-cache-hit:
     runs-on: ubuntu-latest
@@ -646,4 +646,4 @@ jobs:
       -
         name: Dump context
         if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        uses: crazy-max/ghaction-dump-context@v1.2.0
