@@ -528,7 +528,7 @@ jobs:
             network=host
       -
         name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-ghcache-${{ github.sha }}
@@ -596,7 +596,7 @@ jobs:
             network=host
       -
         name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         id: cache
         with:
           path: /tmp/.buildx-cache
