@@ -36,6 +36,7 @@ ___
     * [GitHub cache](docs/advanced/cache.md#github-cache)
   * [Local registry](docs/advanced/local-registry.md)
   * [Export image to Docker](docs/advanced/export-docker.md)
+  * [Share built image between jobs](docs/advanced/share-image-jobs.md)
   * [Handle tags and labels](docs/advanced/tags-labels.md)
   * [Update DockerHub repo description](docs/advanced/dockerhub-desc.md)
 * [Customizing](#customizing)
@@ -171,6 +172,7 @@ jobs:
   * [GitHub cache](docs/advanced/cache.md#github-cache)
 * [Local registry](docs/advanced/local-registry.md)
 * [Export image to Docker](docs/advanced/export-docker.md)
+* [Share built image between jobs](docs/advanced/share-image-jobs.md)
 * [Handle tags and labels](docs/advanced/tags-labels.md)
 * [Update DockerHub repo description](docs/advanced/dockerhub-desc.md)
 
