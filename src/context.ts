@@ -185,6 +185,7 @@ export async function getInputList(name: string, ignoreComma?: boolean): Promise
 
   for (let output of (await csvparse(items, {
     columns: false,
+    relax: true,
     relaxColumnCount: true,
     skipLinesWithEmptyValues: true
   })) as Array<string[]>) {

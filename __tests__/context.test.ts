@@ -361,6 +361,22 @@ ccc`],
         '--push',
         'https://github.com/docker/build-push-action.git#heads/master'
       ]
+    ],
+    [
+      '0.4.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['labels', 'org.opencontainers.image.title=filter_results_top_n\norg.opencontainers.image.description=Reference implementation of operation "filter results (top-n)"'],
+        ['outputs', 'type=local,dest=./release-out']
+      ]),
+      [
+        'buildx',
+        'build',
+        '--label', 'org.opencontainers.image.title=filter_results_top_n',
+        '--label', 'org.opencontainers.image.description=Reference implementation of operation "filter results (top-n)"',
+        '--output', 'type=local,dest=./release-out',
+        '.'
+      ]
     ]
   ])(
     'given %p with %p as inputs, returns %p',
