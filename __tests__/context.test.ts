@@ -112,7 +112,7 @@ PejgXO0uIRolYQ3sz2tMGhx1MfBqH64=
 -----END PGP PRIVATE KEY BLOCK-----`;
 
 jest.spyOn(context, 'defaultContext').mockImplementation((): string => {
-  return 'https://github.com/docker/build-push-action.git#test-jest';
+  return 'https://github.com/docker/build-push-action.git#refs/heads/test-jest';
 });
 
 jest.spyOn(context, 'tmpDir').mockImplementation((): string => {
@@ -162,7 +162,7 @@ describe('getArgs', () => {
         '--build-arg', 'MY_ARG=val1,val2,val3',
         '--build-arg', 'ARG=val',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        'https://github.com/docker/build-push-action.git#test-jest'
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
     ],
     [
@@ -176,7 +176,7 @@ describe('getArgs', () => {
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        'https://github.com/docker/build-push-action.git#test-jest'
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
     ],
     [
@@ -245,13 +245,13 @@ describe('getArgs', () => {
         'build',
         '--output', '.',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        'https://github.com/docker/build-push-action.git#test-jest'
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
     ],
     [
       '0.4.2',
       new Map<string, string>([
-        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
         ['platforms', 'linux/amd64,linux/arm64'],
         ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
@@ -268,13 +268,13 @@ describe('getArgs', () => {
         '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--push',
-        'https://github.com/docker/build-push-action.git#heads/master'
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
       '0.4.2',
       new Map<string, string>([
-        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
         ['platforms', 'linux/amd64,linux/arm64'],
         ['secrets', `GIT_AUTH_TOKEN=abcdefghi,jklmno=0123456789
@@ -302,13 +302,13 @@ ccc"`],
         '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--push',
-        'https://github.com/docker/build-push-action.git#heads/master'
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
       '0.4.2',
       new Map<string, string>([
-        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
         ['platforms', 'linux/amd64,linux/arm64'],
         ['secrets', `GIT_AUTH_TOKEN=abcdefghi,jklmno=0123456789
@@ -336,13 +336,13 @@ ccc`],
         '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--push',
-        'https://github.com/docker/build-push-action.git#heads/master'
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
       '0.5.1',
       new Map<string, string>([
-        ['context', 'https://github.com/docker/build-push-action.git#heads/master'],
+        ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
         ['secret-files', `MY_SECRET=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`],
         ['file', './test/Dockerfile'],
@@ -359,7 +359,7 @@ ccc`],
         '--builder', 'builder-git-context-2',
         '--network', 'host',
         '--push',
-        'https://github.com/docker/build-push-action.git#heads/master'
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [

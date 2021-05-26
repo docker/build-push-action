@@ -39,9 +39,16 @@ export interface Inputs {
 
 export function defaultContext(): string {
   if (!_defaultContext) {
+    let ref = github.context.ref;
+    if (github.context.sha && ref && !ref.startsWith('refs/')) {
+      ref = `refs/heads/${github.context.ref}`;
+    }
+    if (github.context.sha && !ref.startsWith(`refs/pull/`)) {
+      ref = github.context.sha;
+    }
     _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${
       github.context.repo.repo
-    }.git#${github.context?.ref?.replace(/^refs\//, '')}`;
+    }.git#${ref}`;
   }
   return _defaultContext;
 }
