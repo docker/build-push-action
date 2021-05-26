@@ -2530,10 +2530,8 @@ function run() {
             }
             stateHelper.setTmpDir(context.tmpDir());
             const buildxVersion = yield buildx.getVersion();
-            core.info(`Using buildx ${buildxVersion}`);
             const defContext = context.defaultContext();
             let inputs = yield context.getInputs(defContext);
-            core.info(`Building...`);
             const args = yield context.getArgs(inputs, defContext, buildxVersion);
             yield exec.exec('docker', args).then(res => {
                 if (res.stderr != '' && !res.success) {

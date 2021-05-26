@@ -19,12 +19,9 @@ async function run(): Promise<void> {
     stateHelper.setTmpDir(context.tmpDir());
 
     const buildxVersion = await buildx.getVersion();
-    core.info(`Using buildx ${buildxVersion}`);
-
     const defContext = context.defaultContext();
     let inputs: context.Inputs = await context.getInputs(defContext);
 
-    core.info(`Building...`);
     const args: string[] = await context.getArgs(inputs, defContext, buildxVersion);
     await exec.exec('docker', args).then(res => {
       if (res.stderr != '' && !res.success) {
