@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
+import * as exec from '@actions/exec';
 
 import * as buildx from '../src/buildx';
 import * as context from '../src/context';
-import * as docker from '../src/docker';
 
 const tmpNameSync = path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
 const digest = 'sha256:bfb45ab72e46908183546477a08f8867fc40cebadd00af54b071b097aed127a9';
@@ -92,9 +92,26 @@ describe('isLocalOrTarExporter', () => {
   );
 });
 
+describe('isAvailable', () => {
+  const execSpy: jest.SpyInstance = jest.spyOn(exec, 'getExecOutput');
+  buildx.isAvailable();
+
+  expect(execSpy).toHaveBeenCalledWith(`docker`, ['buildx'], {
+    silent: true,
+    ignoreReturnCode: true
+  });
+});
+
 describe('getVersion', () => {
   async function isDaemonRunning() {
-    return await docker.isDaemonRunning();
+    return await exec
+      .getExecOutput(`docker`, ['version', '--format', '{{.Server.Os}}'], {
+        ignoreReturnCode: true,
+        silent: true
+      })
+      .then(res => {
+        return !res.stdout.includes(' ') && res.exitCode == 0;
+      });
   }
   (isDaemonRunning() ? it : it.skip)(
     'valid',
