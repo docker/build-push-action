@@ -143,6 +143,10 @@ describe('getArgs', () => {
       '0.4.1',
       new Map<string, string>([
         ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -155,6 +159,10 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['build-args', 'MY_ARG=val1,val2,val3\nARG=val'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -169,6 +177,10 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['tags', 'name/app:7.4, name/app:latest'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -184,7 +196,11 @@ describe('getArgs', () => {
       new Map<string, string>([
         ['context', '.'],
         ['labels', 'org.opencontainers.image.title=buildkit\norg.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit'],
-        ['outputs', 'type=local,dest=./release-out']
+        ['outputs', 'type=local,dest=./release-out'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -199,7 +215,11 @@ describe('getArgs', () => {
       '0.4.1',
       new Map<string, string>([
         ['context', '.'],
-        ['platforms', 'linux/amd64,linux/arm64']
+        ['platforms', 'linux/amd64,linux/arm64'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -211,7 +231,11 @@ describe('getArgs', () => {
     [
       '0.4.1',
       new Map<string, string>([
-        ['context', '.']
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -225,6 +249,10 @@ describe('getArgs', () => {
       new Map<string, string>([
         ['context', '.'],
         ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -238,7 +266,11 @@ describe('getArgs', () => {
       '0.4.2',
       new Map<string, string>([
         ['github-token', 'abcdefghijklmno0123456789'],
-        ['outputs', '.']
+        ['outputs', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -257,7 +289,10 @@ describe('getArgs', () => {
         ['secrets', 'GIT_AUTH_TOKEN=abcdefghijklmno=0123456789'],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
-        ['push', 'true']
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'true'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -288,7 +323,10 @@ bbbb
 ccc"`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
-        ['push', 'true']
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'true'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -322,7 +360,10 @@ bbbb
 ccc`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
-        ['push', 'true']
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'true'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -348,7 +389,10 @@ ccc`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
         ['network', 'host'],
-        ['push', 'true']
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'true'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -367,7 +411,11 @@ ccc`],
       new Map<string, string>([
         ['context', '.'],
         ['labels', 'org.opencontainers.image.title=filter_results_top_n\norg.opencontainers.image.description=Reference implementation of operation "filter results (top-n)"'],
-        ['outputs', 'type=local,dest=./release-out']
+        ['outputs', 'type=local,dest=./release-out'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
       ]),
       [
         'buildx',
@@ -592,7 +640,7 @@ describe('setOutput', () => {
   });
 });
 
-// See: https://github.com/actions/toolkit/blob/master/packages/core/src/core.ts#L67
+// See: https://github.com/actions/toolkit/blob/a1b068ec31a042ff1e10a522d8fdf0b8869d53ca/packages/core/src/core.ts#L89
 function getInputName(name: string): string {
   return `INPUT_${name.replace(/ /g, '_').toUpperCase()}`;
 }
