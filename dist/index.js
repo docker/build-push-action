@@ -12276,7 +12276,7 @@ class Parser extends Transform {
     }else{
       throw new CsvError('CSV_INVALID_OPTION_COLUMNS', [
         'Invalid option columns:',
-        'expect an object, a function or true,',
+        'expect an array, a function or true,',
         `got ${JSON.stringify(options.columns)}`
       ], options)
     }
@@ -12288,6 +12288,11 @@ class Parser extends Transform {
         'Invalid option columns_duplicates_to_array:',
         'expect an boolean,',
         `got ${JSON.stringify(options.columns_duplicates_to_array)}`
+      ], options)
+    }else if(options.columns === false){
+      throw new CsvError('CSV_INVALID_OPTION_COLUMNS_DUPLICATES_TO_ARRAY', [
+        'Invalid option columns_duplicates_to_array:',
+        'the `columns` mode must be activated.'
       ], options)
     }
     // Normalize option `comment`
@@ -12603,10 +12608,10 @@ class Parser extends Transform {
       escaping: false,
       // escapeIsQuote: options.escape === options.quote,
       escapeIsQuote: Buffer.isBuffer(options.escape) && Buffer.isBuffer(options.quote) && Buffer.compare(options.escape, options.quote) === 0,
-      expectedRecordLength: options.columns === null ? 0 : options.columns.length,
+      // columns can be `false`, `true`, `Array`
+      expectedRecordLength: Array.isArray(options.columns) ? options.columns.length : undefined,
       field: new ResizeableBuffer(20),
       firstLineToHeaders: fnFirstLineToHeaders,
-      info: Object.assign({}, this.info),
       needMoreDataSize: Math.max(
         // Skip if the remaining buffer smaller than comment
         options.comment !== null ? options.comment.length : 0,
@@ -12649,7 +12654,7 @@ class Parser extends Transform {
   }
   // Central parser implementation
   __parse(nextBuf, end){
-    const {bom, comment, escape, from_line, info, ltrim, max_record_size, quote, raw, relax, rtrim, skip_empty_lines, to, to_line} = this.options
+    const {bom, comment, escape, from_line, ltrim, max_record_size, quote, raw, relax, rtrim, skip_empty_lines, to, to_line} = this.options
     let {record_delimiter} = this.options
     const {bomSkipped, previousBuf, rawBuffer, escapeIsQuote} = this.state
     let buf
@@ -12700,9 +12705,6 @@ class Parser extends Transform {
       }
       if(this.state.wasRowDelimiter === true){
         this.info.lines++
-        if(info === true && this.state.record.length === 0 && this.state.field.length === 0 && this.state.wasQuoting === false){
-          this.state.info = Object.assign({}, this.info)
-        }
         this.state.wasRowDelimiter = false
       }
       if(to_line !== -1 && this.info.lines > to_line){
@@ -12771,7 +12773,7 @@ class Parser extends Transform {
                   `at line ${this.info.lines}`,
                   'instead of delimiter, record delimiter, trimable character',
                   '(if activated) or comment',
-                ], this.options, this.__context())
+                ], this.options, this.__infoField())
               )
               if(err !== undefined) return err
             }else{
@@ -12788,7 +12790,7 @@ class Parser extends Transform {
                   new CsvError('INVALID_OPENING_QUOTE', [
                     'Invalid Opening Quote:',
                     `a quote is found inside a field at line ${this.info.lines}`,
-                  ], this.options, this.__context(), {
+                  ], this.options, this.__infoField(), {
                     field: this.state.field,
                   })
                 )
@@ -12863,12 +12865,11 @@ class Parser extends Transform {
               'record exceed the maximum number of tolerated bytes',
               `of ${max_record_size}`,
               `at line ${this.info.lines}`,
-            ], this.options, this.__context())
+            ], this.options, this.__infoField())
           )
           if(err !== undefined) return err
         }
       }
-
       const lappend = ltrim === false || this.state.quoting === true || this.state.field.length !== 0 || !this.__isCharTrimable(chr)
       // rtrim in non quoting is handle in __onField
       const rappend = rtrim === false || this.state.wasQuoting === false
@@ -12880,7 +12881,7 @@ class Parser extends Transform {
             'Invalid Closing Quote:',
             'found non trimable byte after quote',
             `at line ${this.info.lines}`,
-          ], this.options, this.__context())
+          ], this.options, this.__infoField())
         )
         if(err !== undefined) return err
       }
@@ -12892,7 +12893,7 @@ class Parser extends Transform {
           new CsvError('CSV_QUOTE_NOT_CLOSED', [
             'Quote Not Closed:',
             `the parsing is finished with an opening quote at line ${this.info.lines}`,
-          ], this.options, this.__context())
+          ], this.options, this.__infoField())
         )
         if(err !== undefined) return err
       }else{
@@ -12925,7 +12926,7 @@ class Parser extends Transform {
     // Convert the first line into column names
     const recordLength = record.length
     if(columns === true){
-      if(isRecordEmpty(record)){
+      if(skip_lines_with_empty_values === true && isRecordEmpty(record)){
         this.__resetRecord()
         return
       }
@@ -12942,7 +12943,7 @@ class Parser extends Transform {
           'Invalid Record Length:',
           `expect ${this.state.expectedRecordLength},`,
           `got ${recordLength} on line ${this.info.lines}`,
-        ], this.options, this.__context(), {
+        ], this.options, this.__infoField(), {
           record: record,
         })
       :
@@ -12952,7 +12953,7 @@ class Parser extends Transform {
           'Invalid Record Length:',
           `columns length is ${columns.length},`, // rename columns
           `got ${recordLength} on line ${this.info.lines}`,
-        ], this.options, this.__context(), {
+        ], this.options, this.__infoField(), {
           record: record,
         })
       if(relax_column_count === true ||
@@ -12966,11 +12967,9 @@ class Parser extends Transform {
         if(finalErr) return finalErr
       }
     }
-    if(skip_lines_with_empty_values === true){
-      if(isRecordEmpty(record)){
-        this.__resetRecord()
-        return
-      }
+    if(skip_lines_with_empty_values === true && isRecordEmpty(record)){
+      this.__resetRecord()
+      return
     }
     if(this.state.recordHasError === true){
       this.__resetRecord()
@@ -12979,6 +12978,7 @@ class Parser extends Transform {
     }
     this.info.records++
     if(from === 1 || this.info.records >= from){
+      // With columns, records are object
       if(columns !== false){
         const obj = {}
         // Transform record array to an object
@@ -12996,12 +12996,13 @@ class Parser extends Transform {
           }
         }
         const {objname} = this.options
+        // Without objname (default)
         if(objname === undefined){
           if(raw === true || info === true){
             const err = this.__push(Object.assign(
               {record: obj},
               (raw === true ? {raw: this.state.rawBuffer.toString(encoding)}: {}),
-              (info === true ? {info: this.state.info}: {})
+              (info === true ? {info: this.__infoRecord()}: {})
             ))
             if(err){
               return err
@@ -13012,12 +13013,13 @@ class Parser extends Transform {
               return err
             }
           }
+        // With objname (default)
         }else{
           if(raw === true || info === true){
             const err = this.__push(Object.assign(
               {record: [obj[objname], obj]},
               raw === true ? {raw: this.state.rawBuffer.toString(encoding)}: {},
-              info === true ? {info: this.state.info}: {}
+              info === true ? {info: this.__infoRecord()}: {}
             ))
             if(err){
               return err
@@ -13029,12 +13031,13 @@ class Parser extends Transform {
             }
           }
         }
+      // Without columns, records are array
       }else{
         if(raw === true || info === true){
           const err = this.__push(Object.assign(
             {record: record},
             raw === true ? {raw: this.state.rawBuffer.toString(encoding)}: {},
-            info === true ? {info: this.state.info}: {}
+            info === true ? {info: this.__infoRecord()}: {}
           ))
           if(err){
             return err
@@ -13059,7 +13062,7 @@ class Parser extends Transform {
             'Invalid Column Mapping:',
             'expect an array from column function,',
             `got ${JSON.stringify(headers)}`
-          ], this.options, this.__context(), {
+          ], this.options, this.__infoField(), {
             headers: headers,
           })
         )
@@ -13085,7 +13088,7 @@ class Parser extends Transform {
     const {cast, encoding, rtrim, max_record_size} = this.options
     const {enabled, wasQuoting} = this.state
     // Short circuit for the from_line options
-    if(enabled === false){ /* this.options.columns !== true && */
+    if(enabled === false){
       return this.__resetField()
     }
     let field = this.state.field.toString(encoding)
@@ -13111,9 +13114,9 @@ class Parser extends Transform {
   __push(record){
     const {on_record} = this.options
     if(on_record !== undefined){
-      const context = this.__context()
+      const info = this.__infoRecord()
       try{
-        record = on_record.call(null, record, context)
+        record = on_record.call(null, record, info)
       }catch(err){
         return err
       }
@@ -13131,10 +13134,10 @@ class Parser extends Transform {
     if( isColumns === true && relax_column_count && this.options.columns.length <= this.state.record.length ){
       return [undefined, undefined]
     }
-    const context = this.__context()
     if(this.state.castField !== null){
       try{
-        return [undefined, this.state.castField.call(null, field, context)]
+        const info = this.__infoField()
+        return [undefined, this.state.castField.call(null, field, info)]
       }catch(err){
         return [err]
       }
@@ -13142,7 +13145,8 @@ class Parser extends Transform {
     if(this.__isFloat(field)){
       return [undefined, parseFloat(field)]
     }else if(this.options.cast_date !== false){
-      return [undefined, this.options.cast_date.call(null, field, context)]
+      const info = this.__infoField()
+      return [undefined, this.options.cast_date.call(null, field, info)]
     }
     return [undefined, field]
   }
@@ -13274,24 +13278,33 @@ class Parser extends Transform {
       return err
     }
   }
-  __context(){
+  __infoDataSet(){
+    return {
+      ...this.info,
+      columns: this.options.columns
+    }
+  }
+  __infoRecord(){
+    const {columns} = this.options
+    return {
+      ...this.__infoDataSet(),
+      error: this.state.error,
+      header: columns === true,
+      index: this.state.record.length,
+    }
+  }
+  __infoField(){
     const {columns} = this.options
     const isColumns = Array.isArray(columns)
     return {
+      ...this.__infoRecord(),
       column: isColumns === true ?
         ( columns.length > this.state.record.length ?
           columns[this.state.record.length].name :
           null
         ) :
         this.state.record.length,
-      empty_lines: this.info.empty_lines,
-      error: this.state.error,
-      header: columns === true,
-      index: this.state.record.length,
-      invalid_field_length: this.info.invalid_field_length,
       quoting: this.state.wasQuoting,
-      lines: this.info.lines,
-      records: this.info.records
     }
   }
 }
@@ -13328,10 +13341,10 @@ const parse = function(){
       }
     })
     parser.on('error', function(err){
-      callback(err, undefined, parser.info)
+      callback(err, undefined, parser.__infoDataSet())
     })
     parser.on('end', function(){
-      callback(undefined, records, parser.info)
+      callback(undefined, records, parser.__infoDataSet())
     })
   }
   if(data !== undefined){
