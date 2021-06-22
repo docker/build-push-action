@@ -2,9 +2,9 @@ import csvparse from 'csv-parse/lib/sync';
 import fs from 'fs';
 import path from 'path';
 import * as semver from 'semver';
+import * as exec from '@actions/exec';
 
 import * as context from './context';
-import * as exec from './exec';
 
 export async function getImageIDFile(): Promise<string> {
   return path.join(context.tmpDir(), 'iidfile').split(path.sep).join(path.posix.sep);
@@ -80,21 +80,31 @@ export function hasGitAuthToken(secrets: string[]): Boolean {
 }
 
 export async function isAvailable(): Promise<Boolean> {
-  return await exec.exec(`docker`, ['buildx'], true).then(res => {
-    if (res.stderr != '' && !res.success) {
-      return false;
-    }
-    return res.success;
-  });
+  return await exec
+    .getExecOutput('docker', ['buildx'], {
+      ignoreReturnCode: true,
+      silent: true
+    })
+    .then(res => {
+      if (res.stderr.length > 0 && res.exitCode != 0) {
+        return false;
+      }
+      return res.exitCode == 0;
+    });
 }
 
 export async function getVersion(): Promise<string> {
-  return await exec.exec(`docker`, ['buildx', 'version'], true).then(res => {
-    if (res.stderr != '' && !res.success) {
-      throw new Error(res.stderr);
-    }
-    return parseVersion(res.stdout);
-  });
+  return await exec
+    .getExecOutput('docker', ['buildx', 'version'], {
+      ignoreReturnCode: true,
+      silent: true
+    })
+    .then(res => {
+      if (res.stderr.length > 0 && res.exitCode != 0) {
+        throw new Error(res.stderr.trim());
+      }
+      return parseVersion(res.stdout);
+    });
 }
 
 export async function parseVersion(stdout: string): Promise<string> {
