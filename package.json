@@ -37,17 +37,17 @@
   },
   "devDependencies": {
     "@types/csv-parse": "^1.2.2",
-    "@types/jest": "^26.0.3",
-    "@types/node": "^14.0.14",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^14.17.4",
     "@types/tmp": "^0.2.0",
-    "@vercel/ncc": "^0.23.0",
-    "dotenv": "^8.2.0",
-    "jest": "^26.1.0",
-    "jest-circus": "^26.1.0",
-    "jest-runtime": "^26.1.0",
-    "prettier": "^2.0.5",
-    "ts-jest": "^26.1.1",
-    "typescript": "^3.9.5",
+    "@vercel/ncc": "^0.28.6",
+    "dotenv": "^8.6.0",
+    "jest": "^26.6.3",
+    "jest-circus": "^26.6.3",
+    "jest-runtime": "^26.6.3",
+    "prettier": "^2.3.1",
+    "ts-jest": "^26.5.6",
+    "typescript": "^4.3.4",
     "typescript-formatter": "^7.2.2"
   }
 }
