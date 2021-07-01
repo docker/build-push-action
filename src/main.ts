@@ -29,7 +29,7 @@ async function run(): Promise<void> {
       })
       .then(res => {
         if (res.stderr.length > 0 && res.exitCode != 0) {
-          throw new Error(`buildx bake failed with: ${res.stderr.match(/(.*)\s*$/)![0].trim()}`);
+          throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)![0].trim()}`);
         }
       });
 
