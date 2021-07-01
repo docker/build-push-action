@@ -46,9 +46,7 @@ export function defaultContext(): string {
     if (github.context.sha && !ref.startsWith(`refs/pull/`)) {
       ref = github.context.sha;
     }
-    _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${
-      github.context.repo.repo
-    }.git#${ref}`;
+    _defaultContext = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}.git#${ref}`;
   }
   return _defaultContext;
 }
@@ -121,10 +119,7 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
   });
-  if (
-    !buildx.isLocalOrTarExporter(inputs.outputs) &&
-    (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2'))
-  ) {
+  if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {

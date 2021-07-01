@@ -128,9 +128,20 @@ describe('parseVersion', () => {
   test.each([
     ['github.com/docker/buildx 0.4.1+azure bda4882a65349ca359216b135896bddc1d92461c', '0.4.1'],
     ['github.com/docker/buildx v0.4.1 bda4882a65349ca359216b135896bddc1d92461c', '0.4.1'],
-    ['github.com/docker/buildx v0.4.2 fb7b670b764764dc4716df3eba07ffdae4cc47b2', '0.4.2']
+    ['github.com/docker/buildx v0.4.2 fb7b670b764764dc4716df3eba07ffdae4cc47b2', '0.4.2'],
+    ['github.com/docker/buildx f117971 f11797113e5a9b86bd976329c5dbb8a8bfdfadfa', 'f117971']
   ])('given %p', async (stdout, expected) => {
-    expect(await buildx.parseVersion(stdout)).toEqual(expected);
+    expect(buildx.parseVersion(stdout)).toEqual(expected);
+  });
+});
+
+describe('satisfies', () => {
+  test.each([
+    ['0.4.1', '>=0.3.2', true],
+    ['bda4882a65349ca359216b135896bddc1d92461c', '>0.1.0', false],
+    ['f117971', '>0.6.0', true]
+  ])('given %p', async (version, range, expected) => {
+    expect(buildx.satisfies(version, range)).toBe(expected);
   });
 });
 
@@ -142,13 +153,7 @@ describe('getSecret', () => {
     ['aaaaaaaa', false, '', '', true],
     ['aaaaaaaa=', false, '', '', true],
     ['=bbbbbbb', false, '', '', true],
-    [
-      `foo=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`,
-      true,
-      'foo',
-      'bar',
-      false
-    ],
+    [`foo=${path.join(__dirname, 'fixtures', 'secret.txt').split(path.sep).join(path.posix.sep)}`, true, 'foo', 'bar', false],
     [`notfound=secret`, true, '', '', true]
   ])('given %p key and %p secret', async (kvp, file, exKey, exValue, invalid) => {
     try {
