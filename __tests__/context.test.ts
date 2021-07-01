@@ -565,13 +565,7 @@ FOO=bar`
     );
     const res = await context.getInputList('secrets', true);
     console.log(res);
-    expect(res).toEqual([
-      'GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789',
-      'MYSECRET=aaaaaaaa',
-      'bbbbbbb',
-      'ccccccccc',
-      'FOO=bar'
-    ]);
+    expect(res).toEqual(['GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789', 'MYSECRET=aaaaaaaa', 'bbbbbbb', 'ccccccccc', 'FOO=bar']);
   });
 
   it('large multiline values', async () => {

@@ -38,7 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getImageID = exports.getImageIDFile = void 0;
+exports.satisfies = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getImageID = exports.getImageIDFile = void 0;
 const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
@@ -158,15 +158,17 @@ function getVersion() {
 }
 exports.getVersion = getVersion;
 function parseVersion(stdout) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const matches = /\sv?([0-9.]+)/.exec(stdout);
-        if (!matches) {
-            throw new Error(`Cannot parse buildx version`);
-        }
-        return semver.clean(matches[1]);
-    });
+    const matches = /\sv?([0-9a-f]{7}|[0-9.]+)/.exec(stdout);
+    if (!matches) {
+        throw new Error(`Cannot parse buildx version`);
+    }
+    return matches[1];
 }
 exports.parseVersion = parseVersion;
+function satisfies(version, range) {
+    return semver.satisfies(version, range) || /^[0-9a-f]{7}$/.exec(version) !== null;
+}
+exports.satisfies = satisfies;
 //# sourceMappingURL=buildx.js.map
 
 /***/ }),
@@ -213,7 +215,6 @@ const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs = __importStar(__nccwpck_require__(5747));
 const os = __importStar(__nccwpck_require__(2087));
 const path = __importStar(__nccwpck_require__(5622));
-const semver = __importStar(__nccwpck_require__(1383));
 const tmp = __importStar(__nccwpck_require__(8517));
 const core = __importStar(__nccwpck_require__(2186));
 const command_1 = __nccwpck_require__(5241);
@@ -307,8 +308,7 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
             args.push('--output', output);
         }));
-        if (!buildx.isLocalOrTarExporter(inputs.outputs) &&
-            (inputs.platforms.length == 0 || semver.satisfies(buildxVersion, '>=0.4.2'))) {
+        if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
