@@ -103,7 +103,7 @@ export async function getVersion(): Promise<string> {
       if (res.stderr.length > 0 && res.exitCode != 0) {
         throw new Error(res.stderr.trim());
       }
-      return parseVersion(res.stdout);
+      return parseVersion(res.stdout.trim());
     });
 }
 
