@@ -53,7 +53,7 @@ By default, this action uses the [Git context](#git-context) so you don't need t
 done directly by buildkit. The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
 and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
 
-Be careful because **any file mutation in the steps that precede the build step will be ignored** since
+Be careful because **any file mutation in the steps that precede the build step will be ignored, including processing of the `.dockerignore` file** since
 the context is based on the git reference. However, you can use the [Path context](#path-context) using the
 [`context` input](#inputs) alongside the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
 this restriction.
