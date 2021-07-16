@@ -41,7 +41,7 @@ jobs:
           push: true
           tags: user/app:latest
           cache-from: type=registry,ref=user/app:latest
-          cache-to: type=inline
+          cache-to: type=inline,mode=max
 ```
 
 ## GitHub cache
@@ -95,7 +95,7 @@ jobs:
           push: true
           tags: user/app:latest
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
       -
         # Temp fix
         # https://github.com/docker/build-push-action/issues/252
