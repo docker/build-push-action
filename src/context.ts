@@ -2,7 +2,6 @@ import csvparse from 'csv-parse/lib/sync';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import * as semver from 'semver';
 import * as tmp from 'tmp';
 
 import * as core from '@actions/core';
@@ -121,6 +120,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   });
   if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
     args.push('--iidfile', await buildx.getImageIDFile());
+  }
+  if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
+    args.push('--metadata-file', await buildx.getMetadataFile());
   }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {
     args.push('--cache-from', cacheFrom);

@@ -33,13 +33,18 @@ async function run(): Promise<void> {
         }
       });
 
-    const imageID = await buildx.getImageID();
-    if (imageID) {
-      core.startGroup(`Extracting digest`);
-      core.info(`${imageID}`);
-      context.setOutput('digest', imageID);
-      core.endGroup();
-    }
+    await core.group(`Setting outputs`, async () => {
+      const imageID = await buildx.getImageID();
+      const buildMetadata = await buildx.getBuildMetadata();
+      if (imageID) {
+        core.info(`digest=${imageID}`);
+        context.setOutput('digest', imageID);
+      }
+      if (buildMetadata) {
+        core.info(`build-metadata=${buildMetadata}`);
+        context.setOutput('build-metadata', buildMetadata);
+      }
+    });
   } catch (error) {
     core.setFailed(error.message);
   }
