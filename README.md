@@ -121,9 +121,6 @@ a [secret](docs/advanced/secrets.md) named `GIT_AUTH_TOKEN` to be able to authen
             GIT_AUTH_TOKEN=${{ secrets.MYTOKEN }}
 ```
 
-> :warning: Subdir for Git context is not yet supported ([moby/buildkit#1684](https://github.com/moby/buildkit/issues/1684))
-> but you can use the [path context](#path-context) in the meantime. More info on [Docker docs website](https://docs.docker.com/engine/reference/commandline/build/#git-repositories).
-
 ### Path context
 
 ```yaml
