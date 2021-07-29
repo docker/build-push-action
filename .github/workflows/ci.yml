@@ -71,9 +71,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -134,9 +131,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -191,9 +185,6 @@ jobs:
         name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
       -
         name: Check digest
         run: |
@@ -393,9 +384,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -448,9 +436,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:latest
       -
-        name: Image digest (1)
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest (1)
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -481,9 +466,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:latest
       -
-        name: Image digest (2)
-        run: echo ${{ steps.docker_build2.outputs.digest }}
-      -
         name: Check digest (2)
         run: |
           if [ -z "${{ steps.docker_build2.outputs.digest }}" ]; then
@@ -503,7 +485,7 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
-  github-cache-first:
+  local-cache-first:
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.docker_build.outputs.digest }}
@@ -531,7 +513,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-ghcache-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-local-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-ghcache-
       -
@@ -558,9 +540,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -572,9 +551,9 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
-  github-cache-hit:
+  local-cache-hit:
     runs-on: ubuntu-latest
-    needs: github-cache-first
+    needs: local-cache-first
     services:
       registry:
         image: registry:2
@@ -600,7 +579,7 @@ jobs:
         id: cache
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-ghcache-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-local-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-ghcache-
       -
@@ -623,9 +602,6 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      -
         name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
@@ -635,14 +611,64 @@ jobs:
       -
         name: Compare digests
         run: |
-          echo Compare "${{ needs.github-cache-first.outputs.digest }}" with "${{ steps.docker_build.outputs.digest }}"
-          if [ "${{ needs.github-cache-first.outputs.digest }}" != "${{ steps.docker_build.outputs.digest }}" ]; then
+          echo Compare "${{ needs.local-cache-first.outputs.digest }}" with "${{ steps.docker_build.outputs.digest }}"
+          if [ "${{ needs.local-cache-first.outputs.digest }}" != "${{ steps.docker_build.outputs.digest }}" ]; then
             echo "::error::Digests should be identical"
             exit 1
           fi
       -
         name: Cache hit
         run: echo ${{ steps.cache.outputs.cache-hit }}
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  github-cache:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx_version:
+          - ""
+          - latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: ${{ matrix.buildx_version }}
+          driver-opts: |
+            network=host
+          buildkitd-flags: --debug
+      -
+        name: Build and push
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/multi.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+            localhost:5000/name/app:1.0.0
+          cache-from: type=gha,scope=ci-${{ matrix.buildx_version }}
+          cache-to: type=gha,scope=ci-${{ matrix.buildx_version }}
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
       -
         name: Dump context
         if: always()
