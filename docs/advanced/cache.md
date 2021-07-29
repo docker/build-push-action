@@ -52,7 +52,7 @@ jobs:
 ## Registry cache
 
 You can import/export cache from a cache manifest or (special) image configuration on the registry with the
-[`type=registry` cache exporter](https://github.com/crazy-max/buildkit/tree/cache-docs#registry-push-image-and-cache-separately).
+[`type=registry` cache exporter](https://github.com/moby/buildkit/tree/master#registry-push-image-and-cache-separately).
 
 ```yaml
 name: ci
