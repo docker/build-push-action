@@ -101,25 +101,17 @@ steps:
     name: Checkout
     uses: actions/checkout@v2
   -
-    name: Prepare
-    id: prep
-    run: |
-      DOCKER_IMAGE=myorg/myrepository
-      VERSION=edge
-      if [[ $GITHUB_REF == refs/tags/* ]]; then
-        VERSION=${GITHUB_REF#refs/tags/}
-      elif [[ $GITHUB_REF == refs/heads/* ]]; then
-        VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-      elif [[ $GITHUB_REF == refs/pull/* ]]; then
-        VERSION=pr-${{ github.event.number }}
-      fi
-      TAGS="${DOCKER_IMAGE}:${VERSION}"
-      if [ "${{ github.event_name }}" = "push" ]; then
-        TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
-      fi
-      echo ::set-output name=version::${VERSION}
-      echo ::set-output name=tags::${TAGS}
-      echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+    name: Docker meta
+    id: meta
+    uses: docker/metadata-action@v3
+    with:
+      images: |
+        myorg/myrepository
+      tags: |
+        type=ref,event=branch
+        type=ref,event=pr
+        type=semver,pattern={{version}}
+        type=sha
   -
     name: Set up Docker Buildx
     uses: docker/setup-buildx-action@v1
@@ -136,12 +128,6 @@ steps:
     with:
       context: .
       push: ${{ github.event_name != 'pull_request' }}
-      tags: ${{ steps.prep.outputs.tags }}
-      labels: |
-        org.opencontainers.image.source=${{ github.event.repository.html_url }}
-        org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-        org.opencontainers.image.revision=${{ github.sha }}
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
 ```
-
-> You can also use the [Docker meta action to handle tags and labels](docs/advanced/tags-labels.md) based on GitHub
-> actions events and Git metadata.
