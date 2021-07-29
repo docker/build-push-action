@@ -33,8 +33,6 @@ ___
   * [Push to multi-registries](docs/advanced/push-multi-registries.md)
   * [Copy between registries](docs/advanced/copy-between-registries.md)  
   * [Cache](docs/advanced/cache.md)
-    * [Registry cache](docs/advanced/cache.md#registry-cache)
-    * [GitHub cache](docs/advanced/cache.md#github-cache)
   * [Local registry](docs/advanced/local-registry.md)
   * [Export image to Docker](docs/advanced/export-docker.md)
   * [Share built image between jobs](docs/advanced/share-image-jobs.md)
@@ -100,9 +98,6 @@ jobs:
         with:
           push: true
           tags: user/app:latest
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
 Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
@@ -170,8 +165,6 @@ jobs:
 * [Push to multi-registries](docs/advanced/push-multi-registries.md)
 * [Copy between registries](docs/advanced/copy-between-registries.md)
 * [Cache](docs/advanced/cache.md)
-  * [Registry cache](docs/advanced/cache.md#registry-cache)
-  * [GitHub cache](docs/advanced/cache.md#github-cache)
 * [Local registry](docs/advanced/local-registry.md)
 * [Export image to Docker](docs/advanced/export-docker.md)
 * [Share built image between jobs](docs/advanced/share-image-jobs.md)
