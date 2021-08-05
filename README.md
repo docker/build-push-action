@@ -205,7 +205,7 @@ Following inputs can be used as `step.with` keys
 | `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of secret files to expose to the build (eg. `key=filename`, `MY_SECRET=./secret.txt`) |
-| `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
+| `ssh`               | List     | List of paths to SSH agent sockets or to keys you wish to expose to the build (eg. `default=/tmp/ssh-socket`) |
 | `tags`              | List/CSV | List of tags |
 | `target`            | String   | Sets the target stage to build |
 
