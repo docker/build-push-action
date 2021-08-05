@@ -74,16 +74,6 @@ jobs:
           sudo ctr --debug i push --user "${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}" docker.io/user/app:latest
 ```
 
-## `invalid reference format`
-
-You may encounter this issue if you're using `github.repository` in your tag
-name:
-
-```
-#10 importing cache manifest from ghcr.io/My-Org/repo:main
-#10 ERROR: invalid reference format: repository name must be lowercase
-```
-
 ## `repository name must be lowercase`
 
 You may encounter this issue if you're using `github.repository` as a repo slug
