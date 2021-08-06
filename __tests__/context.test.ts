@@ -644,7 +644,7 @@ describe('flagMap', () => {
     expect(results).toEqual([
       ['--catpants', 'a'],
       ['--catpants', 'b'],
-      ['--catpants', 'c'],
+      ['--catpants', 'c']
     ]);
   });
 });

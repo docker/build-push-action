@@ -88,12 +88,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  return [
-    'buildx',
-    ...await getBuildArgs(inputs, defaultContext, buildxVersion),
-    ...await getCommonArgs(inputs),
-    inputs.context,
-  ];
+  return ['buildx', ...(await getBuildArgs(inputs, defaultContext, buildxVersion)), ...(await getCommonArgs(inputs)), inputs.context];
 }
 
 async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
@@ -104,7 +99,7 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
     ...flagMap(inputs.labels, '--label'),
     ...flagMap(inputs.outputs, '--output'),
     ...flagMap(inputs.tags, '--tag'),
-    ...flagMap(inputs.ssh, '--ssh'),
+    ...flagMap(inputs.ssh, '--ssh')
   );
 
   if (inputs.target) {
