@@ -230,7 +230,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutput = exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
+exports.setOutput = exports.flagMap = exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
 const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs = __importStar(__nccwpck_require__(5747));
 const os = __importStar(__nccwpck_require__(2087));
@@ -296,26 +296,13 @@ function getInputs(defaultContext) {
 exports.getInputs = getInputs;
 function getArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        let args = ['buildx'];
-        args.push.apply(args, yield getBuildArgs(inputs, defaultContext, buildxVersion));
-        args.push.apply(args, yield getCommonArgs(inputs));
-        args.push(inputs.context);
-        return args;
+        return ['buildx', ...(yield getBuildArgs(inputs, defaultContext, buildxVersion)), ...(yield getCommonArgs(inputs)), inputs.context];
     });
 }
 exports.getArgs = getArgs;
 function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        let args = ['build'];
-        yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--build-arg', buildArg);
-        }));
-        yield exports.asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--label', label);
-        }));
-        yield exports.asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--tag', tag);
-        }));
+        const args = ['build'].concat(...flagMap(inputs.buildArgs, '--build-arg'), ...flagMap(inputs.cacheFrom, '--cache-from'), ...flagMap(inputs.cacheTo, '--cache-to'), ...flagMap(inputs.labels, '--label'), ...flagMap(inputs.outputs, '--output'), ...flagMap(inputs.tags, '--tag'), ...flagMap(inputs.ssh, '--ssh'));
         if (inputs.target) {
             args.push('--target', inputs.target);
         }
@@ -325,9 +312,6 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.platforms.length > 0) {
             args.push('--platform', inputs.platforms.join(','));
         }
-        yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--output', output);
-        }));
         if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
@@ -359,9 +343,6 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
-        yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--ssh', ssh);
-        }));
         if (inputs.file) {
             args.push('--file', inputs.file);
         }
@@ -425,6 +406,10 @@ const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.asyncForEach = asyncForEach;
+function flagMap(array, flag) {
+    return array.map(value => [flag, value]);
+}
+exports.flagMap = flagMap;
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
 function setOutput(name, value) {
     command_1.issueCommand('set-output', { name }, value);
@@ -1091,8 +1076,8 @@ class OidcClient {
             const res = yield httpclient
                 .getJson(id_token_url)
                 .catch(error => {
-                throw new Error(`Failed to get ID Token. \n 
-        Error Code : ${error.statusCode}\n 
+                throw new Error(`Failed to get ID Token. \n
+        Error Code : ${error.statusCode}\n
         Error Message: ${error.result.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
@@ -17234,7 +17219,7 @@ module.exports = require("zlib");;
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -17248,7 +17233,7 @@ module.exports = require("zlib");;
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		var threw = true;
 /******/ 		try {
@@ -17257,21 +17242,21 @@ module.exports = require("zlib");;
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat */
-/******/ 	
+/******/
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
-/******/ 	
+/******/
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
 /******/ 	module.exports = __webpack_exports__;
-/******/ 	
+/******/
 /******/ })()
 ;
