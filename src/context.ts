@@ -88,24 +88,25 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
-  args.push.apply(args, await getCommonArgs(inputs));
-  args.push(inputs.context);
-  return args;
+  return [
+    'buildx',
+    ...await getBuildArgs(inputs, defaultContext, buildxVersion),
+    ...await getCommonArgs(inputs),
+    inputs.context,
+  ];
 }
 
 async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['build'];
-  await asyncForEach(inputs.buildArgs, async buildArg => {
-    args.push('--build-arg', buildArg);
-  });
-  await asyncForEach(inputs.labels, async label => {
-    args.push('--label', label);
-  });
-  await asyncForEach(inputs.tags, async tag => {
-    args.push('--tag', tag);
-  });
+  const args: Array<string> = ['build'].concat(
+    ...flagMap(inputs.buildArgs, '--build-arg'),
+    ...flagMap(inputs.cacheFrom, '--cache-from'),
+    ...flagMap(inputs.cacheTo, '--cache-to'),
+    ...flagMap(inputs.labels, '--label'),
+    ...flagMap(inputs.outputs, '--output'),
+    ...flagMap(inputs.tags, '--tag'),
+    ...flagMap(inputs.ssh, '--ssh'),
+  );
+
   if (inputs.target) {
     args.push('--target', inputs.target);
   }
@@ -115,9 +116,6 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
   }
-  await asyncForEach(inputs.outputs, async output => {
-    args.push('--output', output);
-  });
   if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
@@ -147,9 +145,6 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
-  await asyncForEach(inputs.ssh, async ssh => {
-    args.push('--ssh', ssh);
-  });
   if (inputs.file) {
     args.push('--file', inputs.file);
   }
@@ -211,6 +206,10 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+export function flagMap(array: string[], flag: string): string[][] {
+  return array.map(value => [flag, value]);
+}
 
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
 export function setOutput(name: string, value: any): void {

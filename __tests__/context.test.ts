@@ -636,6 +636,19 @@ describe('asyncForEach', () => {
   });
 });
 
+describe('flagMap', () => {
+  it('should prepend array elements with the provided flag', async () => {
+    const testValues = ['a', 'b', 'c'];
+    const results: string[][] = context.flagMap(testValues, '--catpants');
+
+    expect(results).toEqual([
+      ['--catpants', 'a'],
+      ['--catpants', 'b'],
+      ['--catpants', 'c'],
+    ]);
+  });
+});
+
 describe('setOutput', () => {
   beforeEach(() => {
     process.stdout.write = jest.fn();
