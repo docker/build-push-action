@@ -7,7 +7,8 @@
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "test": "jest --coverage",
-    "pre-checkin": "yarn run format && yarn run build"
+    "pre-checkin": "yarn run format && yarn run build",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -42,9 +43,11 @@
     "@types/tmp": "^0.2.0",
     "@vercel/ncc": "^0.28.6",
     "dotenv": "^8.6.0",
+    "husky": "^7.0.1",
     "jest": "^26.6.3",
     "jest-circus": "^26.6.3",
     "jest-runtime": "^26.6.3",
+    "lint-staged": "^11.1.2",
     "prettier": "^2.3.1",
     "ts-jest": "^26.5.6",
     "typescript": "^4.3.4",
