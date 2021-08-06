@@ -201,7 +201,7 @@ Following inputs can be used as `step.with` keys
 | `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
 | `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
 | `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |
-| `pull`              | Bool     | Always attempt to pull a newer version of the image (default `false`) |
+| `pull`              | Bool     | Always attempt to pull a newer version of the [`FROM`](https://docs.docker.com/engine/reference/builder/#from) image (default `false`) |
 | `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
 | `secrets`           | List     | List of secrets to expose to the build (eg. `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of secret files to expose to the build (eg. `key=filename`, `MY_SECRET=./secret.txt`) |
