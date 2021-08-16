@@ -210,7 +210,7 @@ Following inputs can be used as `step.with` keys
 | `target`            | String   | Sets the target stage to build |
 
 ### outputs
-
+ 
 Following outputs are available
 
 | Name          | Type    | Description                           |
