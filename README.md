@@ -100,9 +100,6 @@ jobs:
         with:
           push: true
           tags: user/app:latest
-      -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
 ```
 
 Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
@@ -223,9 +220,10 @@ Following inputs can be used as `step.with` keys
 
 Following outputs are available
 
-| Name          | Type    | Description                           |
-|---------------|---------|---------------------------------------|
-| `digest`      | String  | Image content-addressable identifier also called a digest |
+| Name              | Type    | Description                           |
+|-------------------|---------|---------------------------------------|
+| `digest`          | String  | Image content-addressable identifier also called a digest |
+| `metadata`        | JSON    | Build result metadata |
 
 ## Troubleshooting
 
