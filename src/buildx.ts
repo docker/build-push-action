@@ -18,6 +18,18 @@ export async function getImageID(): Promise<string | undefined> {
   return fs.readFileSync(iidFile, {encoding: 'utf-8'});
 }
 
+export async function getMetadataFile(): Promise<string> {
+  return path.join(context.tmpDir(), 'metadata-file').split(path.sep).join(path.posix.sep);
+}
+
+export async function getMetadata(): Promise<string | undefined> {
+  const metadataFile = await getMetadataFile();
+  if (!fs.existsSync(metadataFile)) {
+    return undefined;
+  }
+  return fs.readFileSync(metadataFile, {encoding: 'utf-8'});
+}
+
 export async function getSecretString(kvp: string): Promise<string> {
   return getSecret(kvp, false);
 }

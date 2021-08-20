@@ -38,7 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.satisfies = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getImageID = exports.getImageIDFile = void 0;
+exports.satisfies = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getMetadata = exports.getMetadataFile = exports.getImageID = exports.getImageIDFile = void 0;
 const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
@@ -61,6 +61,22 @@ function getImageID() {
     });
 }
 exports.getImageID = getImageID;
+function getMetadataFile() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return path_1.default.join(context.tmpDir(), 'metadata-file').split(path_1.default.sep).join(path_1.default.posix.sep);
+    });
+}
+exports.getMetadataFile = getMetadataFile;
+function getMetadata() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const metadataFile = yield getMetadataFile();
+        if (!fs_1.default.existsSync(metadataFile)) {
+            return undefined;
+        }
+        return fs_1.default.readFileSync(metadataFile, { encoding: 'utf-8' });
+    });
+}
+exports.getMetadata = getMetadata;
 function getSecretString(kvp) {
     return __awaiter(this, void 0, void 0, function* () {
         return getSecret(kvp, false);
@@ -311,6 +327,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
+        if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
+            args.push('--metadata-file', yield buildx.getMetadataFile());
+        }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-from', cacheFrom);
         }));
@@ -476,13 +495,18 @@ function run() {
                     throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)[0].trim()}`);
                 }
             });
-            const imageID = yield buildx.getImageID();
-            if (imageID) {
-                core.startGroup(`Extracting digest`);
-                core.info(`${imageID}`);
-                context.setOutput('digest', imageID);
-                core.endGroup();
-            }
+            yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
+                const imageID = yield buildx.getImageID();
+                const metadata = yield buildx.getMetadata();
+                if (imageID) {
+                    core.info(`digest=${imageID}`);
+                    context.setOutput('digest', imageID);
+                }
+                if (metadata) {
+                    core.info(`metadata=${metadata}`);
+                    context.setOutput('metadata', metadata);
+                }
+            }));
         }
         catch (error) {
             core.setFailed(error.message);

@@ -79,6 +79,8 @@ inputs:
 outputs:
   digest:
     description: 'Image content-addressable identifier also called a digest'
+  metadata:
+    description: 'Build result metadata'
 
 runs:
   using: 'node12'

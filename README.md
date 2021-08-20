@@ -213,9 +213,10 @@ Following inputs can be used as `step.with` keys
 
 Following outputs are available
 
-| Name          | Type    | Description                           |
-|---------------|---------|---------------------------------------|
-| `digest`      | String  | Image content-addressable identifier also called a digest |
+| Name              | Type    | Description                           |
+|-------------------|---------|---------------------------------------|
+| `digest`          | String  | Image content-addressable identifier also called a digest |
+| `metadata`        | JSON    | Build result metadata |
 
 ## Troubleshooting
 
