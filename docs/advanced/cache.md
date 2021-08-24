@@ -10,7 +10,7 @@
 
 ## Inline cache
 
-In most case you want to use the [`type=inline` cache exporter](https://github.com/moby/buildkit#inline-push-image-and-cache-together).
+In most cases you want to use the [`type=inline` cache exporter](https://github.com/moby/buildkit#inline-push-image-and-cache-together).
 However, note that the `inline` cache exporter only supports `min` cache mode. To enable `max` cache mode, push the
 image and the cache separately by using the `registry` cache exporter as shown in the [next example](#registry-cache).
 
