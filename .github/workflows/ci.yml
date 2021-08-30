@@ -673,3 +673,29 @@ jobs:
         name: Dump context
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
+
+  composite:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Build with composite
+        uses: ./composite
+        with:
+          context: .
+          file: ./test/Dockerfile
+          images: |
+            localhost:5000/name/app
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
