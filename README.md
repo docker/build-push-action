@@ -36,6 +36,7 @@ ___
   * [Local registry](docs/advanced/local-registry.md)
   * [Export image to Docker](docs/advanced/export-docker.md)
   * [Share built image between jobs](docs/advanced/share-image-jobs.md)
+  * [Test your image before pushing it](docs/advanced/test-before-push.md)
   * [Handle tags and labels](docs/advanced/tags-labels.md)
   * [Update DockerHub repo description](docs/advanced/dockerhub-desc.md)
 * [Customizing](#customizing)
@@ -165,6 +166,7 @@ jobs:
 * [Local registry](docs/advanced/local-registry.md)
 * [Export image to Docker](docs/advanced/export-docker.md)
 * [Share built image between jobs](docs/advanced/share-image-jobs.md)
+* [Test your image before pushing it](docs/advanced/test-before-push.md)
 * [Handle tags and labels](docs/advanced/tags-labels.md)
 * [Update DockerHub repo description](docs/advanced/dockerhub-desc.md)
 
