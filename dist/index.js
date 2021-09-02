@@ -6771,6 +6771,7 @@ class Parser extends Transform {
       }
     }
     this.info = {
+      bytes: 0,
       comment_lines: 0,
       empty_lines: 0,
       invalid_field_length: 0,
@@ -6780,6 +6781,7 @@ class Parser extends Transform {
     this.options = options
     this.state = {
       bomSkipped: false,
+      bufBytesStart: 0,
       castField: fnCastField,
       commenting: false,
       // Current error encountered by a record
@@ -6866,7 +6868,9 @@ class Parser extends Transform {
         for(let encoding in boms){
           if(boms[encoding].compare(buf, 0, boms[encoding].length) === 0){
             // Skip BOM
-            buf = buf.slice(boms[encoding].length)
+            let bomLength = boms[encoding].length
+            this.state.bufBytesStart += bomLength
+            buf = buf.slice(bomLength)
             // Renormalize original options with the new encoding
             this.__normalizeOptions({...this.__originalOptions, encoding: encoding})
             break
@@ -7006,8 +7010,10 @@ class Parser extends Transform {
                 pos += recordDelimiterLength - 1
                 continue
               }
+              this.info.bytes = this.state.bufBytesStart + pos;
               const errField = this.__onField()
               if(errField !== undefined) return errField
+              this.info.bytes = this.state.bufBytesStart + pos + recordDelimiterLength;
               const errRecord = this.__onRecord()
               if(errRecord !== undefined) return errRecord
               if(to !== -1 && this.info.records >= to){
@@ -7030,6 +7036,7 @@ class Parser extends Transform {
           }
           let delimiterLength = this.__isDelimiter(buf, pos, chr)
           if(delimiterLength !== 0){
+            this.info.bytes = this.state.bufBytesStart + pos;
             const errField = this.__onField()
             if(errField !== undefined) return errField
             pos += delimiterLength - 1
@@ -7079,6 +7086,7 @@ class Parser extends Transform {
       }else{
         // Skip last line if it has no characters
         if(this.state.wasQuoting === true || this.state.record.length !== 0 || this.state.field.length !== 0){
+          this.info.bytes = this.state.bufBytesStart + pos;
           const errField = this.__onField()
           if(errField !== undefined) return errField
           const errRecord = this.__onRecord()
@@ -7090,6 +7098,7 @@ class Parser extends Transform {
         }
       }
     }else{
+      this.state.bufBytesStart += pos
       this.state.previousBuf = buf.slice(pos)
     }
     if(this.state.wasRowDelimiter === true){
@@ -7504,7 +7513,7 @@ const parse = function(){
       throw new CsvError('CSV_INVALID_ARGUMENT', [
         'Invalid argument:',
         `got ${JSON.stringify(argument)} at index ${i}`
-      ], this.options)
+      ], options || {})
     }
   }
   const parser = new Parser(options)
