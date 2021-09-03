@@ -6435,7 +6435,7 @@ class Parser extends Transform {
         const date = Date.parse(value)
         return !isNaN(date) ? new Date(date) : value
       }
-    }else if(typeof options.cast_date !== 'function'){
+    }else{
       throw new CsvError('CSV_INVALID_OPTION_CAST_DATE', [
         'Invalid option cast_date:', 'cast_date must be true or a function,',
         `got ${JSON.stringify(options.cast_date)}`
