@@ -15,7 +15,7 @@ export async function getImageID(): Promise<string | undefined> {
   if (!fs.existsSync(iidFile)) {
     return undefined;
   }
-  return fs.readFileSync(iidFile, {encoding: 'utf-8'});
+  return fs.readFileSync(iidFile, {encoding: 'utf-8'}).trim();
 }
 
 export async function getMetadataFile(): Promise<string> {
@@ -27,7 +27,11 @@ export async function getMetadata(): Promise<string | undefined> {
   if (!fs.existsSync(metadataFile)) {
     return undefined;
   }
-  return fs.readFileSync(metadataFile, {encoding: 'utf-8'});
+  const content = fs.readFileSync(metadataFile, {encoding: 'utf-8'}).trim();
+  if (content === 'null') {
+    return undefined;
+  }
+  return content;
 }
 
 export async function getSecretString(kvp: string): Promise<string> {
