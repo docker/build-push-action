@@ -62,7 +62,7 @@ jobs:
         run: make tests
       - # copy multiplatform image from dockerhub to quay and ghcr
         name: Push Image to multiple registries
-        uses: akhilerm/tag-push-action@v1.0.0
+        uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/user/app:1.0.0
           dst: |
