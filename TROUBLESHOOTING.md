@@ -100,7 +100,25 @@ or a cache reference:
 ```
 
 To fix this issue you can use our [metadata action](https://github.com/docker/metadata-action)
-to generate sanitized tags, or a dedicated step to sanitize the slug:
+to generate sanitized tags:
+
+```yaml
+- name: Docker meta
+  id: meta
+  uses: docker/metadata-action@v3
+  with:
+    images: ghcr.io/${{ github.repository }}
+    tags: latest
+
+- name: Build and push
+  uses: docker/build-push-action@v2
+  with:
+    context: .
+    push: true
+    tags: ${{ steps.meta.outputs.tags }}
+```
+
+Or a dedicated step to sanitize the slug:
 
 ```yaml
 - name: Sanitize repo slug
@@ -108,7 +126,7 @@ to generate sanitized tags, or a dedicated step to sanitize the slug:
   id: repo_slug
   with:
     result-encoding: string
-    script: return '${{ github.repository }}'.toLowerCase()
+    script: return 'ghcr.io/${{ github.repository }}'.toLowerCase()
 
 - name: Build and push
   uses: docker/build-push-action@v2
