@@ -108,7 +108,7 @@ to generate sanitized tags, or a dedicated step to sanitize the slug:
   id: repo_slug
   with:
     result-encoding: string
-    script: return `ghcr.io/${github.repository.toLowerCase()}`
+    script: return '${{ github.repository }}'.toLowerCase()
 
 - name: Build and push
   uses: docker/build-push-action@v2
