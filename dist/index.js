@@ -386,8 +386,8 @@ function getCommonArgs(inputs) {
         if (inputs.network) {
             args.push('--network', inputs.network);
         }
-        if (inputs.push) {
-            args.push('--push');
+        if (inputs.quiet) {
+            args.push('--quiet');
         }
         return args;
     });
