@@ -26,6 +26,7 @@ export interface Inputs {
   noCache: boolean;
   outputs: string[];
   platforms: string[];
+  quiet: boolean;
   pull: boolean;
   push: boolean;
   secrets: string[];
@@ -74,6 +75,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
     noCache: core.getBooleanInput('no-cache'),
+    quiet: core.getBooleanInput('quiet'),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
     pull: core.getBooleanInput('pull'),
@@ -152,6 +154,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   });
   if (inputs.file) {
     args.push('--file', inputs.file);
+  }
+  if (inputs.quiet) {
+    args.push('--quiet');
   }
   return args;
 }
