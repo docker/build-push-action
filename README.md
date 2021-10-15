@@ -210,6 +210,7 @@ Following inputs can be used as `step.with` keys
 | `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
 | `tags`              | List/CSV | List of tags |
 | `target`            | String   | Sets the target stage to build |
+| `quiet`             | String   | Suppress the build output and print image ID on success |
 
 ### outputs
 
