@@ -280,6 +280,7 @@ function getInputs(defaultContext) {
             load: core.getBooleanInput('load'),
             network: core.getInput('network'),
             noCache: core.getBooleanInput('no-cache'),
+            quiet: core.getBooleanInput('quiet'),
             outputs: yield getInputList('outputs', true),
             platforms: yield getInputList('platforms'),
             pull: core.getBooleanInput('pull'),
