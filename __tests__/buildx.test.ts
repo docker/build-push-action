@@ -28,10 +28,8 @@ jest.spyOn(context, 'tmpNameSync').mockImplementation((): string => {
 describe('getImageID', () => {
   it('matches', async () => {
     const imageIDFile = await buildx.getImageIDFile();
-    console.log(`imageIDFile: ${imageIDFile}`);
     await fs.writeFileSync(imageIDFile, digest);
     const imageID = await buildx.getImageID();
-    console.log(`imageID: ${imageID}`);
     expect(imageID).toEqual(digest);
   });
 });
@@ -39,10 +37,8 @@ describe('getImageID', () => {
 describe('getMetadata', () => {
   it('matches', async () => {
     const metadataFile = await buildx.getMetadataFile();
-    console.log(`metadataFile: ${metadataFile}`);
     await fs.writeFileSync(metadataFile, metadata);
     const expected = await buildx.getMetadata();
-    console.log(`metadata: ${expected}`);
     expect(expected).toEqual(metadata);
   });
 });
@@ -132,7 +128,6 @@ describe('getVersion', () => {
     'valid',
     async () => {
       const version = await buildx.getVersion();
-      console.log(`version: ${version}`);
       expect(semver.valid(version)).not.toBeNull();
     },
     100000
@@ -179,10 +174,8 @@ describe('getSecret', () => {
         secret = await buildx.getSecretString(kvp);
       }
       expect(true).toBe(!invalid);
-      console.log(`secret: ${secret}`);
       expect(secret).toEqual(`id=${exKey},src=${tmpNameSync}`);
       const secretValue = await fs.readFileSync(tmpNameSync, 'utf-8');
-      console.log(`secretValue: ${secretValue}`);
       expect(secretValue).toEqual(exValue);
     } catch (err) {
       expect(true).toBe(invalid);

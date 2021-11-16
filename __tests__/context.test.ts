@@ -140,6 +140,7 @@ describe('getArgs', () => {
   // prettier-ignore
   test.each([
     [
+      0,
       '0.4.1',
       new Map<string, string>([
         ['context', '.'],
@@ -156,6 +157,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      1,
       '0.4.2',
       new Map<string, string>([
         ['build-args', 'MY_ARG=val1,val2,val3\nARG=val'],
@@ -174,6 +176,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      2,
       '0.4.2',
       new Map<string, string>([
         ['tags', 'name/app:7.4, name/app:latest'],
@@ -185,13 +188,14 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
-        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
     ],
     [
+      3,
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
@@ -212,6 +216,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      4,
       '0.4.1',
       new Map<string, string>([
         ['context', '.'],
@@ -229,6 +234,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      5,
       '0.4.1',
       new Map<string, string>([
         ['context', '.'],
@@ -245,6 +251,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      6,
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
@@ -263,6 +270,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      7,
       '0.4.2',
       new Map<string, string>([
         ['github-token', 'abcdefghijklmno0123456789'],
@@ -281,6 +289,7 @@ describe('getArgs', () => {
       ]
     ],
     [
+      8,
       '0.4.2',
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
@@ -297,16 +306,17 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
-        '--platform', 'linux/amd64,linux/arm64',
-        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--file', './test/Dockerfile',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--platform', 'linux/amd64,linux/arm64',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
+      9,
       '0.4.2',
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
@@ -331,19 +341,20 @@ ccc"`],
       [
         'buildx',
         'build',
-        '--platform', 'linux/amd64,linux/arm64',
+        '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--platform', 'linux/amd64,linux/arm64',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=MYSECRET,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=FOO,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=EMPTYLINE,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
+      10,
       '0.4.2',
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
@@ -368,19 +379,20 @@ ccc`],
       [
         'buildx',
         'build',
-        '--platform', 'linux/amd64,linux/arm64',
+        '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--platform', 'linux/amd64,linux/arm64',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=MYSECRET,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=FOO,src=/tmp/.docker-build-push-jest/.tmpname-jest',
         '--secret', 'id=EMPTYLINE,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
     [
+      11,
       '0.5.1',
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
@@ -397,9 +409,9 @@ ccc`],
       [
         'buildx',
         'build',
+        '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=MY_SECRET,src=/tmp/.docker-build-push-jest/.tmpname-jest',
-        '--file', './test/Dockerfile',
         '--builder', 'builder-git-context-2',
         '--network', 'host',
         '--push',
@@ -407,6 +419,7 @@ ccc`],
       ]
     ],
     [
+      12,
       '0.4.2',
       new Map<string, string>([
         ['context', '.'],
@@ -427,6 +440,7 @@ ccc`],
       ]
     ],
     [
+      13,
       '0.6.0',
       new Map<string, string>([
         ['context', '.'],
@@ -441,25 +455,23 @@ ccc`],
       [
         'buildx',
         'build',
+        '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
-        '--file', './test/Dockerfile',
         '--network', 'host',
         '--push',
         '.'
       ]
     ],
   ])(
-    'given %p with %p as inputs, returns %p',
-    async (buildxVersion: string, inputs: Map<string, any>, expected: Array<string>) => {
+    '[%d] given %p with %p as inputs, returns %p',
+    async (num: number, buildxVersion: string, inputs: Map<string, any>, expected: Array<string>) => {
       await inputs.forEach((value: string, name: string) => {
         setInput(name, value);
       });
       const defContext = context.defaultContext();
       const inp = await context.getInputs(defContext);
-      console.log(inp);
       const res = await context.getArgs(inp, defContext, buildxVersion);
-      console.log(res);
       expect(res).toEqual(expected);
     }
   );
@@ -469,63 +481,54 @@ describe('getInputList', () => {
   it('single line correctly', async () => {
     await setInput('foo', 'bar');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar']);
   });
 
   it('multiline correctly', async () => {
     setInput('foo', 'bar\nbaz');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz']);
   });
 
   it('empty lines correctly', async () => {
     setInput('foo', 'bar\n\nbaz');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz']);
   });
 
   it('comma correctly', async () => {
     setInput('foo', 'bar,baz');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz']);
   });
 
   it('empty result correctly', async () => {
     setInput('foo', 'bar,baz,');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz']);
   });
 
   it('different new lines correctly', async () => {
     setInput('foo', 'bar\r\nbaz');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz']);
   });
 
   it('different new lines and comma correctly', async () => {
     setInput('foo', 'bar\r\nbaz,bat');
     const res = await context.getInputList('foo');
-    console.log(res);
     expect(res).toEqual(['bar', 'baz', 'bat']);
   });
 
   it('multiline and ignoring comma correctly', async () => {
     setInput('cache-from', 'user/app:cache\ntype=local,src=path/to/dir');
     const res = await context.getInputList('cache-from', true);
-    console.log(res);
     expect(res).toEqual(['user/app:cache', 'type=local,src=path/to/dir']);
   });
 
   it('different new lines and ignoring comma correctly', async () => {
     setInput('cache-from', 'user/app:cache\r\ntype=local,src=path/to/dir');
     const res = await context.getInputList('cache-from', true);
-    console.log(res);
     expect(res).toEqual(['user/app:cache', 'type=local,src=path/to/dir']);
   });
 
@@ -539,7 +542,6 @@ ccccccccc"
 FOO=bar`
     );
     const res = await context.getInputList('secrets', true);
-    console.log(res);
     expect(res).toEqual([
       'GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789',
       `MYSECRET=aaaaaaaa
@@ -563,7 +565,6 @@ bbbb
 ccc"`
     );
     const res = await context.getInputList('secrets', true);
-    console.log(res);
     expect(res).toEqual([
       'GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789',
       `MYSECRET=aaaaaaaa
@@ -587,7 +588,6 @@ ccccccccc
 FOO=bar`
     );
     const res = await context.getInputList('secrets', true);
-    console.log(res);
     expect(res).toEqual(['GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789', 'MYSECRET=aaaaaaaa', 'bbbbbbb', 'ccccccccc', 'FOO=bar']);
   });
 
@@ -598,7 +598,6 @@ FOO=bar`
 FOO=bar`
     );
     const res = await context.getInputList('secrets', true);
-    console.log(res);
     expect(res).toEqual([`GPG_KEY=${pgp}`, 'FOO=bar']);
   });
 
@@ -612,7 +611,6 @@ ccccccccc"
 FOO=bar`
     );
     const res = await context.getInputList('secrets', true);
-    console.log(res);
     expect(res).toEqual([
       'GIT_AUTH_TOKEN=abcdefgh,ijklmno=0123456789',
       `MYSECRET=aaaaaaaa
