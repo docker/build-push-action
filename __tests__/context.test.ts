@@ -147,7 +147,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -164,7 +164,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -183,7 +183,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -204,7 +204,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -224,7 +224,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -241,7 +241,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -259,7 +259,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -278,7 +278,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -301,7 +301,7 @@ describe('getArgs', () => {
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'true'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -336,7 +336,7 @@ ccc"`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'true'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -374,7 +374,7 @@ ccc`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'true'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -404,7 +404,7 @@ ccc`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'true'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -428,7 +428,7 @@ ccc`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -450,7 +450,7 @@ ccc`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'true'],
-        ['pull', 'false']
+        ['pull', 'false'],
       ]),
       [
         'buildx',
@@ -460,6 +460,34 @@ ccc`],
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '--network', 'host',
         '--push',
+        '.'
+      ]
+    ],
+    [
+      14,
+      '0.7.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['file', './test/Dockerfile'],
+        ['cgroup-parent', 'foo'],
+        ['shm-size', '2g'],
+        ['ulimit', `nofile=1024:1024
+nproc=3`],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--cgroup-parent', 'foo',
+        '--file', './test/Dockerfile',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--shm-size', '2g',
+        '--ulimit', 'nofile=1024:1024',
+        '--ulimit', 'nproc=3',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '.'
       ]
     ],

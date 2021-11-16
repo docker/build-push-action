@@ -274,6 +274,7 @@ function getInputs(defaultContext) {
             builder: core.getInput('builder'),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
+            cgroupParent: core.getInput('cgroup-parent'),
             context: core.getInput('context') || defaultContext,
             file: core.getInput('file'),
             labels: yield getInputList('labels', true),
@@ -286,9 +287,11 @@ function getInputs(defaultContext) {
             push: core.getBooleanInput('push'),
             secrets: yield getInputList('secrets', true),
             secretFiles: yield getInputList('secret-files', true),
+            shmSize: core.getInput('shm-size'),
             ssh: yield getInputList('ssh'),
             tags: yield getInputList('tags'),
             target: core.getInput('target'),
+            ulimit: yield getInputList('ulimit', true),
             githubToken: core.getInput('github-token')
         };
     });
@@ -319,6 +322,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-to', cacheTo);
         }));
+        if (inputs.cgroupParent) {
+            args.push('--cgroup-parent', inputs.cgroupParent);
+        }
         if (inputs.file) {
             args.push('--file', inputs.file);
         }
@@ -353,6 +359,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
+        if (inputs.shmSize) {
+            args.push('--shm-size', inputs.shmSize);
+        }
         yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
             args.push('--ssh', ssh);
         }));
@@ -362,6 +371,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.target) {
             args.push('--target', inputs.target);
         }
+        yield exports.asyncForEach(inputs.ulimit, (ulimit) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--ulimit', ulimit);
+        }));
         return args;
     });
 }

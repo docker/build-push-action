@@ -1,9 +1,9 @@
-# This workflow is provided just as an usage example and not for repo testing/verification
+# This workflow is provided just as an example and not for repo testing/verification
 name: example
 
 on:
   schedule:
-    - cron: '0 10 * * 0' # everyday sunday at 10am
+    - cron: '0 10 * * 0'
   push:
     branches:
       - '**'

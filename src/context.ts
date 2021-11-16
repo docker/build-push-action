@@ -18,6 +18,7 @@ export interface Inputs {
   builder: string;
   cacheFrom: string[];
   cacheTo: string[];
+  cgroupParent: string;
   context: string;
   file: string;
   labels: string[];
@@ -30,9 +31,11 @@ export interface Inputs {
   push: boolean;
   secrets: string[];
   secretFiles: string[];
+  shmSize: string;
   ssh: string[];
   tags: string[];
   target: string;
+  ulimit: string[];
   githubToken: string;
 }
 
@@ -68,6 +71,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     builder: core.getInput('builder'),
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
+    cgroupParent: core.getInput('cgroup-parent'),
     context: core.getInput('context') || defaultContext,
     file: core.getInput('file'),
     labels: await getInputList('labels', true),
@@ -80,9 +84,11 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     push: core.getBooleanInput('push'),
     secrets: await getInputList('secrets', true),
     secretFiles: await getInputList('secret-files', true),
+    shmSize: core.getInput('shm-size'),
     ssh: await getInputList('ssh'),
     tags: await getInputList('tags'),
     target: core.getInput('target'),
+    ulimit: await getInputList('ulimit', true),
     githubToken: core.getInput('github-token')
   };
 }
@@ -109,6 +115,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   await asyncForEach(inputs.cacheTo, async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
+  if (inputs.cgroupParent) {
+    args.push('--cgroup-parent', inputs.cgroupParent);
+  }
   if (inputs.file) {
     args.push('--file', inputs.file);
   }
@@ -141,6 +150,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
     args.push('--secret', await buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
+  if (inputs.shmSize) {
+    args.push('--shm-size', inputs.shmSize);
+  }
   await asyncForEach(inputs.ssh, async ssh => {
     args.push('--ssh', ssh);
   });
@@ -150,6 +162,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.target) {
     args.push('--target', inputs.target);
   }
+  await asyncForEach(inputs.ulimit, async ulimit => {
+    args.push('--ulimit', ulimit);
+  });
   return args;
 }
 
