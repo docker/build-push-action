@@ -4,15 +4,6 @@
 [![Test workflow](https://img.shields.io/github/workflow/status/docker/build-push-action/test?label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
 [![Codecov](https://img.shields.io/codecov/c/github/docker/build-push-action?logo=codecov&style=flat-square)](https://codecov.io/gh/docker/build-push-action)
 
-## Upgrade from v1
-
-`v2` of this action includes significant updates and now uses Docker [Buildx](https://github.com/docker/buildx). It's
-also rewritten as a [typescript-action](https://github.com/actions/typescript-action/) to be as close as possible
-of the [GitHub Runner](https://github.com/actions/virtual-environments) during its execution.
-
-[Upgrade notes](UPGRADE.md) with many [usage examples](#advanced-usage) have been added to handle most use cases but
-`v1` is still available through [`releases/v1` branch](https://github.com/docker/build-push-action/tree/releases/v1).
-
 ## About
 
 GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx) with full support of the

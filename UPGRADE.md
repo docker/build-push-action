@@ -28,7 +28,7 @@
 # v1
 steps:
   -
-    name: Checkout code
+    name: Checkout
     uses: actions/checkout@v2
   -
     name: Build and push Docker images
@@ -47,7 +47,7 @@ steps:
 # v2
 steps:
   -
-    name: Checkout code
+    name: Checkout
     uses: actions/checkout@v2
   -
     name: Set up Docker Buildx
@@ -79,7 +79,7 @@ steps:
 # v1
 steps:
   -
-    name: Checkout code
+    name: Checkout
     uses: actions/checkout@v2
   -
     name: Build and push Docker images
