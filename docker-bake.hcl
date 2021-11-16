@@ -31,6 +31,7 @@ target "build-validate" {
   inherits = ["node-version"]
   dockerfile = "./hack/build.Dockerfile"
   target = "build-validate"
+  output = ["type=cacheonly"]
 }
 
 target "format" {
@@ -44,24 +45,26 @@ target "format-validate" {
   inherits = ["node-version"]
   dockerfile = "./hack/build.Dockerfile"
   target = "format-validate"
+  output = ["type=cacheonly"]
 }
 
 target "vendor-update" {
   inherits = ["node-version"]
-  dockerfile = "./hack/vendor.Dockerfile"
-  target = "update"
+  dockerfile = "./hack/build.Dockerfile"
+  target = "vendor-update"
   output = ["."]
 }
 
 target "vendor-validate" {
   inherits = ["node-version"]
-  dockerfile = "./hack/vendor.Dockerfile"
-  target = "validate"
+  dockerfile = "./hack/build.Dockerfile"
+  target = "vendor-validate"
+  output = ["type=cacheonly"]
 }
 
 target "test" {
   inherits = ["node-version"]
-  dockerfile = "./hack/test.Dockerfile"
+  dockerfile = "./hack/build.Dockerfile"
   target = "test-coverage"
   output = ["./coverage"]
 }
