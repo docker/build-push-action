@@ -168,7 +168,7 @@ jobs:
 * [Handle tags and labels](docs/advanced/tags-labels.md)
 * [Update DockerHub repo description](docs/advanced/dockerhub-desc.md)
 
-	## Customizing
+## Customizing
 
 ### inputs
 
