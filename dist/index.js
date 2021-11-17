@@ -274,6 +274,7 @@ function getInputs(defaultContext) {
             builder: core.getInput('builder'),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
+            cgroupParent: core.getInput('cgroup-parent'),
             context: core.getInput('context') || defaultContext,
             file: core.getInput('file'),
             labels: yield getInputList('labels', true),
@@ -286,9 +287,11 @@ function getInputs(defaultContext) {
             push: core.getBooleanInput('push'),
             secrets: yield getInputList('secrets', true),
             secretFiles: yield getInputList('secret-files', true),
+            shmSize: core.getInput('shm-size'),
             ssh: yield getInputList('ssh'),
             tags: yield getInputList('tags'),
             target: core.getInput('target'),
+            ulimit: yield getInputList('ulimit', true),
             githubToken: core.getInput('github-token')
         };
     });
@@ -296,34 +299,28 @@ function getInputs(defaultContext) {
 exports.getInputs = getInputs;
 function getArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        return ['buildx', ...(yield getBuildArgs(inputs, defaultContext, buildxVersion)), ...(yield getCommonArgs(inputs)), inputs.context];
+        return ['buildx', ...(yield getBuildArgs(inputs, defaultContext, buildxVersion)), ...(yield getCommonArgs(inputs, buildxVersion)), inputs.context];
     });
 }
 exports.getArgs = getArgs;
 function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        const args = ['build'].concat(...flagMap(inputs.buildArgs, '--build-arg'), ...flagMap(inputs.cacheFrom, '--cache-from'), ...flagMap(inputs.cacheTo, '--cache-to'), ...flagMap(inputs.labels, '--label'), ...flagMap(inputs.outputs, '--output'), ...flagMap(inputs.tags, '--tag'), ...flagMap(inputs.ssh, '--ssh'));
-        if (inputs.target) {
-            args.push('--target', inputs.target);
-        }
+        const args = ['build'].concat(...flagMap(inputs.buildArgs, '--build-arg'), ...flagMap(inputs.cacheFrom, '--cache-from'), ...flagMap(inputs.cacheTo, '--cache-to'), ...flagMap(inputs.labels, '--label'), ...flagMap(inputs.outputs, '--output'), ...flagMap(inputs.ssh, '--ssh'), ...flagMap(inputs.tags, '--tag'), ...flagMap(inputs.ulimit, '--ulimit'));
         if (inputs.allow.length > 0) {
             args.push('--allow', inputs.allow.join(','));
         }
-        if (inputs.platforms.length > 0) {
-            args.push('--platform', inputs.platforms.join(','));
+        if (inputs.cgroupParent) {
+            args.push('--cgroup-parent', inputs.cgroupParent);
+        }
+        if (inputs.file) {
+            args.push('--file', inputs.file);
         }
         if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
-        if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
-            args.push('--metadata-file', yield buildx.getMetadataFile());
+        if (inputs.platforms.length > 0) {
+            args.push('--platform', inputs.platforms.join(','));
         }
-        yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--cache-from', cacheFrom);
-        }));
-        yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--cache-to', cacheTo);
-        }));
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
             try {
                 args.push('--secret', yield buildx.getSecretString(secret));
@@ -343,29 +340,35 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
-        if (inputs.file) {
-            args.push('--file', inputs.file);
+        if (inputs.shmSize) {
+            args.push('--shm-size', inputs.shmSize);
+        }
+        if (inputs.target) {
+            args.push('--target', inputs.target);
         }
         return args;
     });
 }
-function getCommonArgs(inputs) {
+function getCommonArgs(inputs, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = [];
-        if (inputs.noCache) {
-            args.push('--no-cache');
-        }
         if (inputs.builder) {
             args.push('--builder', inputs.builder);
-        }
-        if (inputs.pull) {
-            args.push('--pull');
         }
         if (inputs.load) {
             args.push('--load');
         }
+        if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
+            args.push('--metadata-file', yield buildx.getMetadataFile());
+        }
         if (inputs.network) {
             args.push('--network', inputs.network);
+        }
+        if (inputs.noCache) {
+            args.push('--no-cache');
+        }
+        if (inputs.pull) {
+            args.push('--pull');
         }
         if (inputs.push) {
             args.push('--push');
