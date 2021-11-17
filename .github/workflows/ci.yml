@@ -336,6 +336,86 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
+  shm-size:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: v0.7.0
+          driver-opts: |
+            image=moby/buildkit:master
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/shmsize.Dockerfile
+          tags: name/app:latest
+          shm-size: 2g
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  ulimit:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: v0.7.0
+          driver-opts: |
+            image=moby/buildkit:master
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/ulimit.Dockerfile
+          tags: name/app:latest
+          ulimit: |
+            nofile=1024:1024
+            nproc=3
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
+  cgroup-parent:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: v0.7.0
+          driver-opts: |
+            image=moby/buildkit:master
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/cgroup.Dockerfile
+          tags: name/app:latest
+          cgroup-parent: foo
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
   multi:
     runs-on: ubuntu-latest
     strategy:

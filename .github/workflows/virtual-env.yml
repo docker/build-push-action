@@ -3,7 +3,7 @@ name: virtual-env
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *' # everyday at 10am
+    - cron: '0 10 * * *'
 
 jobs:
   os:

@@ -8,7 +8,7 @@ branding:
 
 inputs:
   allow:
-    description: "List of extra privileged entitlement (eg. network.host,security.insecure)"
+    description: "List of extra privileged entitlement (e.g., network.host,security.insecure)"
     required: false
   build-args:
     description: "List of build-time variables"
@@ -17,10 +17,13 @@ inputs:
     description: "Builder instance"
     required: false
   cache-from:
-    description: "List of external cache sources for buildx (eg. user/app:cache, type=local,src=path/to/dir)"
+    description: "List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)"
     required: false
   cache-to:
-    description: "List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)"
+    description: "List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)"
+    required: false
+  cgroup-parent:
+    description: "Optional parent cgroup for the container used in the build"
     required: false
   context:
     description: "Build's context is the set of files located in the specified PATH or URL"
@@ -57,10 +60,13 @@ inputs:
     required: false
     default: 'false'
   secrets:
-    description: "List of secrets to expose to the build (eg. key=string, GIT_AUTH_TOKEN=mytoken)"
+    description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
     required: false
   secret-files:
-    description: "List of secret files to expose to the build (eg. key=filename, MY_SECRET=./secret.txt)"
+    description: "List of secret files to expose to the build (e.g., key=filename, MY_SECRET=./secret.txt)"
+    required: false
+  shm-size:
+    description: "Size of /dev/shm (e.g., 2g)"
     required: false
   ssh:
     description: "List of SSH agent socket or keys to expose to the build"
@@ -70,6 +76,9 @@ inputs:
     required: false
   target:
     description: "Sets the target stage to build"
+    required: false
+  ulimit:
+    description: "Ulimit options (e.g., nofile=1024:1024)"
     required: false
   github-token:
     description: "GitHub Token used to authenticate against a repository for Git context"

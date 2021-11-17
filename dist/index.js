@@ -274,6 +274,7 @@ function getInputs(defaultContext) {
             builder: core.getInput('builder'),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
+            cgroupParent: core.getInput('cgroup-parent'),
             context: core.getInput('context') || defaultContext,
             file: core.getInput('file'),
             labels: yield getInputList('labels', true),
@@ -286,9 +287,11 @@ function getInputs(defaultContext) {
             push: core.getBooleanInput('push'),
             secrets: yield getInputList('secrets', true),
             secretFiles: yield getInputList('secret-files', true),
+            shmSize: core.getInput('shm-size'),
             ssh: yield getInputList('ssh'),
             tags: yield getInputList('tags'),
             target: core.getInput('target'),
+            ulimit: yield getInputList('ulimit', true),
             githubToken: core.getInput('github-token')
         };
     });
@@ -298,7 +301,7 @@ function getArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['buildx'];
         args.push.apply(args, yield getBuildArgs(inputs, defaultContext, buildxVersion));
-        args.push.apply(args, yield getCommonArgs(inputs));
+        args.push.apply(args, yield getCommonArgs(inputs, buildxVersion));
         args.push(inputs.context);
         return args;
     });
@@ -307,39 +310,36 @@ exports.getArgs = getArgs;
 function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['build'];
-        yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--build-arg', buildArg);
-        }));
-        yield exports.asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--label', label);
-        }));
-        yield exports.asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--tag', tag);
-        }));
-        if (inputs.target) {
-            args.push('--target', inputs.target);
-        }
         if (inputs.allow.length > 0) {
             args.push('--allow', inputs.allow.join(','));
         }
-        if (inputs.platforms.length > 0) {
-            args.push('--platform', inputs.platforms.join(','));
-        }
-        yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--output', output);
+        yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--build-arg', buildArg);
         }));
-        if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
-            args.push('--iidfile', yield buildx.getImageIDFile());
-        }
-        if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
-            args.push('--metadata-file', yield buildx.getMetadataFile());
-        }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-from', cacheFrom);
         }));
         yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-to', cacheTo);
         }));
+        if (inputs.cgroupParent) {
+            args.push('--cgroup-parent', inputs.cgroupParent);
+        }
+        if (inputs.file) {
+            args.push('--file', inputs.file);
+        }
+        if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
+            args.push('--iidfile', yield buildx.getImageIDFile());
+        }
+        yield exports.asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--label', label);
+        }));
+        yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--output', output);
+        }));
+        if (inputs.platforms.length > 0) {
+            args.push('--platform', inputs.platforms.join(','));
+        }
         yield exports.asyncForEach(inputs.secrets, (secret) => __awaiter(this, void 0, void 0, function* () {
             try {
                 args.push('--secret', yield buildx.getSecretString(secret));
@@ -359,32 +359,44 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
             args.push('--secret', yield buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
         }
+        if (inputs.shmSize) {
+            args.push('--shm-size', inputs.shmSize);
+        }
         yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
             args.push('--ssh', ssh);
         }));
-        if (inputs.file) {
-            args.push('--file', inputs.file);
+        yield exports.asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--tag', tag);
+        }));
+        if (inputs.target) {
+            args.push('--target', inputs.target);
         }
+        yield exports.asyncForEach(inputs.ulimit, (ulimit) => __awaiter(this, void 0, void 0, function* () {
+            args.push('--ulimit', ulimit);
+        }));
         return args;
     });
 }
-function getCommonArgs(inputs) {
+function getCommonArgs(inputs, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = [];
-        if (inputs.noCache) {
-            args.push('--no-cache');
-        }
         if (inputs.builder) {
             args.push('--builder', inputs.builder);
-        }
-        if (inputs.pull) {
-            args.push('--pull');
         }
         if (inputs.load) {
             args.push('--load');
         }
+        if (buildx.satisfies(buildxVersion, '>=0.6.0')) {
+            args.push('--metadata-file', yield buildx.getMetadataFile());
+        }
         if (inputs.network) {
             args.push('--network', inputs.network);
+        }
+        if (inputs.noCache) {
+            args.push('--no-cache');
+        }
+        if (inputs.pull) {
+            args.push('--pull');
         }
         if (inputs.push) {
             args.push('--push');
