@@ -17,6 +17,9 @@ jobs:
           - ubuntu-18.04
     steps:
       -
+        name: File system
+        run: df -ah
+      -
         name: List install packages
         run: apt list --installed
       -
