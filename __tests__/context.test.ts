@@ -188,9 +188,9 @@ describe('getArgs', () => {
       [
         'buildx',
         'build',
-        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
     ],
@@ -481,12 +481,12 @@ nproc=3`],
       [
         'buildx',
         'build',
+        '--ulimit', 'nofile=1024:1024',
+        '--ulimit', 'nproc=3',
         '--cgroup-parent', 'foo',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--shm-size', '2g',
-        '--ulimit', 'nofile=1024:1024',
-        '--ulimit', 'nproc=3',
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '.'
       ]
@@ -659,6 +659,19 @@ describe('asyncForEach', () => {
     });
 
     expect(results).toEqual(testValues);
+  });
+});
+
+describe('flagMap', () => {
+  it('should prepend array elements with the provided flag', async () => {
+    const testValues = ['a', 'b', 'c'];
+    const results: string[][] = context.flagMap(testValues, '--catpants');
+
+    expect(results).toEqual([
+      ['--catpants', 'a'],
+      ['--catpants', 'b'],
+      ['--catpants', 'c']
+    ]);
   });
 });
 

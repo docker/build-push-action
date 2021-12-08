@@ -94,27 +94,24 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
-  args.push.apply(args, await getCommonArgs(inputs, buildxVersion));
-  args.push(inputs.context);
-  return args;
+  return ['buildx', ...(await getBuildArgs(inputs, defaultContext, buildxVersion)), ...(await getCommonArgs(inputs, buildxVersion)), inputs.context];
 }
 
 async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['build'];
+  const args: Array<string> = ['build'].concat(
+    ...flagMap(inputs.buildArgs, '--build-arg'),
+    ...flagMap(inputs.cacheFrom, '--cache-from'),
+    ...flagMap(inputs.cacheTo, '--cache-to'),
+    ...flagMap(inputs.labels, '--label'),
+    ...flagMap(inputs.outputs, '--output'),
+    ...flagMap(inputs.ssh, '--ssh'),
+    ...flagMap(inputs.tags, '--tag'),
+    ...flagMap(inputs.ulimit, '--ulimit')
+  );
+
   if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
   }
-  await asyncForEach(inputs.buildArgs, async buildArg => {
-    args.push('--build-arg', buildArg);
-  });
-  await asyncForEach(inputs.cacheFrom, async cacheFrom => {
-    args.push('--cache-from', cacheFrom);
-  });
-  await asyncForEach(inputs.cacheTo, async cacheTo => {
-    args.push('--cache-to', cacheTo);
-  });
   if (inputs.cgroupParent) {
     args.push('--cgroup-parent', inputs.cgroupParent);
   }
@@ -124,12 +121,6 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
     args.push('--iidfile', await buildx.getImageIDFile());
   }
-  await asyncForEach(inputs.labels, async label => {
-    args.push('--label', label);
-  });
-  await asyncForEach(inputs.outputs, async output => {
-    args.push('--output', output);
-  });
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
   }
@@ -153,18 +144,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   if (inputs.shmSize) {
     args.push('--shm-size', inputs.shmSize);
   }
-  await asyncForEach(inputs.ssh, async ssh => {
-    args.push('--ssh', ssh);
-  });
-  await asyncForEach(inputs.tags, async tag => {
-    args.push('--tag', tag);
-  });
   if (inputs.target) {
     args.push('--target', inputs.target);
   }
-  await asyncForEach(inputs.ulimit, async ulimit => {
-    args.push('--ulimit', ulimit);
-  });
   return args;
 }
 
@@ -226,6 +208,10 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+export function flagMap(array: string[], flag: string): string[][] {
+  return array.map(value => [flag, value]);
+}
 
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
 export function setOutput(name: string, value: any): void {

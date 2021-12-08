@@ -230,7 +230,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutput = exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
+exports.setOutput = exports.flagMap = exports.asyncForEach = exports.getInputList = exports.getArgs = exports.getInputs = exports.tmpNameSync = exports.tmpDir = exports.defaultContext = void 0;
 const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs = __importStar(__nccwpck_require__(5747));
 const os = __importStar(__nccwpck_require__(2087));
@@ -299,29 +299,16 @@ function getInputs(defaultContext) {
 exports.getInputs = getInputs;
 function getArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        let args = ['buildx'];
-        args.push.apply(args, yield getBuildArgs(inputs, defaultContext, buildxVersion));
-        args.push.apply(args, yield getCommonArgs(inputs, buildxVersion));
-        args.push(inputs.context);
-        return args;
+        return ['buildx', ...(yield getBuildArgs(inputs, defaultContext, buildxVersion)), ...(yield getCommonArgs(inputs, buildxVersion)), inputs.context];
     });
 }
 exports.getArgs = getArgs;
 function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        let args = ['build'];
+        const args = ['build'].concat(...flagMap(inputs.buildArgs, '--build-arg'), ...flagMap(inputs.cacheFrom, '--cache-from'), ...flagMap(inputs.cacheTo, '--cache-to'), ...flagMap(inputs.labels, '--label'), ...flagMap(inputs.outputs, '--output'), ...flagMap(inputs.ssh, '--ssh'), ...flagMap(inputs.tags, '--tag'), ...flagMap(inputs.ulimit, '--ulimit'));
         if (inputs.allow.length > 0) {
             args.push('--allow', inputs.allow.join(','));
         }
-        yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--build-arg', buildArg);
-        }));
-        yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--cache-from', cacheFrom);
-        }));
-        yield exports.asyncForEach(inputs.cacheTo, (cacheTo) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--cache-to', cacheTo);
-        }));
         if (inputs.cgroupParent) {
             args.push('--cgroup-parent', inputs.cgroupParent);
         }
@@ -331,12 +318,6 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (!buildx.isLocalOrTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || buildx.satisfies(buildxVersion, '>=0.4.2'))) {
             args.push('--iidfile', yield buildx.getImageIDFile());
         }
-        yield exports.asyncForEach(inputs.labels, (label) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--label', label);
-        }));
-        yield exports.asyncForEach(inputs.outputs, (output) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--output', output);
-        }));
         if (inputs.platforms.length > 0) {
             args.push('--platform', inputs.platforms.join(','));
         }
@@ -362,18 +343,9 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         if (inputs.shmSize) {
             args.push('--shm-size', inputs.shmSize);
         }
-        yield exports.asyncForEach(inputs.ssh, (ssh) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--ssh', ssh);
-        }));
-        yield exports.asyncForEach(inputs.tags, (tag) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--tag', tag);
-        }));
         if (inputs.target) {
             args.push('--target', inputs.target);
         }
-        yield exports.asyncForEach(inputs.ulimit, (ulimit) => __awaiter(this, void 0, void 0, function* () {
-            args.push('--ulimit', ulimit);
-        }));
         return args;
     });
 }
@@ -437,6 +409,10 @@ const asyncForEach = (array, callback) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.asyncForEach = asyncForEach;
+function flagMap(array, flag) {
+    return array.map(value => [flag, value]);
+}
+exports.flagMap = flagMap;
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
 function setOutput(name, value) {
     command_1.issueCommand('set-output', { name }, value);
