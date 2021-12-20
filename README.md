@@ -65,7 +65,7 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
@@ -116,7 +116,7 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
