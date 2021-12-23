@@ -110,6 +110,8 @@ a [secret](docs/advanced/secrets.md) named `GIT_AUTH_TOKEN` to be able to authen
 
 ### Path context
 
+You need to add the `actions/checkout@v2` action.
+
 ```yaml
 name: ci
 
