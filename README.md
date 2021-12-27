@@ -43,6 +43,19 @@ By default, this action uses the [Git context](#git-context) so you don't need t
 done directly by buildkit. The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
 and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
 
+You can provide a subdirectory to the [Git context](#git-context) by using the following [Handlebars template](https://handlebarsjs.com/guide/) expression `{{defaultContext}}`:
+
+```yaml
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: {{defaultContext}}:docker
+          push: true
+          tags: user/app:latest
+```
+
 Be careful because **any file mutation in the steps that precede the build step will be ignored, including processing of the `.dockerignore` file** since
 the context is based on the git reference. However, you can use the [Path context](#path-context) using the
 [`context` input](#inputs) alongside the [`actions/checkout`](https://github.com/actions/checkout/) action to remove

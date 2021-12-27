@@ -491,6 +491,24 @@ nproc=3`],
         '.'
       ]
     ],
+    [
+      15,
+      '0.7.0',
+      new Map<string, string>([
+        ['context', '{{defaultContext}}:docker'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest:docker'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, any>, expected: Array<string>) => {
