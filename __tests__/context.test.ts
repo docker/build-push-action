@@ -491,6 +491,43 @@ nproc=3`],
         '.'
       ]
     ],
+    [
+      15,
+      '0.7.0',
+      new Map<string, string>([
+        ['context-subdir', 'test'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['pull', 'false'],
+        ['push', 'false'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest:test'
+      ]
+    ],
+    [
+      16,
+      '0.7.0',
+      new Map<string, string>([
+        ['context', './test'],
+        ['context-subdir', 'should-be-ignored'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['pull', 'false'],
+        ['push', 'false'],
+      ]),
+      [
+        'buildx',
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        './test'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, any>, expected: Array<string>) => {

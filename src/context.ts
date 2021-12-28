@@ -20,6 +20,7 @@ export interface Inputs {
   cacheTo: string[];
   cgroupParent: string;
   context: string;
+  contextSubdir: string;
   file: string;
   labels: string[];
   load: boolean;
@@ -73,6 +74,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     cacheTo: await getInputList('cache-to', true),
     cgroupParent: core.getInput('cgroup-parent'),
     context: core.getInput('context') || defaultContext,
+    contextSubdir: core.getInput('context-subdir'),
     file: core.getInput('file'),
     labels: await getInputList('labels', true),
     load: core.getBooleanInput('load'),
@@ -97,7 +99,15 @@ export async function getArgs(inputs: Inputs, defaultContext: string, buildxVers
   let args: Array<string> = ['buildx'];
   args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
   args.push.apply(args, await getCommonArgs(inputs, buildxVersion));
-  args.push(inputs.context);
+  let context: string = inputs.context;
+  if (inputs.contextSubdir) {
+    if (context == defaultContext) {
+      context = `${context}:${inputs.contextSubdir}`;
+    } else {
+      core.warning('"context-subdir" input is ignored when a "context" input is present');
+    }
+  }
+  args.push(context);
   return args;
 }
 

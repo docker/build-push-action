@@ -28,6 +28,9 @@ inputs:
   context:
     description: "Build's context is the set of files located in the specified PATH or URL"
     required: false
+  context-subdir:
+    description: "Subdirectory of the git repo to use as the docker build context (when using a URL-based context)"
+    required: false
   file:
     description: "Path to the Dockerfile"
     required: false

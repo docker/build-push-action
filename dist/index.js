@@ -276,6 +276,7 @@ function getInputs(defaultContext) {
             cacheTo: yield getInputList('cache-to', true),
             cgroupParent: core.getInput('cgroup-parent'),
             context: core.getInput('context') || defaultContext,
+            contextSubdir: core.getInput('context-subdir'),
             file: core.getInput('file'),
             labels: yield getInputList('labels', true),
             load: core.getBooleanInput('load'),
@@ -302,7 +303,16 @@ function getArgs(inputs, defaultContext, buildxVersion) {
         let args = ['buildx'];
         args.push.apply(args, yield getBuildArgs(inputs, defaultContext, buildxVersion));
         args.push.apply(args, yield getCommonArgs(inputs, buildxVersion));
-        args.push(inputs.context);
+        let context = inputs.context;
+        if (inputs.contextSubdir) {
+            if (context == defaultContext) {
+                context = `${context}:${inputs.contextSubdir}`;
+            }
+            else {
+                core.warning('"context-subdir" input is ignored when a "context" input is present');
+            }
+        }
+        args.push(context);
         return args;
     });
 }
