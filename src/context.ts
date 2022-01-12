@@ -9,6 +9,7 @@ import {issueCommand} from '@actions/core/lib/command';
 import * as github from '@actions/github';
 
 import * as buildx from './buildx';
+import * as handlebars from 'handlebars';
 
 let _defaultContext, _tmpDir: string;
 
@@ -97,7 +98,7 @@ export async function getArgs(inputs: Inputs, defaultContext: string, buildxVers
   let args: Array<string> = ['buildx'];
   args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
   args.push.apply(args, await getCommonArgs(inputs, buildxVersion));
-  args.push(inputs.context);
+  args.push(handlebars.compile(inputs.context)({defaultContext}));
   return args;
 }
 
