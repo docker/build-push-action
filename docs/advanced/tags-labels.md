@@ -18,7 +18,7 @@ on:
       - 'v*.*.*'
   pull_request:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:

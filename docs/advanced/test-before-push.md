@@ -14,7 +14,7 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 env:
   TEST_TAG: user/myapp:test

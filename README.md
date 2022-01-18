@@ -78,7 +78,7 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
@@ -129,7 +129,7 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
@@ -199,7 +199,7 @@ Following inputs can be used as `step.with` keys
 | `build-args`        | List     | List of build-time variables |
 | `cache-from`        | List     | List of [external cache sources](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-from) (e.g., `type=local,src=path/to/dir`) |
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-to) (e.g., `type=local,dest=path/to/dir`) |
-| `cgroup-parent`     | String   | Optional [parent cgroup](https://docs.docker.com/engine/reference/commandline/build/#use-a-custom-parent-cgroup---cgroup-parent) for the container used in the build |
+| `cgroup-parent`¹    | String   | Optional [parent cgroup](https://docs.docker.com/engine/reference/commandline/build/#use-a-custom-parent-cgroup---cgroup-parent) for the container used in the build |
 | `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
 | `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
 | `labels`            | List     | List of metadata for an image |
@@ -212,11 +212,21 @@ Following inputs can be used as `step.with` keys
 | `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
 | `secrets`           | List     | List of secrets to expose to the build (e.g., `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of secret files to expose to the build (e.g., `key=filename`, `MY_SECRET=./secret.txt`) |
-| `shm-size`          | String   | Size of [`/dev/shm`](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-size-of-devshm---shm-size) (e.g., `2g`) |
+| `shm-size`¹         | String   | Size of [`/dev/shm`](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-size-of-devshm---shm-size) (e.g., `2g`) |
 | `ssh`               | List     | List of SSH agent socket or keys to expose to the build |
 | `tags`              | List/CSV | List of tags |
 | `target`            | String   | Sets the target stage to build |
-| `ulimit`            | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`) |
+| `ulimit`¹           | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`) |
+
+> ¹ `cgroup-parent`, `shm-size` and `ulimit` are only available using `moby/buildkit:master`
+> as builder image atm:
+> ```yaml
+> - name: Set up Docker Buildx
+>   uses: docker/setup-buildx-action@v1
+>   with:
+>   driver-opts: |
+>     image=moby/buildkit:master
+> ```
 
 ### outputs
 
