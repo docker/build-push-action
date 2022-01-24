@@ -217,6 +217,7 @@ Following inputs can be used as `step.with` keys
 | `tags`              | List/CSV | List of tags |
 | `target`            | String   | Sets the target stage to build |
 | `ulimit`¹           | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`) |
+| `github-token`      | String   | GitHub Token used to authenticate against a repository for Git context (default `${{ github.token }}`) |
 
 > ¹ `cgroup-parent`, `shm-size` and `ulimit` are only available using `moby/buildkit:master`
 > as builder image atm:
