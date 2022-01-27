@@ -52,6 +52,11 @@ jobs:
             slug: gcr.io/sandbox-298914/test-docker-action
             username_secret: GCR_USERNAME
             password_secret: GCR_JSON_KEY
+          -
+            registry: officialgithubactions.azurecr.io
+            slug: officialgithubactions.azurecr.io/test-docker-action
+            username_secret: AZURE_CLIENT_ID
+            password_secret: AZURE_CLIENT_SECRET
     steps:
       -
         name: Checkout
