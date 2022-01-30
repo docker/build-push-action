@@ -1,7 +1,6 @@
 # Handle tags and labels
 
-If you come from [`v1`](https://github.com/docker/build-push-action/tree/releases/v1#readme) and want an
-"automatic" tag management and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
+If you want an "automatic" tag management and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
 for labels, you can do it in a dedicated step. The following workflow will use the [Docker metadata action](https://github.com/docker/metadata-action)
 to handle tags and labels based on GitHub actions events and Git metadata.
 
@@ -10,7 +9,7 @@ name: ci
 
 on:
   schedule:
-    - cron: '0 10 * * *' # everyday at 10am
+    - cron: '0 10 * * *'
   push:
     branches:
       - '**'
