@@ -38,30 +38,7 @@ ___
 
 ## Usage
 
-By default, this action uses the [Git context](#git-context) so you don't need to use the
-[`actions/checkout`](https://github.com/actions/checkout/) action to checkout the repository because this will be
-done directly by buildkit. The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
-and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
-
-You can provide a subdirectory to the [Git context](#git-context) by using the following [Handlebars template](https://handlebarsjs.com/guide/) expression `{{defaultContext}}`:
-
-```yaml
-      -
-        name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          context: {{defaultContext}}:docker
-          push: true
-          tags: user/app:latest
-```
-
-Be careful because **any file mutation in the steps that precede the build step will be ignored, including processing of the `.dockerignore` file** since
-the context is based on the git reference. However, you can use the [Path context](#path-context) using the
-[`context` input](#inputs) alongside the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
-this restriction.
-
-In the examples below we are using 3 other actions:
+In the examples below we are also using 3 other actions:
 
 * [`setup-buildx`](https://github.com/docker/setup-buildx-action) action will create and boot a builder using by 
 default the `docker-container` [builder driver](https://github.com/docker/buildx/blob/master/docs/reference/buildx_create.md#driver).
@@ -71,6 +48,13 @@ to add emulation support with QEMU to be able to build against more platforms.
 * [`login`](https://github.com/docker/login-action) action will take care to log in against a Docker registry.
 
 ### Git context
+
+By default, this action uses the [Git context](#git-context) so you don't need
+to use the [`actions/checkout`](https://github.com/actions/checkout/) action to
+check out the repository because this will be done directly by [BuildKit](https://github.com/moby/buildkit).
+
+The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
+and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
 
 ```yaml
 name: ci
@@ -98,21 +82,42 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: user/app:latest
 ```
 
-Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
-so it does not need to be passed. If you want to authenticate against another private repository, you have to use
-a [secret](docs/advanced/secrets.md) named `GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
+Be careful because **any file mutation in the steps that precede the build step
+will be ignored, including processing of the `.dockerignore` file** since
+the context is based on the Git reference. However, you can use the
+[Path context](#path-context) using the [`context` input](#inputs) alongside
+the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
+this restriction.
+
+Default Git context can also be provided using the [Handlebars template](https://handlebarsjs.com/guide/)
+expression `{{defaultContext}}`. Here we can use it to provide a subdirectory
+to the default Git context:
 
 ```yaml
       -
         name: Build and push
-        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: "{{defaultContext}}:mysubdir"
+          push: true
+          tags: user/app:latest
+```
+> :warning: Subdirectory for Git context is not yet available for the buildx [`docker` driver](https://github.com/docker/buildx/blob/master/docs/reference/buildx_create.md#driver).
+
+Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
+so it does not need to be passed. If you want to authenticate against another
+private repository, you have to use a [secret](docs/advanced/secrets.md) named
+`GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
+
+```yaml
+      -
+        name: Build and push
         uses: docker/build-push-action@v2
         with:
           push: true
@@ -217,7 +222,7 @@ Following inputs can be used as `step.with` keys
 | `tags`              | List/CSV | List of tags |
 | `target`            | String   | Sets the target stage to build |
 | `ulimit`¹           | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`) |
-| `github-token`      | String   | GitHub Token used to authenticate against a repository for Git context (default `${{ github.token }}`) |
+| `github-token`      | String   | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`) |
 
 > ¹ `cgroup-parent`, `shm-size` and `ulimit` are only available using `moby/buildkit:master`
 > as builder image atm:
