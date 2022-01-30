@@ -469,6 +469,7 @@ ccc`],
       new Map<string, string>([
         ['context', '.'],
         ['file', './test/Dockerfile'],
+        ['add-host', 'docker:10.180.0.1'],
         ['cgroup-parent', 'foo'],
         ['shm-size', '2g'],
         ['ulimit', `nofile=1024:1024
@@ -481,6 +482,7 @@ nproc=3`],
       [
         'buildx',
         'build',
+        '--add-host', 'docker:10.180.0.1',
         '--cgroup-parent', 'foo',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
