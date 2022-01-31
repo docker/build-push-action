@@ -199,7 +199,7 @@ Following inputs can be used as `step.with` keys
 
 | Name                | Type     | Description                        |
 |---------------------|----------|------------------------------------|
-| `add-host`          | List/CSV | Add a [custom host-to-IP mapping](https://docs.docker.com/engine/reference/commandline/build/#add-entries-to-container-hosts-file---add-host) (e.g., `docker:10.180.0.1`) |
+| `add-hosts`         | List/CSV | List of [customs host-to-IP mapping](https://docs.docker.com/engine/reference/commandline/build/#add-entries-to-container-hosts-file---add-host) (e.g., `docker:10.180.0.1`) |
 | `allow`             | List/CSV | List of [extra privileged entitlement](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#allow) (e.g., `network.host,security.insecure`) |
 | `builder`           | String   | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action) |
 | `build-args`        | List     | List of build-time variables |

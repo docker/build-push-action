@@ -416,7 +416,7 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
-  addhost:
+  add-hosts:
     runs-on: ubuntu-latest
     steps:
       -
@@ -432,7 +432,7 @@ jobs:
           context: ./test
           file: ./test/addhost.Dockerfile
           tags: name/app:latest
-          add-host: |
+          add-hosts: |
             docker:10.180.0.1
             foo:10.0.0.1
       -
