@@ -14,7 +14,7 @@ import * as handlebars from 'handlebars';
 let _defaultContext, _tmpDir: string;
 
 export interface Inputs {
-  addHost: string[];
+  addHosts: string[];
   allow: string[];
   buildArgs: string[];
   builder: string;
@@ -68,7 +68,7 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
 
 export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
-    addHost: await getInputList('add-host'),
+    addHosts: await getInputList('add-hosts'),
     allow: await getInputList('allow'),
     buildArgs: await getInputList('build-args', true),
     builder: core.getInput('builder'),
@@ -106,9 +106,9 @@ export async function getArgs(inputs: Inputs, defaultContext: string, buildxVers
 
 async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   let args: Array<string> = ['build'];
-  if (inputs.addHost.length > 0) {
-    args.push('--add-host', inputs.addHost.join(','));
-  }
+  await asyncForEach(inputs.addHosts, async addHost => {
+    args.push('--add-host', addHost);
+  });
   if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
   }
