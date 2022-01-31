@@ -416,6 +416,30 @@ jobs:
         if: always()
         uses: crazy-max/ghaction-dump-context@v1
 
+  addhost:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/addhost.Dockerfile
+          tags: name/app:latest
+          add-host: |
+            docker:10.180.0.1
+            foo:10.0.0.1
+      -
+        name: Dump context
+        if: always()
+        uses: crazy-max/ghaction-dump-context@v1
+
   multi:
     runs-on: ubuntu-latest
     strategy:

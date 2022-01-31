@@ -270,6 +270,7 @@ exports.tmpNameSync = tmpNameSync;
 function getInputs(defaultContext) {
     return __awaiter(this, void 0, void 0, function* () {
         return {
+            addHost: yield getInputList('add-host'),
             allow: yield getInputList('allow'),
             buildArgs: yield getInputList('build-args', true),
             builder: core.getInput('builder'),
@@ -311,6 +312,9 @@ exports.getArgs = getArgs;
 function getBuildArgs(inputs, defaultContext, buildxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         let args = ['build'];
+        if (inputs.addHost.length > 0) {
+            args.push('--add-host', inputs.addHost.join(','));
+        }
         if (inputs.allow.length > 0) {
             args.push('--allow', inputs.allow.join(','));
         }

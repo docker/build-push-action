@@ -7,6 +7,9 @@ branding:
   color: 'blue'
 
 inputs:
+  add-host:
+    description: "Add a custom host-to-IP mapping (e.g., docker:10.180.0.1)"
+    required: false
   allow:
     description: "List of extra privileged entitlement (e.g., network.host,security.insecure)"
     required: false
