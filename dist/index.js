@@ -516,18 +516,20 @@ function run() {
                     throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)[0].trim()}`);
                 }
             });
-            yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                const imageID = yield buildx.getImageID();
-                const metadata = yield buildx.getMetadata();
-                if (imageID) {
-                    core.info(`digest=${imageID}`);
+            const imageID = yield buildx.getImageID();
+            if (imageID) {
+                yield core.group(`Digest output`, () => __awaiter(this, void 0, void 0, function* () {
+                    core.info(imageID);
                     context.setOutput('digest', imageID);
-                }
-                if (metadata) {
-                    core.info(`metadata=${metadata}`);
+                }));
+            }
+            const metadata = yield buildx.getMetadata();
+            if (metadata) {
+                yield core.group(`Metadata output`, () => __awaiter(this, void 0, void 0, function* () {
+                    core.info(metadata);
                     context.setOutput('metadata', metadata);
-                }
-            }));
+                }));
+            }
         }
         catch (error) {
             core.setFailed(error.message);
