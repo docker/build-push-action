@@ -13,6 +13,23 @@ RUN --mount=type=secret,id=github_token \
   cat /run/secrets/github_token
 ```
 
+If you need access to the `secrets` file from a non-root user, you'll need to set the `uid` in the `--mount` argument:
+
+```Dockerfile
+#syntax=docker/dockerfile:1.2
+
+FROM alpine
+
+# Create non-root user
+RUN addgroup -S newuser && adduser -u 1001 -S -g newuser newuser
+
+# Run everything after as non-privileged user.
+USER newuser
+
+RUN --mount=type=secret,uid=1001,id=github_token \
+  cat /run/secrets/github_token
+```
+
 As you can see we have named our secret `github_token`. Here is the workflow you can use to expose this secret using
 the [`secrets` input](../../README.md#inputs):
 
