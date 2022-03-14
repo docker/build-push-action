@@ -89,8 +89,10 @@ inputs:
     required: false
 
 outputs:
+  imageid:
+    description: 'Image ID'
   digest:
-    description: 'Image content-addressable identifier also called a digest'
+    description: 'Image digest'
   metadata:
     description: 'Build result metadata'
 

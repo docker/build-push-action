@@ -241,7 +241,8 @@ Following outputs are available
 
 | Name              | Type    | Description                           |
 |-------------------|---------|---------------------------------------|
-| `digest`          | String  | Image content-addressable identifier also called a digest |
+| `imageid`         | String  | Image ID |
+| `digest`          | String  | Image digest |
 | `metadata`        | JSON    | Build result metadata |
 
 ## Troubleshooting

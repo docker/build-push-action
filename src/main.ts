@@ -34,16 +34,23 @@ async function run(): Promise<void> {
       });
 
     const imageID = await buildx.getImageID();
+    const metadata = await buildx.getMetadata();
+    const digest = await buildx.getDigest(metadata);
+
     if (imageID) {
-      await core.group(`Digest output`, async () => {
+      await core.group(`ImageID`, async () => {
         core.info(imageID);
-        context.setOutput('digest', imageID);
+        context.setOutput('imageid', imageID);
       });
     }
-
-    const metadata = await buildx.getMetadata();
+    if (digest) {
+      await core.group(`Digest`, async () => {
+        core.info(digest);
+        context.setOutput('digest', digest);
+      });
+    }
     if (metadata) {
-      await core.group(`Metadata output`, async () => {
+      await core.group(`Metadata`, async () => {
         core.info(metadata);
         context.setOutput('metadata', metadata);
       });
