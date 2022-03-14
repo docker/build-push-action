@@ -34,6 +34,17 @@ export async function getMetadata(): Promise<string | undefined> {
   return content;
 }
 
+export async function getDigest(metadata: string | undefined): Promise<string | undefined> {
+  if (metadata === undefined) {
+    return undefined;
+  }
+  const metadataJSON = JSON.parse(metadata);
+  if (metadataJSON['containerimage.digest']) {
+    return metadataJSON['containerimage.digest'];
+  }
+  return undefined;
+}
+
 export async function getSecretString(kvp: string): Promise<string> {
   return getSecret(kvp, false);
 }

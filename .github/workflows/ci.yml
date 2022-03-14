@@ -26,10 +26,6 @@ jobs:
         uses: ./action
         with:
           file: ./test/Dockerfile
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   git-context:
     runs-on: ubuntu-latest
@@ -77,10 +73,6 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   git-context-secret:
     runs-on: ubuntu-latest
@@ -137,10 +129,6 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   path-context:
     runs-on: ubuntu-latest
@@ -192,10 +180,6 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   error:
     runs-on: ubuntu-latest
@@ -223,10 +207,6 @@ jobs:
             echo "::error::Should have failed"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   error-buildx:
     runs-on: ubuntu-latest
@@ -259,10 +239,6 @@ jobs:
             echo "::error::Should have failed"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   docker-driver:
     runs-on: ubuntu-latest
@@ -284,10 +260,6 @@ jobs:
           file: ./test/Dockerfile
           push: true
           tags: localhost:5000/name/app:latest
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   export-docker:
     runs-on: ubuntu-latest
@@ -307,10 +279,6 @@ jobs:
         name: Inspect
         run: |
           docker image inspect myimage:latest
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   network:
     runs-on: ubuntu-latest
@@ -331,10 +299,6 @@ jobs:
           context: ./test
           tags: name/app:latest
           network: host
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   shm-size:
     runs-on: ubuntu-latest
@@ -357,10 +321,6 @@ jobs:
           file: ./test/shmsize.Dockerfile
           tags: name/app:latest
           shm-size: 2g
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   ulimit:
     runs-on: ubuntu-latest
@@ -385,10 +345,6 @@ jobs:
           ulimit: |
             nofile=1024:1024
             nproc=3
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   cgroup-parent:
     runs-on: ubuntu-latest
@@ -411,10 +367,6 @@ jobs:
           file: ./test/cgroup.Dockerfile
           tags: name/app:latest
           cgroup-parent: foo
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   add-hosts:
     runs-on: ubuntu-latest
@@ -435,10 +387,6 @@ jobs:
           add-hosts: |
             docker:10.180.0.1
             foo:10.0.0.1
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   multi:
     runs-on: ubuntu-latest
@@ -494,10 +442,94 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
+
+  digest:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE: localhost:5000/name/app
+    strategy:
+      fail-fast: false
+      matrix:
+        driver:
+          - docker
+          - docker-container
+        load:
+          - true
+          - false
+        push:
+          - true
+          - false
+        exclude:
+          - driver: docker
+            load: true
+            push: true
+          - driver: docker-container
+            load: true
+            push: true
+          - driver: docker
+            load: false
+            push: false
+          - driver: docker-container
+            load: false
+            push: false
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
       -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: v0.8.0
+          driver: ${{ matrix.driver }}
+          driver-opts: |
+            network=host
+      -
+        name: Build
+        id: docker_build
+        uses: ./
+        with:
+          context: ./test
+          load: ${{ matrix.load }}
+          push: ${{ matrix.push }}
+          tags: ${{ env.DOCKER_IMAGE }}:latest
+          platforms: ${{ matrix.platforms }}
+      -
+        name: Docker images
+        run: |
+          docker image ls --no-trunc
+      -
+        name: Check digest
+        if: ${{ matrix.push }}
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+            echo "::error::Digest should not be empty"
+            exit 1
+          fi
+      -
+        name: Check manifest
+        if: ${{ matrix.push }}
+        run: |
+          set -x
+          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}@${{ steps.docker_build.outputs.digest }} --format '{{json .}}'
+      -
+        name: Check image ID
+        run: |
+          if [ -z "${{ steps.docker_build.outputs.imageid }}" ]; then
+            echo "::error::Image ID should not be empty"
+            exit 1
+          fi
+      -
+        name: Inspect image
+        if: ${{ matrix.load }}
+        run: |
+          set -x
+          docker image inspect ${{ steps.docker_build.outputs.imageid }}
 
   registry-cache:
     runs-on: ubuntu-latest
@@ -584,10 +616,6 @@ jobs:
             echo "::error::Digests should be identical"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   local-cache-first:
     runs-on: ubuntu-latest
@@ -650,10 +678,6 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   local-cache-hit:
     runs-on: ubuntu-latest
@@ -723,10 +747,6 @@ jobs:
       -
         name: Cache hit
         run: echo ${{ steps.cache.outputs.cache-hit }}
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
 
   github-cache:
     runs-on: ubuntu-latest
@@ -773,7 +793,3 @@ jobs:
         name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:1.0.0
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1

@@ -38,7 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.satisfies = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getMetadata = exports.getMetadataFile = exports.getImageID = exports.getImageIDFile = void 0;
+exports.satisfies = exports.parseVersion = exports.getVersion = exports.isAvailable = exports.hasGitAuthToken = exports.isLocalOrTarExporter = exports.getSecret = exports.getSecretFile = exports.getSecretString = exports.getDigest = exports.getMetadata = exports.getMetadataFile = exports.getImageID = exports.getImageIDFile = void 0;
 const sync_1 = __importDefault(__nccwpck_require__(8750));
 const fs_1 = __importDefault(__nccwpck_require__(5747));
 const path_1 = __importDefault(__nccwpck_require__(5622));
@@ -81,6 +81,19 @@ function getMetadata() {
     });
 }
 exports.getMetadata = getMetadata;
+function getDigest(metadata) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (metadata === undefined) {
+            return undefined;
+        }
+        const metadataJSON = JSON.parse(metadata);
+        if (metadataJSON['containerimage.digest']) {
+            return metadataJSON['containerimage.digest'];
+        }
+        return undefined;
+    });
+}
+exports.getDigest = getDigest;
 function getSecretString(kvp) {
     return __awaiter(this, void 0, void 0, function* () {
         return getSecret(kvp, false);
@@ -517,15 +530,22 @@ function run() {
                 }
             });
             const imageID = yield buildx.getImageID();
+            const metadata = yield buildx.getMetadata();
+            const digest = yield buildx.getDigest(metadata);
             if (imageID) {
-                yield core.group(`Digest output`, () => __awaiter(this, void 0, void 0, function* () {
+                yield core.group(`ImageID`, () => __awaiter(this, void 0, void 0, function* () {
                     core.info(imageID);
-                    context.setOutput('digest', imageID);
+                    context.setOutput('imageid', imageID);
                 }));
             }
-            const metadata = yield buildx.getMetadata();
+            if (digest) {
+                yield core.group(`Digest`, () => __awaiter(this, void 0, void 0, function* () {
+                    core.info(digest);
+                    context.setOutput('digest', digest);
+                }));
+            }
             if (metadata) {
-                yield core.group(`Metadata output`, () => __awaiter(this, void 0, void 0, function* () {
+                yield core.group(`Metadata`, () => __awaiter(this, void 0, void 0, function* () {
                     core.info(metadata);
                     context.setOutput('metadata', metadata);
                 }));
