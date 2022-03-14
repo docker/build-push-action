@@ -17,6 +17,7 @@ export interface Inputs {
   addHosts: string[];
   allow: string[];
   buildArgs: string[];
+  buildContexts: string[];
   builder: string;
   cacheFrom: string[];
   cacheTo: string[];
@@ -71,6 +72,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     addHosts: await getInputList('add-hosts'),
     allow: await getInputList('allow'),
     buildArgs: await getInputList('build-args', true),
+    buildContexts: await getInputList('build-contexts', true),
     builder: core.getInput('builder'),
     cacheFrom: await getInputList('cache-from', true),
     cacheTo: await getInputList('cache-to', true),
@@ -115,6 +117,11 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
   });
+  if (buildx.satisfies(buildxVersion, '>=0.8.0')) {
+    await asyncForEach(inputs.buildContexts, async buildContext => {
+      args.push('--build-context', buildContext);
+    });
+  }
   await asyncForEach(inputs.cacheFrom, async cacheFrom => {
     args.push('--cache-from', cacheFrom);
   });
