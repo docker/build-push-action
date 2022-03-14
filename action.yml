@@ -16,6 +16,9 @@ inputs:
   build-args:
     description: "List of build-time variables"
     required: false
+  build-contexts:
+    description: "List of additional build contexts (e.g., name=path)"
+    required: false
   builder:
     description: "Builder instance"
     required: false
@@ -55,7 +58,7 @@ inputs:
     description: "List of target platforms for build"
     required: false
   pull:
-    description: "Always attempt to pull a newer version of the image"
+    description: "Always attempt to pull all referenced images"
     required: false
     default: 'false'
   push:

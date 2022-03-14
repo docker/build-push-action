@@ -286,6 +286,7 @@ function getInputs(defaultContext) {
             addHosts: yield getInputList('add-hosts'),
             allow: yield getInputList('allow'),
             buildArgs: yield getInputList('build-args', true),
+            buildContexts: yield getInputList('build-contexts', true),
             builder: core.getInput('builder'),
             cacheFrom: yield getInputList('cache-from', true),
             cacheTo: yield getInputList('cache-to', true),
@@ -334,6 +335,11 @@ function getBuildArgs(inputs, defaultContext, buildxVersion) {
         yield exports.asyncForEach(inputs.buildArgs, (buildArg) => __awaiter(this, void 0, void 0, function* () {
             args.push('--build-arg', buildArg);
         }));
+        if (buildx.satisfies(buildxVersion, '>=0.8.0')) {
+            yield exports.asyncForEach(inputs.buildContexts, (buildContext) => __awaiter(this, void 0, void 0, function* () {
+                args.push('--build-context', buildContext);
+            }));
+        }
         yield exports.asyncForEach(inputs.cacheFrom, (cacheFrom) => __awaiter(this, void 0, void 0, function* () {
             args.push('--cache-from', cacheFrom);
         }));
