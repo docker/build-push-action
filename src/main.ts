@@ -20,7 +20,7 @@ async function run(): Promise<void> {
 
     const buildxVersion = await buildx.getVersion();
     const defContext = context.defaultContext();
-    let inputs: context.Inputs = await context.getInputs(defContext);
+    const inputs: context.Inputs = await context.getInputs(defContext);
 
     const args: string[] = await context.getArgs(inputs, defContext, buildxVersion);
     await exec
@@ -29,7 +29,7 @@ async function run(): Promise<void> {
       })
       .then(res => {
         if (res.stderr.length > 0 && res.exitCode != 0) {
-          throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)![0].trim()}`);
+          throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
         }
       });
 

@@ -3,11 +3,11 @@
   "description": "Build and push Docker images",
   "main": "lib/main.js",
   "scripts": {
-    "build": "tsc && ncc build",
-    "format": "prettier --write **/*.ts",
-    "format-check": "prettier --check **/*.ts",
+    "build": "ncc build src/main.ts --source-map --minify --license licenses.txt",
+    "lint": "eslint src/**/*.ts __tests__/**/*.ts",
+    "format": "eslint --fix src/**/*.ts __tests__/**/*.ts",
     "test": "jest --coverage",
-    "pre-checkin": "yarn run format && yarn run build"
+    "all": "yarn run build && yarn run format && yarn test"
   },
   "repository": {
     "type": "git",
@@ -38,17 +38,21 @@
   },
   "devDependencies": {
     "@types/csv-parse": "^1.2.2",
-    "@types/jest": "^26.0.23",
-    "@types/node": "^14.17.4",
-    "@types/tmp": "^0.2.0",
-    "@vercel/ncc": "^0.28.6",
-    "dotenv": "^8.6.0",
-    "jest": "^26.6.3",
-    "jest-circus": "^26.6.3",
-    "jest-runtime": "^26.6.3",
+    "@types/node": "^16.11.26",
+    "@types/semver": "^7.3.9",
+    "@types/tmp": "^0.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "@typescript-eslint/parser": "^5.14.0",
+    "@vercel/ncc": "^0.33.3",
+    "dotenv": "^16.0.0",
+    "eslint": "^8.11.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jest": "^26.1.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.2.5",
     "prettier": "^2.3.1",
-    "ts-jest": "^26.5.6",
-    "typescript": "^4.3.4",
-    "typescript-formatter": "^7.2.2"
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.4.4"
   }
 }

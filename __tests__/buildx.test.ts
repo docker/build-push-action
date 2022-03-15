@@ -1,8 +1,8 @@
+import {describe, expect, it, jest, test} from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as exec from '@actions/exec';
-
 import * as buildx from '../src/buildx';
 import * as context from '../src/context';
 
@@ -53,69 +53,25 @@ describe('getDigest', () => {
 });
 
 describe('isLocalOrTarExporter', () => {
-  // prettier-ignore
   test.each([
-    [
-      [
-        'type=registry,ref=user/app',
-      ],
-      false
-    ],
-    [
-      [
-        'type=docker',
-      ],
-      false
-    ],
-    [
-      [
-        'type=local,dest=./release-out'
-      ],
-      true
-    ],
-    [
-      [
-        'type=tar,dest=/tmp/image.tar'
-      ],
-      true
-    ],
-    [
-      [
-        'type=docker',
-        'type=tar,dest=/tmp/image.tar'
-      ],
-      true
-    ],
-    [
-      [
-        '"type=tar","dest=/tmp/image.tar"'
-      ],
-      true
-    ],
-    [
-      [
-        '" type= local" , dest=./release-out'
-      ],
-      true
-    ],
-    [
-      [
-        '.'
-      ],
-      true
-    ],
-  ])(
-    'given %p returns %p',
-    async (outputs: Array<string>, expected: boolean) => {
-      expect(buildx.isLocalOrTarExporter(outputs)).toEqual(expected);
-    }
-  );
+    [['type=registry,ref=user/app'], false],
+    [['type=docker'], false],
+    [['type=local,dest=./release-out'], true],
+    [['type=tar,dest=/tmp/image.tar'], true],
+    [['type=docker', 'type=tar,dest=/tmp/image.tar'], true],
+    [['"type=tar","dest=/tmp/image.tar"'], true],
+    [['" type= local" , dest=./release-out'], true],
+    [['.'], true]
+  ])('given %p returns %p', async (outputs: Array<string>, expected: boolean) => {
+    expect(buildx.isLocalOrTarExporter(outputs)).toEqual(expected);
+  });
 });
 
 describe('isAvailable', () => {
-  const execSpy: jest.SpyInstance = jest.spyOn(exec, 'getExecOutput');
+  const execSpy = jest.spyOn(exec, 'getExecOutput');
   buildx.isAvailable();
 
+  // eslint-disable-next-line jest/no-standalone-expect
   expect(execSpy).toHaveBeenCalledWith(`docker`, ['buildx'], {
     silent: true,
     ignoreReturnCode: true
@@ -123,24 +79,10 @@ describe('isAvailable', () => {
 });
 
 describe('getVersion', () => {
-  async function isDaemonRunning() {
-    return await exec
-      .getExecOutput(`docker`, ['version', '--format', '{{.Server.Os}}'], {
-        ignoreReturnCode: true,
-        silent: true
-      })
-      .then(res => {
-        return !res.stdout.includes(' ') && res.exitCode == 0;
-      });
-  }
-  (isDaemonRunning() ? it : it.skip)(
-    'valid',
-    async () => {
-      const version = await buildx.getVersion();
-      expect(semver.valid(version)).not.toBeNull();
-    },
-    100000
-  );
+  it('valid', async () => {
+    const version = await buildx.getVersion();
+    expect(semver.valid(version)).not.toBeNull();
+  });
 });
 
 describe('parseVersion', () => {
@@ -187,6 +129,7 @@ describe('getSecret', () => {
       const secretValue = await fs.readFileSync(tmpNameSync, 'utf-8');
       expect(secretValue).toEqual(exValue);
     } catch (err) {
+      // eslint-disable-next-line jest/no-conditional-expect
       expect(true).toBe(invalid);
     }
   });

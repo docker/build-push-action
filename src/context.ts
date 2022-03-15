@@ -99,15 +99,17 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['buildx'];
-  args.push.apply(args, await getBuildArgs(inputs, defaultContext, buildxVersion));
-  args.push.apply(args, await getCommonArgs(inputs, buildxVersion));
-  args.push(handlebars.compile(inputs.context)({defaultContext}));
-  return args;
+  // prettier-ignore
+  return [
+    'buildx',
+    ...await getBuildArgs(inputs, defaultContext, buildxVersion),
+    ...await getCommonArgs(inputs, buildxVersion),
+    handlebars.compile(inputs.context)({defaultContext})
+  ];
 }
 
 async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = ['build'];
+  const args: Array<string> = ['build'];
   await asyncForEach(inputs.addHosts, async addHost => {
     args.push('--add-host', addHost);
   });
@@ -182,7 +184,7 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
 }
 
 async function getCommonArgs(inputs: Inputs, buildxVersion: string): Promise<Array<string>> {
-  let args: Array<string> = [];
+  const args: Array<string> = [];
   if (inputs.builder) {
     args.push('--builder', inputs.builder);
   }
@@ -208,14 +210,14 @@ async function getCommonArgs(inputs: Inputs, buildxVersion: string): Promise<Arr
 }
 
 export async function getInputList(name: string, ignoreComma?: boolean): Promise<string[]> {
-  let res: Array<string> = [];
+  const res: Array<string> = [];
 
   const items = core.getInput(name);
   if (items == '') {
     return res;
   }
 
-  for (let output of (await csvparse(items, {
+  for (const output of (await csvparse(items, {
     columns: false,
     relax: true,
     relaxColumnCount: true,
@@ -241,6 +243,6 @@ export const asyncForEach = async (array, callback) => {
 };
 
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
-export function setOutput(name: string, value: any): void {
+export function setOutput(name: string, value: unknown): void {
   issueCommand('set-output', {name}, value);
 }

@@ -76,8 +76,8 @@ export async function getSecret(kvp: string, file: boolean): Promise<string> {
   return `id=${key},src=${secretFile}`;
 }
 
-export function isLocalOrTarExporter(outputs: string[]): Boolean {
-  for (let output of csvparse(outputs.join(`\n`), {
+export function isLocalOrTarExporter(outputs: string[]): boolean {
+  for (const output of csvparse(outputs.join(`\n`), {
     delimiter: ',',
     trim: true,
     columns: false,
@@ -88,7 +88,7 @@ export function isLocalOrTarExporter(outputs: string[]): Boolean {
     if (output.length == 1 && !output[0].startsWith('type=')) {
       return true;
     }
-    for (let [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
+    for (const [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
       if (key == 'type' && (value == 'local' || value == 'tar')) {
         return true;
       }
@@ -97,8 +97,8 @@ export function isLocalOrTarExporter(outputs: string[]): Boolean {
   return false;
 }
 
-export function hasGitAuthToken(secrets: string[]): Boolean {
-  for (let secret of secrets) {
+export function hasGitAuthToken(secrets: string[]): boolean {
+  for (const secret of secrets) {
     if (secret.startsWith('GIT_AUTH_TOKEN=')) {
       return true;
     }
@@ -106,7 +106,7 @@ export function hasGitAuthToken(secrets: string[]): Boolean {
   return false;
 }
 
-export async function isAvailable(): Promise<Boolean> {
+export async function isAvailable(): Promise<boolean> {
   return await exec
     .getExecOutput('docker', ['buildx'], {
       ignoreReturnCode: true,
