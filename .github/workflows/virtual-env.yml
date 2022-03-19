@@ -20,14 +20,32 @@ jobs:
         name: File system
         run: df -ah
       -
+        name: Mounts
+        run: mount
+      -
+        name: Node info
+        run: node -p process
+      -
+        name: NPM version
+        run: npm version
+      -
         name: List install packages
         run: apt list --installed
+      -
+        name: Docker daemon conf
+        run: |
+          cat /etc/docker/daemon.json
       -
         name: Docker info
         run: docker info
       -
         name: Docker version
         run: docker version
+      -
+        name: Cgroups
+        run: |
+          sudo apt-get install -y cgroup-tools
+          lscgroup
       -
         name: buildx version
         run: docker buildx version
