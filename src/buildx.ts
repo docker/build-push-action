@@ -1,4 +1,4 @@
-import csvparse from 'csv-parse/lib/sync';
+import {parse} from 'csv-parse/sync';
 import fs from 'fs';
 import path from 'path';
 import * as semver from 'semver';
@@ -77,18 +77,19 @@ export async function getSecret(kvp: string, file: boolean): Promise<string> {
 }
 
 export function isLocalOrTarExporter(outputs: string[]): boolean {
-  for (const output of csvparse(outputs.join(`\n`), {
+  const records = parse(outputs.join(`\n`), {
     delimiter: ',',
     trim: true,
     columns: false,
     relaxColumnCount: true
-  })) {
+  });
+  for (const record of records) {
     // Local if no type is defined
     // https://github.com/docker/buildx/blob/d2bf42f8b4784d83fde17acb3ed84703ddc2156b/build/output.go#L29-L43
-    if (output.length == 1 && !output[0].startsWith('type=')) {
+    if (record.length == 1 && !record[0].startsWith('type=')) {
       return true;
     }
-    for (const [key, value] of output.map(chunk => chunk.split('=').map(item => item.trim()))) {
+    for (const [key, value] of record.map(chunk => chunk.split('=').map(item => item.trim()))) {
       if (key == 'type' && (value == 'local' || value == 'tar')) {
         return true;
       }
