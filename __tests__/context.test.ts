@@ -151,7 +151,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '.'
@@ -168,7 +167,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--build-arg', 'MY_ARG=val1,val2,val3',
         '--build-arg', 'ARG=val',
@@ -187,7 +185,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--tag', 'name/app:7.4',
@@ -208,7 +205,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--label', 'org.opencontainers.image.title=buildkit',
         '--label', 'org.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit',
@@ -228,7 +224,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--platform', 'linux/amd64,linux/arm64',
         '.'
@@ -245,7 +240,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '.'
@@ -263,7 +257,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
@@ -282,7 +275,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--output', '.',
         '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
@@ -305,7 +297,6 @@ describe('getArgs', () => {
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
@@ -340,7 +331,6 @@ ccc"`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
@@ -378,7 +368,6 @@ ccc`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
@@ -408,7 +397,6 @@ ccc`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--file', './test/Dockerfile',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
@@ -432,7 +420,6 @@ ccc`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--label', 'org.opencontainers.image.title=filter_results_top_n',
         '--label', 'org.opencontainers.image.description=Reference implementation of operation "filter results (top-n)"',
@@ -455,7 +442,6 @@ ccc`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--add-host', 'docker:10.180.0.1',
         '--add-host', 'foo:10.0.0.1',
@@ -484,7 +470,6 @@ nproc=3`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--add-host', 'docker:10.180.0.1',
         '--add-host', 'foo:10.0.0.1',
@@ -509,7 +494,6 @@ nproc=3`],
         ['pull', 'false'],
       ]),
       [
-        'buildx',
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',

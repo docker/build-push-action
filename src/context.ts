@@ -101,7 +101,6 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
   // prettier-ignore
   return [
-    'buildx',
     ...await getBuildArgs(inputs, defaultContext, buildxVersion),
     ...await getCommonArgs(inputs, buildxVersion),
     handlebars.compile(inputs.context)({defaultContext})

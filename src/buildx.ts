@@ -107,9 +107,10 @@ export function hasGitAuthToken(secrets: string[]): boolean {
   return false;
 }
 
-export async function isAvailable(): Promise<boolean> {
+export async function isAvailable(standalone?: boolean): Promise<boolean> {
+  const cmd = getCommand([], standalone);
   return await exec
-    .getExecOutput('docker', ['buildx'], {
+    .getExecOutput(cmd.command, cmd.args, {
       ignoreReturnCode: true,
       silent: true
     })
@@ -118,12 +119,17 @@ export async function isAvailable(): Promise<boolean> {
         return false;
       }
       return res.exitCode == 0;
+    })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .catch(error => {
+      return false;
     });
 }
 
-export async function getVersion(): Promise<string> {
+export async function getVersion(standalone?: boolean): Promise<string> {
+  const cmd = getCommand(['version'], standalone);
   return await exec
-    .getExecOutput('docker', ['buildx', 'version'], {
+    .getExecOutput(cmd.command, cmd.args, {
       ignoreReturnCode: true,
       silent: true
     })
@@ -145,4 +151,11 @@ export function parseVersion(stdout: string): string {
 
 export function satisfies(version: string, range: string): boolean {
   return semver.satisfies(version, range) || /^[0-9a-f]{7}$/.exec(version) !== null;
+}
+
+export function getCommand(args: Array<string>, standalone?: boolean) {
+  return {
+    command: standalone ? 'buildx' : 'docker',
+    args: standalone ? args : ['buildx', ...args]
+  };
 }
