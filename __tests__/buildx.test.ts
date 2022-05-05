@@ -78,6 +78,17 @@ describe('isAvailable', () => {
   });
 });
 
+describe('isAvailable standalone', () => {
+  const execSpy = jest.spyOn(exec, 'getExecOutput');
+  buildx.isAvailable(true);
+
+  // eslint-disable-next-line jest/no-standalone-expect
+  expect(execSpy).toHaveBeenCalledWith(`buildx`, [], {
+    silent: true,
+    ignoreReturnCode: true
+  });
+});
+
 describe('getVersion', () => {
   it('valid', async () => {
     const version = await buildx.getVersion();
