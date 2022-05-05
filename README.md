@@ -70,19 +70,19 @@ jobs:
     steps:
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           push: true
           tags: user/app:latest
@@ -102,7 +102,7 @@ to the default Git context:
 ```yaml
       -
         name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: "{{defaultContext}}:mysubdir"
           push: true
@@ -118,7 +118,7 @@ private repository, you have to use a [secret](docs/advanced/secrets.md) named
 ```yaml
       -
         name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           push: true
           tags: user/app:latest
@@ -145,19 +145,19 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           push: true
