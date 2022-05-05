@@ -16,10 +16,10 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         id: builder1
       -
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         id: builder2
       -
         name: Builder 1 name
@@ -29,14 +29,14 @@ jobs:
         run: echo ${{ steps.builder2.outputs.name }}
       -
         name: Build against builder1
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           builder: ${{ steps.builder1.outputs.name }}
           context: .
           target: mytarget1
       -
         name: Build against builder2
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           builder: ${{ steps.builder2.outputs.name }}
           context: .

@@ -20,7 +20,7 @@ jobs:
           path: action
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Build
         uses: ./action
@@ -42,11 +42,11 @@ jobs:
           path: action
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: latest
           driver-opts: network=host
@@ -89,11 +89,11 @@ jobs:
           path: action
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           driver-opts: network=host
       -
@@ -149,11 +149,11 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
@@ -216,10 +216,10 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Build
         id: docker_build
@@ -288,7 +288,7 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: List networks
         run: docker network ls
@@ -308,7 +308,7 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: v0.7.0
           driver-opts: |
@@ -330,7 +330,7 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: v0.7.0
           driver-opts: |
@@ -354,7 +354,7 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: v0.7.0
           driver-opts: |
@@ -376,7 +376,7 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Build
         uses: ./
@@ -396,7 +396,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: v0.8.0
       -
@@ -431,11 +431,11 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: ${{ matrix.buildx-version }}
           driver-opts: network=host
@@ -504,7 +504,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: v0.8.0
           driver: ${{ matrix.driver }}
@@ -565,11 +565,11 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           driver-opts: |
             network=host
@@ -653,11 +653,11 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           driver-opts: |
             network=host
@@ -714,11 +714,11 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           driver-opts: |
             network=host
@@ -788,10 +788,10 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: ${{ matrix.buildx_version }}
           driver-opts: |
@@ -827,7 +827,7 @@ jobs:
           sudo apt-get purge -y moby-cli moby-buildx
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       -
         name: Build
         uses: ./

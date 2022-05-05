@@ -17,12 +17,12 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Validate
-        uses: docker/bake-action@v1
+        uses: docker/bake-action@v2
         with:
           targets: validate
       -
         name: Test
-        uses: docker/bake-action@v1
+        uses: docker/bake-action@v2
         with:
           targets: test
       -
