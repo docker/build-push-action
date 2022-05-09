@@ -210,13 +210,13 @@ Following inputs can be used as `step.with` keys
 | `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
 | `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
 | `labels`            | List     | List of metadata for an image |
-| `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
+| `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`). Can not be used with `push:true`. Only one `--output=type` can be used. |
 | `network`           | String   | Set the networking mode for the `RUN` instructions during build |
 | `no-cache`          | Bool     | Do not use cache when building the image (default `false`) |
 | `outputs`           | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`) |
 | `platforms`         | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build |
 | `pull`              | Bool     | Always attempt to pull all referenced images (default `false`) |
-| `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`) |
+| `push`              | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`). Can not be used with `load:true`. Only one `--output=type` can be used. |
 | `secrets`           | List     | List of [secrets](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#secret) to expose to the build (e.g., `key=string`, `GIT_AUTH_TOKEN=mytoken`) |
 | `secret-files`      | List     | List of [secret files](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#secret) to expose to the build (e.g., `key=filename`, `MY_SECRET=./secret.txt`) |
 | `shm-size`          | String   | Size of [`/dev/shm`](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-size-of-devshm---shm-size) (e.g., `2g`) |
