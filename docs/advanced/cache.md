@@ -28,7 +28,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -68,7 +68,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -118,7 +118,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -162,13 +162,13 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
         name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
