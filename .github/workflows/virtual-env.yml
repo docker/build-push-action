@@ -4,6 +4,16 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 10 * * *'
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/virtual-env.yml'
+  pull_request:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/virtual-env.yml'
 
 jobs:
   os:
@@ -13,6 +23,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - ubuntu-22.04
           - ubuntu-20.04
           - ubuntu-18.04
     steps:
