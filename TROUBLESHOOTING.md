@@ -44,7 +44,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -55,7 +55,7 @@ jobs:
           buildkitd-flags: --debug
       -
         name: Set up containerd
-        uses: crazy-max/ghaction-setup-containerd@v1
+        uses: crazy-max/ghaction-setup-containerd@v2
       -
         name: Build Docker image
         uses: docker/build-push-action@v3
@@ -122,7 +122,7 @@ Or a dedicated step to sanitize the slug:
 
 ```yaml
 - name: Sanitize repo slug
-  uses: actions/github-script@v4
+  uses: actions/github-script@v6
   id: repo_slug
   with:
     result-encoding: string

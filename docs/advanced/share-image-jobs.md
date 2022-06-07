@@ -19,7 +19,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -32,7 +32,7 @@ jobs:
           outputs: type=docker,dest=/tmp/myimage.tar
       -
         name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: myimage
           path: /tmp/myimage.tar
@@ -46,7 +46,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       -
         name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: myimage
           path: /tmp
