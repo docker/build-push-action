@@ -208,7 +208,7 @@ Following inputs can be used as `step.with` keys
 | `cache-to`          | List     | List of [cache export destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#cache-to) (e.g., `type=local,dest=path/to/dir`) |
 | `cgroup-parent`     | String   | Optional [parent cgroup](https://docs.docker.com/engine/reference/commandline/build/#use-a-custom-parent-cgroup---cgroup-parent) for the container used in the build |
 | `context`           | String   | Build's context is the set of files located in the specified [`PATH` or `URL`](https://docs.docker.com/engine/reference/commandline/build/) (default [Git context](#git-context)) |
-| `file`              | String   | Path to the Dockerfile. (default `{context}/Dockerfile`) |
+| `file`              | String   | Path to the Dockerfile, the file extenion must be `.Dockerfile`. (default `{context}/Dockerfile`) |
 | `labels`            | List     | List of metadata for an image |
 | `load`              | Bool     | [Load](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#load) is a shorthand for `--output=type=docker` (default `false`) |
 | `network`           | String   | Set the networking mode for the `RUN` instructions during build |
