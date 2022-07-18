@@ -28,6 +28,7 @@ export interface Inputs {
   load: boolean;
   network: string;
   noCache: boolean;
+  noCacheFilters: string[];
   outputs: string[];
   platforms: string[];
   pull: boolean;
@@ -83,6 +84,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
     noCache: core.getBooleanInput('no-cache'),
+    noCacheFilters: await getInputList('no-cache-filters'),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
     pull: core.getBooleanInput('pull'),
@@ -140,6 +142,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
   }
   await asyncForEach(inputs.labels, async label => {
     args.push('--label', label);
+  });
+  await asyncForEach(inputs.noCacheFilters, async noCacheFilter => {
+    args.push('--no-cache-filter', noCacheFilter);
   });
   await asyncForEach(inputs.outputs, async output => {
     args.push('--output', output);
