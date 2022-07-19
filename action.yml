@@ -51,6 +51,9 @@ inputs:
     description: "Do not use cache when building the image"
     required: false
     default: 'false'
+  no-cache-filters:
+    description: "Do not cache specified stages"
+    required: false
   outputs:
     description: "List of output destinations (format: type=local,dest=path)"
     required: false

@@ -310,7 +310,6 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: v0.7.0
           driver-opts: |
             image=moby/buildkit:master
       -
@@ -332,7 +331,6 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: v0.7.0
           driver-opts: |
             image=moby/buildkit:master
       -
@@ -356,7 +354,6 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: v0.7.0
           driver-opts: |
             image=moby/buildkit:master
       -
@@ -397,8 +394,6 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        with:
-          version: v0.8.0
       -
         name: Build
         uses: ./
@@ -408,6 +403,26 @@ jobs:
           build-contexts: |
             alpine=docker-image://debian:stable-slim
           tags: name/app:latest
+
+  no-cache-filters:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/nocachefilter.Dockerfile
+          no-cache-filters: build
+          tags: name/app:latest
+          cache-from: type=gha,scope=nocachefilter
+          cache-to: type=gha,scope=nocachefilter,mode=max
 
   multi:
     runs-on: ubuntu-latest
@@ -506,7 +521,6 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: v0.8.0
           driver: ${{ matrix.driver }}
           driver-opts: |
             network=host
