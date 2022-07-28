@@ -83,7 +83,7 @@ async function run(): Promise<void> {
 async function cleanup(): Promise<void> {
   if (stateHelper.tmpDir.length > 0) {
     core.startGroup(`Removing temp folder ${stateHelper.tmpDir}`);
-    fs.rmdirSync(stateHelper.tmpDir, {recursive: true});
+    fs.rmSync(stateHelper.tmpDir, {recursive: true});
     core.endGroup();
   }
 }
