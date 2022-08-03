@@ -500,6 +500,25 @@ nproc=3`],
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest:docker'
       ]
     ],
+    [
+      16,
+      '0.8.2',
+      new Map<string, string>([
+        ['github-token', 'abcdefghijklmno0123456789'],
+        ['context', '{{defaultContext}}:subdir'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--secret', 'id=GIT_AUTH_TOKEN,src=/tmp/.docker-build-push-jest/.tmpname-jest',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest:subdir'
+      ]
+    ]
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
