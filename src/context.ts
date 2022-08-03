@@ -101,15 +101,16 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
+  const context = handlebars.compile(inputs.context)({defaultContext});
   // prettier-ignore
   return [
-    ...await getBuildArgs(inputs, defaultContext, buildxVersion),
+    ...await getBuildArgs(inputs, defaultContext, context, buildxVersion),
     ...await getCommonArgs(inputs, buildxVersion),
-    handlebars.compile(inputs.context)({defaultContext})
+    context
   ];
 }
 
-async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, defaultContext: string, context: string, buildxVersion: string): Promise<Array<string>> {
   const args: Array<string> = ['build'];
   await asyncForEach(inputs.addHosts, async addHost => {
     args.push('--add-host', addHost);
@@ -166,7 +167,7 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, buildxVersio
       core.warning(err.message);
     }
   });
-  if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && inputs.context == defaultContext) {
+  if (inputs.githubToken && !buildx.hasGitAuthToken(inputs.secrets) && context.startsWith(defaultContext)) {
     args.push('--secret', await buildx.getSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
   if (inputs.shmSize) {
