@@ -108,7 +108,7 @@ to the default Git context:
           push: true
           tags: user/app:latest
 ```
-> :warning: Subdirectory for Git context is not yet available for the buildx [`docker` driver](https://github.com/docker/buildx/blob/master/docs/reference/buildx_create.md#driver).
+> :warning: Subdirectory for Git context is only available from [Buildkit version 0.9.0](https://github.com/moby/buildkit/releases/tag/v0.9.0).
 
 Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
 so it does not need to be passed. If you want to authenticate against another
