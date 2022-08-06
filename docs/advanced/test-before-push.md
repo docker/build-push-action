@@ -56,7 +56,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: user/app:latest
+          tags: ${{ env.TEST_TAG }}
 ```
 
 > :bulb: Build time will not be increased with this workflow because internal
