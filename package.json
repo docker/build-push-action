@@ -28,7 +28,7 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "@actions/core": "^1.9.0",
+    "@actions/core": "^1.9.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
     "csv-parse": "^5.3.0",
