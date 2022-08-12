@@ -2,6 +2,15 @@ name: ci
 
 on:
   workflow_dispatch:
+    inputs:
+      buildx-version:
+        description: 'Buildx version or Git context'
+        default: 'latest'
+        required: false
+      buildkit-image:
+        description: 'BuildKit image'
+        default: 'moby/buildkit:buildx-stable-1'
+        required: false
   push:
     branches:
       - 'master'
@@ -21,6 +30,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./action
@@ -48,8 +61,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: latest
-          driver-opts: network=host
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build and push
         id: docker_build
@@ -95,7 +110,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          driver-opts: network=host
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build and push
         id: docker_build
@@ -132,12 +150,6 @@ jobs:
 
   path-context:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        buildx-version:
-          - ""
-          - latest
     services:
       registry:
         image: registry:2
@@ -156,7 +168,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
         with:
           version: ${{ matrix.buildx-version }}
-          driver-opts: network=host
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build and push
         id: docker_build
@@ -220,6 +234,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         id: docker_build
@@ -289,6 +307,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: List networks
         run: docker network ls
@@ -310,8 +332,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
-            image=moby/buildkit:master
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -331,8 +354,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
-            image=moby/buildkit:master
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -354,8 +379,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
-            image=moby/buildkit:master
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -374,6 +401,11 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -394,6 +426,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -413,6 +449,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./
@@ -429,9 +469,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        buildx-version:
-          - ""
-          - latest
         dockerfile:
           - multi
           - multi-sudo
@@ -453,7 +490,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
         with:
           version: ${{ matrix.buildx-version }}
-          driver-opts: network=host
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build and push
         id: docker_build
@@ -521,6 +560,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver: ${{ matrix.driver }}
           driver-opts: |
             network=host
@@ -585,8 +625,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
             network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build and push (1)
         id: docker_build
@@ -673,8 +715,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
             network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Cache Docker layers
         uses: actions/cache@v3
@@ -734,8 +778,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
             network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Cache Docker layers
         uses: actions/cache@v3
@@ -785,12 +831,6 @@ jobs:
 
   github-cache:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        buildx_version:
-          - ""
-          - latest
     services:
       registry:
         image: registry:2
@@ -807,9 +847,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx_version }}
+          version: ${{ matrix.buildx-version }}
           driver-opts: |
             network=host
+            ${{ matrix.buildkit-image }}
           buildkitd-flags: --debug
       -
         name: Build and push
@@ -842,6 +883,11 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            network=host
+            ${{ matrix.buildkit-image }}
       -
         name: Build
         uses: ./

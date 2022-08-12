@@ -2,6 +2,15 @@ name: e2e
 
 on:
   workflow_dispatch:
+    inputs:
+      buildx-version:
+        description: 'Buildx version or Git context'
+        default: 'latest'
+        required: false
+      buildkit-image:
+        description: 'BuildKit image'
+        default: 'moby/buildkit:buildx-stable-1'
+        required: false
   schedule:
     - cron: '0 10 * * *'
   push:
@@ -73,6 +82,10 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            ${{ matrix.buildkit-image }}
       -
         name: Login to Registry
         if: github.event_name != 'pull_request'
@@ -104,7 +117,3 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           docker buildx imagetools inspect ${{ matrix.slug }}:${{ steps.meta.outputs.version }}
-      -
-        name: Dump context
-        if: always()
-        uses: crazy-max/ghaction-dump-context@v1
