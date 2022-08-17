@@ -18,6 +18,10 @@ on:
     branches:
       - 'master'
 
+env:
+  BUILDX_VERSION: latest
+  BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
+
 jobs:
   minimal:
     runs-on: ubuntu-latest
@@ -31,9 +35,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./action
@@ -61,10 +65,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build and push
         id: docker_build
@@ -110,10 +114,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build and push
         id: docker_build
@@ -167,10 +171,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build and push
         id: docker_build
@@ -235,9 +239,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         id: docker_build
@@ -308,9 +312,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: List networks
         run: docker network ls
@@ -332,9 +336,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -354,10 +358,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -379,10 +383,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -402,10 +406,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -427,9 +431,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -450,9 +454,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
@@ -489,10 +493,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build and push
         id: docker_build
@@ -560,7 +564,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver: ${{ matrix.driver }}
           driver-opts: |
             network=host
@@ -625,10 +629,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build and push (1)
         id: docker_build
@@ -712,10 +716,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
           buildkitd-flags: --debug
       -
         name: Build and push
@@ -749,10 +753,10 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             network=host
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Build
         uses: ./
