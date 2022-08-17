@@ -19,6 +19,10 @@ on:
     tags:
       - v*
 
+env:
+  BUILDX_VERSION: latest
+  BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -83,9 +87,9 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          version: ${{ matrix.buildx-version }}
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
-            ${{ matrix.buildkit-image }}
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
         name: Login to Registry
         if: github.event_name != 'pull_request'
