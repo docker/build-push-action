@@ -49,9 +49,9 @@ to add emulation support with QEMU to be able to build against more platforms.
 
 ### Git context
 
-By default, this action uses the [Git context](#git-context) so you don't need
-to use the [`actions/checkout`](https://github.com/actions/checkout/) action to
-check out the repository because this will be done directly by [BuildKit](https://github.com/moby/buildkit).
+By default, this action uses the [Git context](https://docs.docker.com/engine/reference/commandline/build/#git-repositories),
+so you don't need to use the [`actions/checkout`](https://github.com/actions/checkout/)
+action to check out the repository as this will be done directly by [BuildKit](https://github.com/moby/buildkit).
 
 The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
 and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
@@ -101,6 +101,11 @@ to the default Git context:
 
 ```yaml
       -
+        # Setting up Docker Buildx with docker-container driver is required
+        # at the moment to be able to use a subdirectory with Git context
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
         name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -108,9 +113,16 @@ to the default Git context:
           push: true
           tags: user/app:latest
 ```
-> :warning: Subdirectory for Git context is only available from [Buildkit version 0.9.0](https://github.com/moby/buildkit/releases/tag/v0.9.0).
 
-Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
+> **Warning**
+>
+> Subdirectory for Git context is available from [BuildKit v0.9.0](https://github.com/moby/buildkit/releases/tag/v0.9.0).
+> If you're using the `docker` builder (default if `setup-buildx-action` not used),
+> then BuildKit in Docker Engine will be used. As Docker Engine < v22.x.x embeds
+> Buildkit 0.8.2 at the moment, it does not support this feature. It's therefore
+> required to use the `setup-buildx-action` at the moment.
+
+Building from the current repository automatically uses the [GitHub Token](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token),
 so it does not need to be passed. If you want to authenticate against another
 private repository, you have to use a [secret](docs/advanced/secrets.md) named
 `GIT_AUTH_TOKEN` to be able to authenticate against it with buildx:
