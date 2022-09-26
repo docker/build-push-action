@@ -17,10 +17,10 @@
   dependencies:
     "@actions/io" "^1.0.1"
 
-"@actions/github@^5.0.3":
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/@actions/github/-/github-5.0.3.tgz#b305765d6173962d113451ea324ff675aa674f35"
-  integrity sha512-myjA/pdLQfhUGLtRZC/J4L1RXOG4o6aYdiEq+zr5wVVKljzbFld+xv10k1FX6IkIJtNxbAq44BdwSNpQ015P0A==
+"@actions/github@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@actions/github/-/github-5.1.0.tgz#573fdba52b7b739b68f891f39eacfdd966a22b90"
+  integrity sha512-tuI80F7JQIhg77ZTTgUAPpVD7ZnP9oHSPN8xw7LOwtA4vEMbAjWJNbmLBfV7xua7r016GyjzWLuec5cs8f/a8A==
   dependencies:
     "@actions/http-client" "^2.0.1"
     "@octokit/core" "^3.6.0"
