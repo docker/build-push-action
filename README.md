@@ -238,6 +238,7 @@ Following inputs can be used as `step.with` keys
 | `target`           | String   | Sets the target stage to build                                                                                                                                                     |
 | `ulimit`           | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`)                                     |
 | `github-token`     | String   | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`)                                                             |
+| `squash`           | Bool     | Squash newly built layers into a single new layer                                                                                                                                  |
 
 ### outputs
 

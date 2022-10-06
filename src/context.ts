@@ -41,6 +41,7 @@ export interface Inputs {
   target: string;
   ulimit: string[];
   githubToken: string;
+  squash: boolean;
 }
 
 export function defaultContext(): string {
@@ -96,7 +97,8 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     tags: await getInputList('tags'),
     target: core.getInput('target'),
     ulimit: await getInputList('ulimit', true),
-    githubToken: core.getInput('github-token')
+    githubToken: core.getInput('github-token'),
+    squash: core.getBooleanInput('squash')
   };
 }
 
@@ -185,6 +187,9 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   await asyncForEach(inputs.ulimit, async ulimit => {
     args.push('--ulimit', ulimit);
   });
+  if (inputs.squash) {
+    args.push('--squash');
+  }
   return args;
 }
 

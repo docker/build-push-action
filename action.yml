@@ -93,6 +93,10 @@ inputs:
     description: "GitHub Token used to authenticate against a repository for Git context"
     default: ${{ github.token }}
     required: false
+  squash:
+    description: "Squash newly built layers into a single new layer"
+    required: false
+    default: 'false'
 
 outputs:
   imageid:
