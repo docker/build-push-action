@@ -1,7 +1,7 @@
 # Export image to Docker
 
-You may want your build result to be available in the Docker client through `docker images` to be able to use it
-in another step of your workflow:
+You may want your build result to be available in the Docker client through
+`docker images` to be able to use it in another step of your workflow:
 
 ```yaml
 name: ci
