@@ -228,7 +228,7 @@ Following inputs can be used as `step.with` keys
 | `network`          | String   | Set the networking mode for the `RUN` instructions during build                                                                                                                    |
 | `no-cache`         | Bool     | Do not use cache when building the image (default `false`)                                                                                                                         |
 | `no-cache-filters` | List/CSV | Do not cache specified stages                                                                                                                                                      |
-| `outputs`          | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`)                                 |
+| `outputs`¹         | List     | List of [output destinations](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#output) (format: `type=local,dest=path`)                                 |
 | `platforms`        | List/CSV | List of [target platforms](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#platform) for build                                                         |
 | `pull`             | Bool     | Always attempt to pull all referenced images (default `false`)                                                                                                                     |
 | `push`             | Bool     | [Push](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#push) is a shorthand for `--output=type=registry` (default `false`)                             |
@@ -240,6 +240,10 @@ Following inputs can be used as `step.with` keys
 | `target`           | String   | Sets the target stage to build                                                                                                                                                     |
 | `ulimit`           | List     | [Ulimit](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-set-ulimits---ulimit) options (e.g., `nofile=1024:1024`)                                     |
 | `github-token`     | String   | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`)                                                             |
+
+> **Note**
+>
+> * ¹ multiple `outputs` are [not yet supported](https://github.com/moby/buildkit/issues/1555)
 
 ### outputs
 
