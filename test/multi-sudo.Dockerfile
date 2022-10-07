@@ -1,9 +1,8 @@
+# syntax=docker/dockerfile:1
 FROM --platform=$BUILDPLATFORM golang:alpine AS build
-
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" > /log
-
 RUN apk --update --no-cache add \
     shadow \
     sudo \
@@ -17,6 +16,5 @@ RUN sudo chown buildx. /log
 USER root
 
 FROM alpine
-
 COPY --from=build /log /log
 RUN ls -al /log

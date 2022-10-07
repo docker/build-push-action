@@ -1,10 +1,14 @@
 # Multi-platform image
 
-You can build multi-platform images using the [`platforms` input](../../README.md#inputs) as described below.
+You can build [multi-platform images](https://docs.docker.com/build/building/multi-platform/)
+using the [`platforms` input](../../README.md#inputs) as described below.
 
-> :bulb: List of available platforms will be displayed and available through our [setup-buildx](https://github.com/docker/setup-buildx-action#about) action.
-
-> :bulb: If you want support for more platforms, you can use QEMU with our [setup-qemu](https://github.com/docker/setup-qemu-action) action.
+> **Note**
+>
+> * List of available platforms will be displayed and available through our
+>   [setup-buildx](https://github.com/docker/setup-buildx-action#about) action.
+> * If you want support for more platforms, you can use QEMU with our
+>   [setup-qemu](https://github.com/docker/setup-qemu-action) action.
 
 ```yaml
 name: ci
@@ -28,7 +32,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Login to DockerHub
+        name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

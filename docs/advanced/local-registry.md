@@ -1,6 +1,7 @@
 # Local registry
 
-For testing purposes you may need to create a [local registry](https://hub.docker.com/_/registry) to push images into:
+For testing purposes you may need to create a [local registry](https://hub.docker.com/_/registry)
+to push images into:
 
 ```yaml
 name: ci

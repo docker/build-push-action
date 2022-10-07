@@ -16,7 +16,7 @@ While pushing to a registry, you may encounter these kinds of issues:
 * `unexpected response: 401 Unauthorized`
 
 These issues are not directly related to this action but are rather linked to
-[buildx](https://github.com/docker/buildx), [buildkit](https://github.com/moby/buildkit),
+[Buildx](https://github.com/docker/buildx), [BuildKit](https://github.com/moby/buildkit),
 [containerd](https://github.com/containerd/containerd) or the registry on which
 you're pushing your image. The quality of error message depends on the registry
 and are usually not very informative.
@@ -29,7 +29,7 @@ action step and attach BuildKit container logs to your issue.
 ### With containerd
 
 Next you can test pushing with [containerd action](https://github.com/crazy-max/ghaction-setup-containerd)
-using the following workflow. If it works then open an issue on [buildkit](https://github.com/moby/buildkit)
+using the following workflow. If it works then open an issue on [BuildKit](https://github.com/moby/buildkit)
 repository.
 
 ```yaml

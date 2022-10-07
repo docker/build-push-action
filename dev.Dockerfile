@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=16
 ARG DOCKER_VERSION=20.10.13

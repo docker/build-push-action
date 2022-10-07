@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM busybox AS base
 RUN echo "Hello world!" > /hello
 

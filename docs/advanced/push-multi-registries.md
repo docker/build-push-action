@@ -1,12 +1,8 @@
 # Push to multi-registries
 
-* [Docker Hub and GHCR](#docker-hub-and-ghcr)
-
-## Docker Hub and GHCR
-
-The following workflow will connect you to [DockerHub](https://github.com/docker/login-action#dockerhub)
-and [GitHub Container Registry](https://github.com/docker/login-action#github-container-registry) and push the
-image to these registries.
+The following workflow will connect you to [Docker Hub](https://github.com/docker/login-action#dockerhub)
+and [GitHub Container Registry](https://github.com/docker/login-action#github-container-registry)
+and push the image to these registries:
 
 ```yaml
 name: ci
@@ -30,7 +26,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Login to DockerHub
+        name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

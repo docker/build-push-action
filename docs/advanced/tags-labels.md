@@ -1,8 +1,9 @@
 # Handle tags and labels
 
 If you want an "automatic" tag management and [OCI Image Format Specification](https://github.com/opencontainers/image-spec/blob/master/annotations.md)
-for labels, you can do it in a dedicated step. The following workflow will use the [Docker metadata action](https://github.com/docker/metadata-action)
-to handle tags and labels based on GitHub actions events and Git metadata.
+for labels, you can do it in a dedicated step. The following workflow will use
+the [Docker metadata action](https://github.com/docker/metadata-action) to
+handle tags and labels based on GitHub actions events and Git metadata:
 
 ```yaml
 name: ci
@@ -51,7 +52,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Login to DockerHub
+        name: Login to Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2
         with:

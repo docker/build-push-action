@@ -33,7 +33,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Login to DockerHub
+        name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -59,6 +59,8 @@ jobs:
           tags: ${{ env.TEST_TAG }}
 ```
 
-> :bulb: Build time will not be increased with this workflow because internal
-> cache for `linux/amd64` will be used from previous step on `Build and push`
-> step so only `linux/arm64` will be actually built.
+> **Note**
+>
+> Build time will not be increased with this workflow because internal cache
+> for `linux/amd64` will be used from previous step on `Build and push` step
+> so only `linux/arm64` will be actually built.

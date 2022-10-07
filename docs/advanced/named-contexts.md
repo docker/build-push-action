@@ -7,6 +7,9 @@ Dockerfile defines a stage with the same name it is overwritten.
 This can be useful with GitHub Actions to reuse results from other builds or
 pin an image to a spcific tag in your workflow.
 
+* [Pin image to a specific tag](#pin-image-to-a-specific-tag)
+* [Usage of the built image in other build steps](#usage-of-the-built-image-in-other-build-steps)
+
 ## Pin image to a specific tag
 
 Replace `alpine:latest` with a pinned one:
