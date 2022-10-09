@@ -137,8 +137,7 @@ describe('getSecret', () => {
       }
       expect(true).toBe(!invalid);
       expect(secret).toEqual(`id=${exKey},src=${tmpNameSync}`);
-      const secretValue = await fs.readFileSync(tmpNameSync, 'utf-8');
-      expect(secretValue).toEqual(exValue);
+      expect(fs.readFileSync(tmpNameSync, 'utf-8')).toEqual(exValue);
     } catch (err) {
       // eslint-disable-next-line jest/no-conditional-expect
       expect(true).toBe(invalid);
