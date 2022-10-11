@@ -1,7 +1,7 @@
-# Update DockerHub repo description
+# Update Docker Hub repo description
 
-You can update the [DockerHub repository description](https://docs.docker.com/docker-hub/repos/) using
-a third party action called [DockerHub Description](https://github.com/peter-evans/dockerhub-description)
+You can update the [Docker Hub repository description](https://docs.docker.com/docker-hub/repos/)
+using a third party action called [Docker Hub Description](https://github.com/peter-evans/dockerhub-description)
 with this action:
 
 ```yaml
@@ -26,7 +26,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Login to DockerHub
+        name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

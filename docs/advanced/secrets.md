@@ -1,20 +1,19 @@
 # Secrets
 
-In the following example we will expose and use the [GITHUB_TOKEN secret](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#about-the-github_token-secret)
+In the following example we will expose and use the [GITHUB_TOKEN secret](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret)
 as provided by GitHub in your workflow.
 
 First let's create our `Dockerfile` to use our secret:
 
-```Dockerfile
-#syntax=docker/dockerfile:1.2
-
+```dockerfile
+# syntax=docker/dockerfile:1
 FROM alpine
 RUN --mount=type=secret,id=github_token \
   cat /run/secrets/github_token
 ```
 
-As you can see we have named our secret `github_token`. Here is the workflow you can use to expose this secret using
-the [`secrets` input](../../README.md#inputs):
+As you can see we have named our secret `github_token`. Here is the workflow
+you can use to expose this secret using the [`secrets` input](../../README.md#inputs):
 
 ```yaml
 name: ci
@@ -48,14 +47,17 @@ jobs:
             "github_token=${{ secrets.GITHUB_TOKEN }}"
 ```
 
-> :bulb: You can also expose a secret file to the build with [`secret-files`](../../README.md#inputs) input:
+> **Note**
+>
+> You can also expose a secret file to the build with the [`secret-files`](../../README.md#inputs) input:
 > ```yaml
 > secret-files: |
 >   "MY_SECRET=./secret.txt"
 > ```
 
-If you're using [GitHub secrets](https://docs.github.com/en/actions/reference/encrypted-secrets) and need to handle
-multi-line value, you will need to place the key-value pair between quotes:
+If you're using [GitHub secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+and need to handle multi-line value, you will need to place the key-value pair
+between quotes:
 
 ```yaml
 secrets: |
@@ -72,13 +74,15 @@ secrets: |
   "JSON_SECRET={""key1"":""value1"",""key2"":""value2""}"
 ```
 
-| Key                | Value                                            |
-|--------------------|--------------------------------------------------|
-| `MYSECRET`         | `***********************` |
-| `GIT_AUTH_TOKEN`   | `abcdefghi,jklmno=0123456789` |
-| `MYSECRET`         | `aaaaaaaa\nbbbbbbb\nccccccccc` |
-| `FOO`              | `bar` |
-| `EMPTYLINE`        | `aaaa\n\nbbbb\nccc` |
+| Key                | Value                               |
+|--------------------|-------------------------------------|
+| `MYSECRET`         | `***********************`           |
+| `GIT_AUTH_TOKEN`   | `abcdefghi,jklmno=0123456789`       |
+| `MYSECRET`         | `aaaaaaaa\nbbbbbbb\nccccccccc`      |
+| `FOO`              | `bar`                               |
+| `EMPTYLINE`        | `aaaa\n\nbbbb\nccc`                 |
 | `JSON_SECRET`      | `{"key1":"value1","key2":"value2"}` |
 
-> :bulb: All quote signs need to be doubled for escaping.
+> **Note**
+>
+> All quote signs need to be doubled for escaping.

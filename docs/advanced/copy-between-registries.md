@@ -1,10 +1,8 @@
 # Copy images between registries
 
-Multi-platform images built using buildx can be copied from one registry to another without
-changing the image SHA using the [tag-push-action](https://github.com/akhilerm/tag-push-action).
-
-The following workflow will first push the image to dockerhub, run some tests using the images
-and then push to quay and ghcr
+[Multi-platform images](https://docs.docker.com/build/building/multi-platform/)
+built using Buildx can be copied from one registry to another using the
+[`imagetools create` command](https://docs.docker.com/engine/reference/commandline/buildx_imagetools_create/):
 
 ```yaml
 name: ci
@@ -27,13 +25,12 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      - # quay and ghcr logins for pushing image after testing
-        name: Login to Quay Registry
+      -
+        name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -41,12 +38,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
         uses: docker/build-push-action@v3
@@ -57,17 +48,11 @@ jobs:
           tags: |
             user/app:latest
             user/app:1.0.0
-      - # run tests using image from docker hub
-        name: Run Tests
-        run: make tests
-      - # copy multiplatform image from dockerhub to quay and ghcr
-        name: Push Image to multiple registries
-        uses: akhilerm/tag-push-action@v2.0.0
-        with:
-          src: docker.io/user/app:1.0.0
-          dst: |
-            quay.io/user/app:latest
-            quay.io/user/app:1.0.0
-            ghcr.io/user/app:latest
-            ghcr.io/user/app:1.0.0
+      -
+        name: Push image to GHCR
+        run: |
+          docker buildx imagetools create \
+            --tag ghcr.io/user/app:latest \
+            --tag ghcr.io/user/app:1.0.0 \
+            user/app:latest
 ```

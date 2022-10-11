@@ -1,8 +1,10 @@
 # Share built image between jobs
 
-As each job is isolated in its own runner you cannot use your built image between jobs (except for [self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners)).
-However, you can [pass data between jobs in a workflow](https://docs.github.com/en/actions/guides/storing-workflow-data-as-artifacts#passing-data-between-jobs-in-a-workflow)
-using the [actions/upload-artifact](https://github.com/actions/upload-artifact) and [actions/download-artifact](https://github.com/actions/download-artifact)
+As each job is isolated in its own runner you cannot use your built image
+between jobs (except for [self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners)).
+However, you can [pass data between jobs in a workflow](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts#passing-data-between-jobs-in-a-workflow)
+using the [actions/upload-artifact](https://github.com/actions/upload-artifact)
+and [actions/download-artifact](https://github.com/actions/download-artifact)
 actions:
 
 ```yaml
