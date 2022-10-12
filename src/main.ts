@@ -60,19 +60,19 @@ async function run(): Promise<void> {
     if (imageID) {
       await core.group(`ImageID`, async () => {
         core.info(imageID);
-        context.setOutput('imageid', imageID);
+        core.setOutput('imageid', imageID);
       });
     }
     if (digest) {
       await core.group(`Digest`, async () => {
         core.info(digest);
-        context.setOutput('digest', digest);
+        core.setOutput('digest', digest);
       });
     }
     if (metadata) {
       await core.group(`Metadata`, async () => {
         core.info(metadata);
-        context.setOutput('metadata', metadata);
+        core.setOutput('metadata', metadata);
       });
     }
   } catch (error) {
