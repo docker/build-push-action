@@ -17,7 +17,8 @@ on:
       - 'main'
 
 env:
-  TEST_TAG: user/myapp:test
+  TEST_TAG: user/app:test
+  LATEST_TAG: user/app:latest
 
 jobs:
   docker:
@@ -56,7 +57,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.TEST_TAG }}
+          tags: ${{ env.LATEST_TAG }}
 ```
 
 > **Note**
