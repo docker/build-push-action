@@ -109,6 +109,10 @@ exclusively used in a GitHub Action workflow as the `url` (`$ACTIONS_CACHE_URL`)
 and `token` (`$ACTIONS_RUNTIME_TOKEN`) attributes are populated when a workflow
 is started.
 
+When building multiple images, add `scope=<scope_name>` to `cache-from` and `cache-to` to avoid
+overwriting the cache index. See the docs for
+[GitHub Actions cache](https://docs.docker.com/build/building/cache/backends/gha/#scope).
+
 ```yaml
 name: ci
 
