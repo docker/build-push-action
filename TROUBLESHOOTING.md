@@ -1,9 +1,10 @@
 # Troubleshooting
 
-* [Cannot push to a registry](#cannot-push-to-a-registry)
-  * [BuildKit container logs](#buildkit-container-logs)
-  * [With containerd](#with-containerd)
-* [`repository name must be lowercase`](#repository-name-must-be-lowercase)
+- [Troubleshooting](#troubleshooting)
+  - [Cannot push to a registry](#cannot-push-to-a-registry)
+    - [BuildKit container logs](#buildkit-container-logs)
+    - [With containerd](#with-containerd)
+  - [`repository name must be lowercase`](#repository-name-must-be-lowercase)
 
 ## Cannot push to a registry
 
@@ -42,34 +43,33 @@ jobs:
   containerd:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           buildkitd-flags: --debug
-      -
-        name: Set up containerd
+
+      - name: Set up containerd
         uses: crazy-max/ghaction-setup-containerd@v2
-      -
-        name: Build Docker image
+
+      - name: Build Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           tags: docker.io/user/app:latest
           outputs: type=oci,dest=/tmp/image.tar
-      -
-        name: Import image in containerd
+
+      - name: Import image in containerd
         run: |
           sudo ctr i import --base-name docker.io/user/app --digests --all-platforms /tmp/image.tar
-      -
-        name: Push image with containerd
+
+      - name: Push image with containerd
         run: |
           sudo ctr --debug i push --user "${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}" docker.io/user/app:latest
 ```

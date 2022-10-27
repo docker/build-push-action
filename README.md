@@ -48,7 +48,7 @@ In the examples below we are also using 3 other actions:
   multi-platform images, export cache, etc.
 * [`setup-qemu`](https://github.com/docker/setup-qemu-action) action can be
   useful if you want to add emulation support with QEMU to be able to build
-  against more platforms. 
+  against more platforms.
 * [`login`](https://github.com/docker/login-action) action will take care to
   log in against a Docker registry.
 
@@ -73,20 +73,19 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Set up QEMU
+
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: true
@@ -105,13 +104,12 @@ expression `{{defaultContext}}`. Here we can use it to provide a subdirectory
 to the default Git context:
 
 ```yaml
-      -
         # Setting up Docker Buildx with docker-container driver is required
         # at the moment to be able to use a subdirectory with Git context
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build and push
+
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: "{{defaultContext}}:mysubdir"
@@ -133,8 +131,7 @@ private repository, you have to use a [secret](docs/advanced/secrets.md) named
 `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
 
 ```yaml
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: true
@@ -157,23 +154,23 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .

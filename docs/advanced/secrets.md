@@ -27,17 +27,13 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build
+      - name: Build
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -68,7 +64,7 @@ secrets: |
   ccccccccc"
   FOO=bar
   "EMPTYLINE=aaaa
-  
+
   bbbb
   ccc"
   "JSON_SECRET={""key1"":""value1"",""key2"":""value2""}"

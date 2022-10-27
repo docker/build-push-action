@@ -32,14 +32,11 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build
+      - name: Build
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -74,21 +71,17 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build base image
+      - name: Build base image
         uses: docker/build-push-action@v3
         with:
           context: base
           load: true
           tags: my-base-image:latest
-      -
-        name: Build
+      - name: Build
         uses: docker/build-push-action@v3
         with:
           context: .

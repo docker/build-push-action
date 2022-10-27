@@ -15,21 +15,17 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Build
+      - name: Build
         uses: docker/build-push-action@v3
         with:
           context: .
           load: true
           tags: myimage:latest
-      -
-        name: Inspect
+      - name: Inspect
         run: |
           docker image inspect myimage:latest
 ```

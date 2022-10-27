@@ -20,26 +20,21 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           driver-opts: network=host
-      -
-        name: Build and push to local registry
+      - name: Build and push to local registry
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
           tags: localhost:5000/name/app:latest
-      -
-        name: Inspect
+      - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:latest
 ```
