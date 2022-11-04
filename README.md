@@ -18,20 +18,7 @@ ___
 * [Usage](#usage)
   * [Git context](#git-context)
   * [Path context](#path-context)
-* [Advanced usage](#advanced-usage)
-  * [Multi-platform image](docs/advanced/multi-platform.md)
-  * [Secrets](docs/advanced/secrets.md)
-  * [Isolated builders](docs/advanced/isolated-builders.md)
-  * [Push to multi-registries](docs/advanced/push-multi-registries.md)
-  * [Copy between registries](docs/advanced/copy-between-registries.md)
-  * [Cache](docs/advanced/cache.md)
-  * [Local registry](docs/advanced/local-registry.md)
-  * [Export image to Docker](docs/advanced/export-docker.md)
-  * [Share built image between jobs](docs/advanced/share-image-jobs.md)
-  * [Test your image before pushing it](docs/advanced/test-before-push.md)
-  * [Named contexts](docs/advanced/named-contexts.md)
-  * [Handle tags and labels](docs/advanced/tags-labels.md)
-  * [Update Docker Hub repo description](docs/advanced/dockerhub-desc.md)
+* [Examples](#examples)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -129,8 +116,8 @@ to the default Git context:
 
 Building from the current repository automatically uses the [GitHub Token](https://docs.github.com/en/actions/security-guides/automatic-token-authentication),
 so it does not need to be passed. If you want to authenticate against another
-private repository, you have to use a [secret](docs/advanced/secrets.md) named
-`GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
+private repository, you have to use a [secret](https://docs.docker.com/build/ci/github-actions/examples/#secrets)
+named `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
 
 ```yaml
       -
@@ -181,21 +168,9 @@ jobs:
           tags: user/app:latest
 ```
 
-## Advanced usage
+## Examples
 
-* [Multi-platform image](docs/advanced/multi-platform.md)
-* [Secrets](docs/advanced/secrets.md)
-* [Isolated builders](docs/advanced/isolated-builders.md)
-* [Push to multi-registries](docs/advanced/push-multi-registries.md)
-* [Copy between registries](docs/advanced/copy-between-registries.md)
-* [Cache](docs/advanced/cache.md)
-* [Local registry](docs/advanced/local-registry.md)
-* [Export image to Docker](docs/advanced/export-docker.md)
-* [Share built image between jobs](docs/advanced/share-image-jobs.md)
-* [Test your image before pushing it](docs/advanced/test-before-push.md)
-* [Named contexts](docs/advanced/named-contexts.md)
-* [Handle tags and labels](docs/advanced/tags-labels.md)
-* [Update Docker Hub repo description](docs/advanced/dockerhub-desc.md)
+See https://docs.docker.com/build/ci/github-actions/examples/.
 
 ## Customizing
 
