@@ -529,9 +529,7 @@ jobs:
           file: ./test/go/Dockerfile
           target: ${{ matrix.target }}
           outputs: ${{ matrix.output }}
-          attests: |
-            type=sbom
-            type=provenance,mode=max,builder-id=https://github.com/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}
+          sbom: true
           cache-from: type=gha,scope=attests-${{ matrix.target }}
           cache-to: type=gha,scope=attests-${{ matrix.target }},mode=max
       -

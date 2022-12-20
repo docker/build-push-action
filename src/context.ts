@@ -164,6 +164,10 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
     if (inputs.provenance) {
       args.push('--provenance', inputs.provenance);
+    } else if (fromPayload('repository.private') !== false) {
+      args.push('--provenance', `mode=min,inline-only=true`);
+    } else {
+      args.push('--provenance', `mode=max,builder-id=${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`);
     }
     if (inputs.sbom) {
       args.push('--sbom', inputs.sbom);
@@ -264,3 +268,21 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromPayload(path: string): any {
+  return select(github.context.payload, path);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function select(obj: any, path: string): any {
+  if (!obj) {
+    return undefined;
+  }
+  const i = path.indexOf('.');
+  if (i < 0) {
+    return obj[path];
+  }
+  const key = path.slice(0, i);
+  return select(obj[key], path.slice(i + 1));
+}
