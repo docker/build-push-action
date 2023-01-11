@@ -165,7 +165,10 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
     const prvBuilderID = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
     if (inputs.provenance) {
       args.push('--provenance', getProvenanceAttrs(inputs.provenance, prvBuilderID));
-    } else if (await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) {
+    } else if ((await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) && !hasDockerExport(inputs)) {
+      // if provenance not specified and BuildKit version compatible for
+      // attestation, set default provenance. Also needs to make sure user
+      // doesn't want to explicitly load the image to docker.
       if (fromPayload('repository.private') !== false) {
         // if this is a private repository, we set the default provenance
         // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
@@ -312,4 +315,29 @@ function getProvenanceAttrs(input: string, builderID: string): string {
   }
   // if not add builder-id attribute
   return `${input},builder-id=${builderID}`;
+}
+
+function hasDockerExport(inputs: Inputs): boolean {
+  if (inputs.load) {
+    return true;
+  }
+  for (const output of inputs.outputs) {
+    const fields = parse(output, {
+      relaxColumnCount: true,
+      skipEmptyLines: true
+    })[0];
+    for (const field of fields) {
+      const parts = field
+        .toString()
+        .split(/(?<=^[^=]+?)=/)
+        .map(item => item.trim());
+      if (parts.length != 2) {
+        continue;
+      }
+      if (parts[0] == 'type' && parts[1] == 'docker') {
+        return true;
+      }
+    }
+  }
+  return false;
 }
