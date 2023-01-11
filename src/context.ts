@@ -162,13 +162,19 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
     args.push('--platform', inputs.platforms.join(','));
   }
   if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
+    const prvBuilderID = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
     if (inputs.provenance) {
-      args.push('--provenance', inputs.provenance);
+      args.push('--provenance', getProvenanceAttrs(inputs.provenance, prvBuilderID));
     } else if (await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) {
       if (fromPayload('repository.private') !== false) {
-        args.push('--provenance', `mode=min,inline-only=true`);
+        // if this is a private repository, we set the default provenance
+        // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
+        // along the builder-id attribute.
+        args.push('--provenance', `mode=min,inline-only=true,builder-id=${prvBuilderID}`);
       } else {
-        args.push('--provenance', `mode=max,builder-id=${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`);
+        // for a public repository, we set max provenance mode and the
+        // builder-id attribute.
+        args.push('--provenance', `mode=max,builder-id=${prvBuilderID}`);
       }
     }
     if (inputs.sbom) {
@@ -287,4 +293,23 @@ function select(obj: any, path: string): any {
   }
   const key = path.slice(0, i);
   return select(obj[key], path.slice(i + 1));
+}
+
+function getProvenanceAttrs(input: string, builderID: string): string {
+  const fields = parse(input, {
+    relaxColumnCount: true,
+    skipEmptyLines: true
+  })[0];
+  // check if builder-id attribute exists in the input
+  for (const field of fields) {
+    const parts = field
+      .toString()
+      .split(/(?<=^[^=]+?)=/)
+      .map(item => item.trim());
+    if (parts[0] == 'builder-id') {
+      return input;
+    }
+  }
+  // if not add builder-id attribute
+  return `${input},builder-id=${builderID}`;
 }
