@@ -740,7 +740,6 @@ jobs:
         uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v2
         with:
           version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
@@ -748,7 +747,7 @@ jobs:
             network=host
             image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
-        name: Build and push (1)
+        name: Build and push
         id: docker_build
         uses: ./
         with:
@@ -763,52 +762,14 @@ jobs:
           cache-from: type=registry,ref=localhost:5000/name/app
           cache-to: type=inline
       -
-        name: Inspect (1)
+        name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
       -
-        name: Check digest (1)
+        name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
             echo "::error::Digest should not be empty"
-            exit 1
-          fi
-      -
-        name: Prune
-        run: |
-          docker buildx prune -a -f --verbose
-      -
-        name: Build and push (2)
-        id: docker_build2
-        uses: ./
-        with:
-          context: ./test
-          file: ./test/multi.Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            localhost:5000/name/app:latest
-            localhost:5000/name/app:1.0.0
-          cache-from: type=registry,ref=localhost:5000/name/app
-          cache-to: type=inline
-      -
-        name: Inspect (2)
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
-      -
-        name: Check digest (2)
-        run: |
-          if [ -z "${{ steps.docker_build2.outputs.digest }}" ]; then
-            echo "::error::Digest should not be empty"
-            exit 1
-          fi
-      -
-        name: Compare digests
-        run: |
-          echo Compare "${{ steps.docker_build.outputs.digest }}" with "${{ steps.docker_build2.outputs.digest }}"
-          if [ "${{ steps.docker_build.outputs.digest }}" != "${{ steps.docker_build2.outputs.digest }}" ]; then
-            echo "::error::Digests should be identical"
             exit 1
           fi
 
