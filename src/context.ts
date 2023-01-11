@@ -13,6 +13,7 @@ let _defaultContext, _tmpDir: string;
 export interface Inputs {
   addHosts: string[];
   allow: string[];
+  attests: string[];
   buildArgs: string[];
   buildContexts: string[];
   builder: string;
@@ -28,8 +29,10 @@ export interface Inputs {
   noCacheFilters: string[];
   outputs: string[];
   platforms: string[];
+  provenance: string;
   pull: boolean;
   push: boolean;
+  sbom: string;
   secrets: string[];
   secretFiles: string[];
   shmSize: string;
@@ -69,6 +72,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     addHosts: await getInputList('add-hosts'),
     allow: await getInputList('allow'),
+    attests: await getInputList('attests', true),
     buildArgs: await getInputList('build-args', true),
     buildContexts: await getInputList('build-contexts', true),
     builder: core.getInput('builder'),
@@ -84,8 +88,10 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     noCacheFilters: await getInputList('no-cache-filters'),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
+    provenance: core.getInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
+    sbom: core.getInput('sbom'),
     secrets: await getInputList('secrets', true),
     secretFiles: await getInputList('secret-files', true),
     shmSize: core.getInput('shm-size'),
@@ -114,6 +120,11 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   });
   if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
+  }
+  if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
+    await asyncForEach(inputs.attests, async attest => {
+      args.push('--attest', attest);
+    });
   }
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -149,6 +160,14 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   });
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
+  }
+  if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
+    if (inputs.provenance) {
+      args.push('--provenance', inputs.provenance);
+    }
+    if (inputs.sbom) {
+      args.push('--sbom', inputs.sbom);
+    }
   }
   await asyncForEach(inputs.secrets, async secret => {
     try {

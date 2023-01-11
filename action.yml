@@ -13,6 +13,9 @@ inputs:
   allow:
     description: "List of extra privileged entitlement (e.g., network.host,security.insecure)"
     required: false
+  attests:
+    description: "List of attestation parameters (e.g., type=sbom,generator=image)"
+    required: false
   build-args:
     description: "List of build-time variables"
     required: false
@@ -60,6 +63,9 @@ inputs:
   platforms:
     description: "List of target platforms for build"
     required: false
+  provenance:
+    description: "Generate provenance attestation for the build (shorthand for --attest=type=provenance)"
+    required: false
   pull:
     description: "Always attempt to pull all referenced images"
     required: false
@@ -68,6 +74,9 @@ inputs:
     description: "Push is a shorthand for --output=type=registry"
     required: false
     default: 'false'
+  sbom:
+    description: "Generate SBOM attestation for the build (shorthand for --attest=type=sbom)"
+    required: false
   secrets:
     description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
     required: false

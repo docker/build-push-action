@@ -491,6 +491,70 @@ jobs:
           cache-from: type=gha,scope=nocachefilter
           cache-to: type=gha,scope=nocachefilter,mode=max
 
+  attests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: image
+            output: type=image,name=localhost:5000/name/app:latest,push=true
+          - target: binary
+            output: /tmp/buildx-build
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    env:
+      BUILDX_VERSION: v0.10.0-rc2  # TODO: remove when Buildx v0.10.0 is released
+      BUILDKIT_IMAGE: moby/buildkit:v0.11.0-rc3  # TODO: remove when BuildKit v0.11.0 is released
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            network=host
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test/go
+          file: ./test/go/Dockerfile
+          target: ${{ matrix.target }}
+          outputs: ${{ matrix.output }}
+          attests: |
+            type=sbom
+            type=provenance,mode=max,builder-id=https://github.com/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}
+          cache-from: type=gha,scope=attests-${{ matrix.target }}
+          cache-to: type=gha,scope=attests-${{ matrix.target }},mode=max
+      -
+        name: Inspect image
+        if: matrix.target == 'image'
+        run: |
+          docker buildx imagetools inspect --format "{{json .}}" localhost:5000/name/app:latest | jq
+      -
+        name: Check output folder
+        if: matrix.target == 'binary'
+        run: |
+          tree /tmp/buildx-build
+      -
+        name: Print provenance
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/provenance.json | jq
+      -
+        name: Print SBOM
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/sbom.spdx.json | jq
+
   multi:
     runs-on: ubuntu-latest
     strategy:
