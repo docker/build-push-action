@@ -84,7 +84,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -143,7 +143,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -190,7 +190,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -536,7 +536,7 @@ jobs:
         name: Inspect image
         if: matrix.target == 'image'
         run: |
-          docker buildx imagetools inspect --format "{{json .}}" localhost:5000/name/app:latest | jq
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
       -
         name: Check output folder
         if: matrix.target == 'binary'
@@ -598,7 +598,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -736,7 +736,7 @@ jobs:
       -
         name: Inspect (1)
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
       -
         name: Check digest (1)
         run: |
@@ -766,7 +766,7 @@ jobs:
       -
         name: Inspect (2)
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
       -
         name: Check digest (2)
         run: |
@@ -822,7 +822,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
 
   standalone:
     runs-on: ubuntu-latest
