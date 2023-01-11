@@ -103,17 +103,17 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
+export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string, standalone?: boolean): Promise<Array<string>> {
   const context = handlebars.compile(inputs.context)({defaultContext});
   // prettier-ignore
   return [
-    ...await getBuildArgs(inputs, defaultContext, context, buildxVersion),
+    ...await getBuildArgs(inputs, defaultContext, context, buildxVersion, standalone),
     ...await getCommonArgs(inputs, buildxVersion),
     context
   ];
 }
 
-async function getBuildArgs(inputs: Inputs, defaultContext: string, context: string, buildxVersion: string): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, defaultContext: string, context: string, buildxVersion: string, standalone?: boolean): Promise<Array<string>> {
   const args: Array<string> = ['build'];
   await asyncForEach(inputs.addHosts, async addHost => {
     args.push('--add-host', addHost);
@@ -164,10 +164,12 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
     if (inputs.provenance) {
       args.push('--provenance', inputs.provenance);
-    } else if (fromPayload('repository.private') !== false) {
-      args.push('--provenance', `mode=min,inline-only=true`);
-    } else {
-      args.push('--provenance', `mode=max,builder-id=${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`);
+    } else if (await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) {
+      if (fromPayload('repository.private') !== false) {
+        args.push('--provenance', `mode=min,inline-only=true`);
+      } else {
+        args.push('--provenance', `mode=max,builder-id=${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`);
+      }
     }
     if (inputs.sbom) {
       args.push('--sbom', inputs.sbom);

@@ -3,8 +3,23 @@ import fs from 'fs';
 import path from 'path';
 import * as semver from 'semver';
 import * as exec from '@actions/exec';
-
 import * as context from './context';
+
+export type Builder = {
+  name?: string;
+  driver?: string;
+  nodes: Node[];
+};
+
+export type Node = {
+  name?: string;
+  endpoint?: string;
+  'driver-opts'?: Array<string>;
+  status?: string;
+  'buildkitd-flags'?: string;
+  buildkit?: string;
+  platforms?: string;
+};
 
 export async function getImageIDFile(): Promise<string> {
   return path.join(context.tmpDir(), 'iidfile').split(path.sep).join(path.posix.sep);
@@ -124,6 +139,112 @@ export async function isAvailable(standalone?: boolean): Promise<boolean> {
     .catch(error => {
       return false;
     });
+}
+
+export async function satisfiesBuildKitVersion(builderName: string, range: string, standalone?: boolean): Promise<boolean> {
+  const builderInspect = await inspect(builderName, standalone);
+  for (const node of builderInspect.nodes) {
+    if (!node.buildkit) {
+      return false;
+    }
+    // BuildKit version reported by moby is in the format of `v0.11.0-moby`
+    if (builderInspect.driver == 'docker' && !node.buildkit.endsWith('-moby')) {
+      return false;
+    }
+    const version = node.buildkit.replace(/-moby$/, '');
+    if (!semver.satisfies(version, range)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function inspect(name: string, standalone?: boolean): Promise<Builder> {
+  const cmd = getCommand(['inspect', name], standalone);
+  return await exec
+    .getExecOutput(cmd.command, cmd.args, {
+      ignoreReturnCode: true,
+      silent: true
+    })
+    .then(res => {
+      if (res.stderr.length > 0 && res.exitCode != 0) {
+        throw new Error(res.stderr.trim());
+      }
+      return parseInspect(res.stdout);
+    });
+}
+
+async function parseInspect(data: string): Promise<Builder> {
+  const builder: Builder = {
+    nodes: []
+  };
+  let node: Node = {};
+  for (const line of data.trim().split(`\n`)) {
+    const [key, ...rest] = line.split(':');
+    const value = rest.map(v => v.trim()).join(':');
+    if (key.length == 0 || value.length == 0) {
+      continue;
+    }
+    switch (key.toLowerCase()) {
+      case 'name': {
+        if (builder.name == undefined) {
+          builder.name = value;
+        } else {
+          if (Object.keys(node).length > 0) {
+            builder.nodes.push(node);
+            node = {};
+          }
+          node.name = value;
+        }
+        break;
+      }
+      case 'driver': {
+        builder.driver = value;
+        break;
+      }
+      case 'endpoint': {
+        node.endpoint = value;
+        break;
+      }
+      case 'driver options': {
+        node['driver-opts'] = (value.match(/(\w+)="([^"]*)"/g) || []).map(v => v.replace(/^(.*)="(.*)"$/g, '$1=$2'));
+        break;
+      }
+      case 'status': {
+        node.status = value;
+        break;
+      }
+      case 'flags': {
+        node['buildkitd-flags'] = value;
+        break;
+      }
+      case 'buildkit': {
+        node.buildkit = value;
+        break;
+      }
+      case 'platforms': {
+        let platforms: Array<string> = [];
+        // if a preferred platform is being set then use only these
+        // https://docs.docker.com/engine/reference/commandline/buildx_inspect/#get-information-about-a-builder-instance
+        if (value.includes('*')) {
+          for (const platform of value.split(', ')) {
+            if (platform.includes('*')) {
+              platforms.push(platform.replace('*', ''));
+            }
+          }
+        } else {
+          // otherwise set all platforms available
+          platforms = value.split(', ');
+        }
+        node.platforms = platforms.join(',');
+        break;
+      }
+    }
+  }
+  if (Object.keys(node).length > 0) {
+    builder.nodes.push(node);
+  }
+  return builder;
 }
 
 export async function getVersion(standalone?: boolean): Promise<string> {

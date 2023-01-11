@@ -491,7 +491,39 @@ jobs:
           cache-from: type=gha,scope=nocachefilter
           cache-to: type=gha,scope=nocachefilter,mode=max
 
-  attests:
+  attests-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - buildx: latest
+            buildkit: moby/buildkit:buildx-stable-1
+          - buildx: latest
+            buildkit: moby/buildkit:v0.10.6
+          - buildx: v0.9.1
+            buildkit: moby/buildkit:buildx-stable-1
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx }}
+          driver-opts: |
+            network=host
+            image=${{ matrix.buildkit }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test/go
+          file: ./test/go/Dockerfile
+          outputs: type=cacheonly
+
+  sbom:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -506,9 +538,6 @@ jobs:
         image: registry:2
         ports:
           - 5000:5000
-    env:
-      BUILDX_VERSION: v0.10.0-rc2  # TODO: remove when Buildx v0.10.0 is released
-      BUILDKIT_IMAGE: moby/buildkit:v0.11.0-rc3  # TODO: remove when BuildKit v0.11.0 is released
     steps:
       -
         name: Checkout

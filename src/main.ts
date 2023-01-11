@@ -41,7 +41,7 @@ async function run(): Promise<void> {
       });
     });
 
-    const args: string[] = await context.getArgs(inputs, defContext, buildxVersion);
+    const args: string[] = await context.getArgs(inputs, defContext, buildxVersion, standalone);
     const buildCmd = buildx.getCommand(args, standalone);
     await exec
       .getExecOutput(buildCmd.command, buildCmd.args, {
