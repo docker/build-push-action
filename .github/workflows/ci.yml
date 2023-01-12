@@ -84,7 +84,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -143,7 +143,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -190,7 +190,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -491,6 +491,97 @@ jobs:
           cache-from: type=gha,scope=nocachefilter
           cache-to: type=gha,scope=nocachefilter,mode=max
 
+  attests-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - buildx: latest
+            buildkit: moby/buildkit:buildx-stable-1
+          - buildx: latest
+            buildkit: moby/buildkit:v0.10.6
+          - buildx: v0.9.1
+            buildkit: moby/buildkit:buildx-stable-1
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ matrix.buildx }}
+          driver-opts: |
+            network=host
+            image=${{ matrix.buildkit }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test/go
+          file: ./test/go/Dockerfile
+          outputs: type=cacheonly
+
+  sbom:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: image
+            output: type=image,name=localhost:5000/name/app:latest,push=true
+          - target: binary
+            output: /tmp/buildx-build
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            network=host
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test/go
+          file: ./test/go/Dockerfile
+          target: ${{ matrix.target }}
+          outputs: ${{ matrix.output }}
+          sbom: true
+          cache-from: type=gha,scope=attests-${{ matrix.target }}
+          cache-to: type=gha,scope=attests-${{ matrix.target }},mode=max
+      -
+        name: Inspect image
+        if: matrix.target == 'image'
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+      -
+        name: Check output folder
+        if: matrix.target == 'binary'
+        run: |
+          tree /tmp/buildx-build
+      -
+        name: Print provenance
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/provenance.json | jq
+      -
+        name: Print SBOM
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/sbom.spdx.json | jq
+
   multi:
     runs-on: ubuntu-latest
     strategy:
@@ -536,7 +627,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
       -
         name: Check digest
         run: |
@@ -649,7 +740,6 @@ jobs:
         uses: docker/setup-qemu-action@v2
       -
         name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v2
         with:
           version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
@@ -657,7 +747,7 @@ jobs:
             network=host
             image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
       -
-        name: Build and push (1)
+        name: Build and push
         id: docker_build
         uses: ./
         with:
@@ -672,52 +762,14 @@ jobs:
           cache-from: type=registry,ref=localhost:5000/name/app
           cache-to: type=inline
       -
-        name: Inspect (1)
+        name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
       -
-        name: Check digest (1)
+        name: Check digest
         run: |
           if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
             echo "::error::Digest should not be empty"
-            exit 1
-          fi
-      -
-        name: Prune
-        run: |
-          docker buildx prune -a -f --verbose
-      -
-        name: Build and push (2)
-        id: docker_build2
-        uses: ./
-        with:
-          context: ./test
-          file: ./test/multi.Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            localhost:5000/name/app:latest
-            localhost:5000/name/app:1.0.0
-          cache-from: type=registry,ref=localhost:5000/name/app
-          cache-to: type=inline
-      -
-        name: Inspect (2)
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
-      -
-        name: Check digest (2)
-        run: |
-          if [ -z "${{ steps.docker_build2.outputs.digest }}" ]; then
-            echo "::error::Digest should not be empty"
-            exit 1
-          fi
-      -
-        name: Compare digests
-        run: |
-          echo Compare "${{ steps.docker_build.outputs.digest }}" with "${{ steps.docker_build2.outputs.digest }}"
-          if [ "${{ steps.docker_build.outputs.digest }}" != "${{ steps.docker_build2.outputs.digest }}" ]; then
-            echo "::error::Digests should be identical"
             exit 1
           fi
 
@@ -760,7 +812,7 @@ jobs:
       -
         name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:1.0.0
+          docker buildx imagetools inspect localhost:5000/name/app:1.0.0 --format '{{json .}}'
 
   standalone:
     runs-on: ubuntu-latest

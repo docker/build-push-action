@@ -13,6 +13,7 @@ let _defaultContext, _tmpDir: string;
 export interface Inputs {
   addHosts: string[];
   allow: string[];
+  attests: string[];
   buildArgs: string[];
   buildContexts: string[];
   builder: string;
@@ -28,8 +29,10 @@ export interface Inputs {
   noCacheFilters: string[];
   outputs: string[];
   platforms: string[];
+  provenance: string;
   pull: boolean;
   push: boolean;
+  sbom: string;
   secrets: string[];
   secretFiles: string[];
   shmSize: string;
@@ -69,6 +72,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     addHosts: await getInputList('add-hosts'),
     allow: await getInputList('allow'),
+    attests: await getInputList('attests', true),
     buildArgs: await getInputList('build-args', true),
     buildContexts: await getInputList('build-contexts', true),
     builder: core.getInput('builder'),
@@ -84,8 +88,10 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     noCacheFilters: await getInputList('no-cache-filters'),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
+    provenance: core.getInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
+    sbom: core.getInput('sbom'),
     secrets: await getInputList('secrets', true),
     secretFiles: await getInputList('secret-files', true),
     shmSize: core.getInput('shm-size'),
@@ -97,23 +103,28 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
   };
 }
 
-export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string): Promise<Array<string>> {
+export async function getArgs(inputs: Inputs, defaultContext: string, buildxVersion: string, standalone?: boolean): Promise<Array<string>> {
   const context = handlebars.compile(inputs.context)({defaultContext});
   // prettier-ignore
   return [
-    ...await getBuildArgs(inputs, defaultContext, context, buildxVersion),
+    ...await getBuildArgs(inputs, defaultContext, context, buildxVersion, standalone),
     ...await getCommonArgs(inputs, buildxVersion),
     context
   ];
 }
 
-async function getBuildArgs(inputs: Inputs, defaultContext: string, context: string, buildxVersion: string): Promise<Array<string>> {
+async function getBuildArgs(inputs: Inputs, defaultContext: string, context: string, buildxVersion: string, standalone?: boolean): Promise<Array<string>> {
   const args: Array<string> = ['build'];
   await asyncForEach(inputs.addHosts, async addHost => {
     args.push('--add-host', addHost);
   });
   if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
+  }
+  if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
+    await asyncForEach(inputs.attests, async attest => {
+      args.push('--attest', attest);
+    });
   }
   await asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -149,6 +160,29 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
   });
   if (inputs.platforms.length > 0) {
     args.push('--platform', inputs.platforms.join(','));
+  }
+  if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
+    const prvBuilderID = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
+    if (inputs.provenance) {
+      args.push('--provenance', getProvenanceAttrs(inputs.provenance, prvBuilderID));
+    } else if ((await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) && !hasDockerExport(inputs)) {
+      // if provenance not specified and BuildKit version compatible for
+      // attestation, set default provenance. Also needs to make sure user
+      // doesn't want to explicitly load the image to docker.
+      if (fromPayload('repository.private') !== false) {
+        // if this is a private repository, we set the default provenance
+        // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
+        // along the builder-id attribute.
+        args.push('--provenance', `mode=min,inline-only=true,builder-id=${prvBuilderID}`);
+      } else {
+        // for a public repository, we set max provenance mode and the
+        // builder-id attribute.
+        args.push('--provenance', `mode=max,builder-id=${prvBuilderID}`);
+      }
+    }
+    if (inputs.sbom) {
+      args.push('--sbom', inputs.sbom);
+    }
   }
   await asyncForEach(inputs.secrets, async secret => {
     try {
@@ -245,3 +279,65 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromPayload(path: string): any {
+  return select(github.context.payload, path);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function select(obj: any, path: string): any {
+  if (!obj) {
+    return undefined;
+  }
+  const i = path.indexOf('.');
+  if (i < 0) {
+    return obj[path];
+  }
+  const key = path.slice(0, i);
+  return select(obj[key], path.slice(i + 1));
+}
+
+function getProvenanceAttrs(input: string, builderID: string): string {
+  const fields = parse(input, {
+    relaxColumnCount: true,
+    skipEmptyLines: true
+  })[0];
+  // check if builder-id attribute exists in the input
+  for (const field of fields) {
+    const parts = field
+      .toString()
+      .split(/(?<=^[^=]+?)=/)
+      .map(item => item.trim());
+    if (parts[0] == 'builder-id') {
+      return input;
+    }
+  }
+  // if not add builder-id attribute
+  return `${input},builder-id=${builderID}`;
+}
+
+function hasDockerExport(inputs: Inputs): boolean {
+  if (inputs.load) {
+    return true;
+  }
+  for (const output of inputs.outputs) {
+    const fields = parse(output, {
+      relaxColumnCount: true,
+      skipEmptyLines: true
+    })[0];
+    for (const field of fields) {
+      const parts = field
+        .toString()
+        .split(/(?<=^[^=]+?)=/)
+        .map(item => item.trim());
+      if (parts.length != 2) {
+        continue;
+      }
+      if (parts[0] == 'type' && parts[1] == 'docker') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
