@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as buildx from './buildx';
 import * as context from './context';
 import * as docker from './docker';
+import * as github from './github';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
@@ -13,6 +14,15 @@ async function run(): Promise<void> {
 
     // standalone if docker cli not available
     const standalone = !(await docker.isAvailable());
+
+    await core.group(`GitHub Actions runtime token access controls`, async () => {
+      const actionsRuntimeToken = process.env['ACTIONS_RUNTIME_TOKEN'];
+      if (actionsRuntimeToken) {
+        core.info(JSON.stringify(JSON.parse(github.parseRuntimeToken(actionsRuntimeToken).ac as string), undefined, 2));
+      } else {
+        core.info(`ACTIONS_RUNTIME_TOKEN not set`);
+      }
+    });
 
     core.startGroup(`Docker info`);
     if (standalone) {
