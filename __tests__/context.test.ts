@@ -517,6 +517,24 @@ nproc=3`],
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest:subdir'
       ]
+    ],
+    [
+      17,
+      '0.8.2',
+      new Map<string, string>([
+        ['build-args', 'BUILD_INFO={"tags":["ghcr.io/ghost/docker-build-info:master","ghcr.io/ghost/docker-build-info:59d6c0f","ghcr.io/ghost/docker-build-info:master-59d6c0f"]}'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--build-arg', 'BUILD_INFO={"tags":["ghcr.io/ghost/docker-build-info:master","ghcr.io/ghost/docker-build-info:59d6c0f","ghcr.io/ghost/docker-build-info:master-59d6c0f"]}',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
+      ]
     ]
   ])(
     '[%d] given %p with %p as inputs, returns %p',
