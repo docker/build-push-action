@@ -73,7 +73,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     addHosts: await getInputList('add-hosts'),
     allow: await getInputList('allow'),
     attests: await getInputList('attests', true),
-    buildArgs: core.getMultilineInput('build-args'),
+    buildArgs: await getInputList('build-args', true),
     buildContexts: await getInputList('build-contexts', true),
     builder: core.getInput('builder'),
     cacheFrom: await getInputList('cache-from', true),
