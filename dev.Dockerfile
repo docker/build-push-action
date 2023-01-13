@@ -68,6 +68,8 @@ FROM docker/buildx-bin:${BUILDX_VERSION} as buildx
 FROM deps AS test
 ENV RUNNER_TEMP=/tmp/github_runner
 ENV RUNNER_TOOL_CACHE=/tmp/github_tool_cache
+ENV GITHUB_REPOSITORY=docker/build-push-action
+ENV GITHUB_RUN_ID=123456789
 RUN --mount=type=bind,target=.,rw \
   --mount=type=cache,target=/src/node_modules \
   --mount=type=bind,from=docker,source=/usr/local/bin/docker,target=/usr/bin/docker \
