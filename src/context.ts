@@ -68,6 +68,10 @@ export function tmpNameSync(options?: tmp.TmpNameOptions): string {
   return tmp.tmpNameSync(options);
 }
 
+export function provenanceBuilderID(): string {
+  return `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
+}
+
 export async function getInputs(defaultContext: string): Promise<Inputs> {
   return {
     addHosts: await getInputList('add-hosts'),
@@ -88,7 +92,7 @@ export async function getInputs(defaultContext: string): Promise<Inputs> {
     noCacheFilters: await getInputList('no-cache-filters'),
     outputs: await getInputList('outputs', true),
     platforms: await getInputList('platforms'),
-    provenance: core.getInput('provenance'),
+    provenance: getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
@@ -162,9 +166,8 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
     args.push('--platform', inputs.platforms.join(','));
   }
   if (buildx.satisfies(buildxVersion, '>=0.10.0')) {
-    const prvBuilderID = `${process.env.GITHUB_SERVER_URL || 'https://github.com'}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
     if (inputs.provenance) {
-      args.push('--provenance', getProvenanceAttrs(inputs.provenance, prvBuilderID));
+      args.push('--provenance', inputs.provenance);
     } else if ((await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) && !hasDockerExport(inputs)) {
       // if provenance not specified and BuildKit version compatible for
       // attestation, set default provenance. Also needs to make sure user
@@ -172,12 +175,10 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
       if (fromPayload('repository.private') !== false) {
         // if this is a private repository, we set the default provenance
         // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
-        // along the builder-id attribute.
-        args.push('--provenance', `mode=min,inline-only=true,builder-id=${prvBuilderID}`);
+        args.push('--provenance', getProvenanceAttrs(`mode=min,inline-only=true`));
       } else {
-        // for a public repository, we set max provenance mode and the
-        // builder-id attribute.
-        args.push('--provenance', `mode=max,builder-id=${prvBuilderID}`);
+        // for a public repository, we set max provenance mode.
+        args.push('--provenance', getProvenanceAttrs(`mode=max`));
       }
     }
     if (inputs.sbom) {
@@ -298,7 +299,24 @@ function select(obj: any, path: string): any {
   return select(obj[key], path.slice(i + 1));
 }
 
-function getProvenanceAttrs(input: string, builderID: string): string {
+function getProvenanceInput(name: string): string {
+  const input = core.getInput(name);
+  if (!input) {
+    // if input is not set, default values will be set later.
+    return input;
+  }
+  const builderID = provenanceBuilderID();
+  try {
+    return core.getBooleanInput(name) ? `builder-id=${builderID}` : 'false';
+  } catch (err) {
+    // not a valid boolean, so we assume it's a string
+    return getProvenanceAttrs(input);
+  }
+}
+
+function getProvenanceAttrs(input: string): string {
+  const builderID = provenanceBuilderID();
+  // parse attributes from input
   const fields = parse(input, {
     relaxColumnCount: true,
     skipEmptyLines: true

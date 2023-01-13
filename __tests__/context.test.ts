@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, it, jest, test} from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import * as buildx from '../src/buildx';
 import * as context from '../src/context';
 
 const pgp = `-----BEGIN PGP PRIVATE KEY BLOCK-----
@@ -127,6 +128,8 @@ jest.spyOn(context, 'tmpNameSync').mockImplementation((): string => {
   return path.join('/tmp/.docker-build-push-jest', '.tmpname-jest').split(path.sep).join(path.posix.sep);
 });
 
+jest.spyOn(buildx, 'satisfiesBuildKitVersion').mockResolvedValueOnce(true);
+
 describe('getArgs', () => {
   beforeEach(() => {
     process.env = Object.keys(process.env).reduce((object, key) => {
@@ -159,7 +162,11 @@ describe('getArgs', () => {
       1,
       '0.4.2',
       new Map<string, string>([
-        ['build-args', 'MY_ARG=val1,val2,val3\nARG=val'],
+        ['build-args', `MY_ARG=val1,val2,val3
+ARG=val
+"MULTILINE=aaaa
+bbbb
+ccc"`],
         ['load', 'false'],
         ['no-cache', 'false'],
         ['push', 'false'],
@@ -169,6 +176,7 @@ describe('getArgs', () => {
         'build',
         '--build-arg', 'MY_ARG=val1,val2,val3',
         '--build-arg', 'ARG=val',
+        '--build-arg', `MULTILINE=aaaa\nbbbb\nccc`,
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest'
       ]
@@ -517,7 +525,119 @@ nproc=3`],
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         'https://github.com/docker/build-push-action.git#refs/heads/test-jest:subdir'
       ]
-    ]
+    ],
+    [
+      17,
+      '0.8.2',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'true'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      18,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      19,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'true'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--provenance", `builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      20,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'mode=max'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--provenance", `mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      21,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--provenance", 'false',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      22,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'builder-id=foo'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--provenance", 'builder-id=foo',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
