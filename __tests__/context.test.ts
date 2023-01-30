@@ -557,7 +557,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        "--provenance", 'false',
+        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '.'
       ]
