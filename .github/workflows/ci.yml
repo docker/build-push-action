@@ -607,6 +607,11 @@ jobs:
         run: |
           tree /tmp/buildx-build
       -
+        name: Print provenance
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/provenance.json | jq
+      -
         name: Print SBOM
         if: matrix.target == 'binary'
         run: |

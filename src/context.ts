@@ -169,14 +169,17 @@ async function getBuildArgs(inputs: Inputs, defaultContext: string, context: str
     if (inputs.provenance) {
       args.push('--provenance', inputs.provenance);
     } else if ((await buildx.satisfiesBuildKitVersion(inputs.builder, '>=0.11.0', standalone)) && !hasDockerExport(inputs)) {
-      // If provenance not specified but BuildKit version compatible for
-      // attestation, disable provenance anyway. Also needs to make sure user
+      // if provenance not specified and BuildKit version compatible for
+      // attestation, set default provenance. Also needs to make sure user
       // doesn't want to explicitly load the image to docker.
-      // While this action successfully pushes OCI compliant images to
-      // well-known registries, some runtimes (e.g. Google Cloud Run and AWS
-      // Lambda) are not able to pull resulting image from their own registry...
-      // See also https://github.com/docker/buildx/issues/1533
-      args.push('--provenance', 'false');
+      if (fromPayload('repository.private') !== false) {
+        // if this is a private repository, we set the default provenance
+        // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
+        args.push('--provenance', getProvenanceAttrs(`mode=min,inline-only=true`));
+      } else {
+        // for a public repository, we set max provenance mode.
+        args.push('--provenance', getProvenanceAttrs(`mode=max`));
+      }
     }
     if (inputs.sbom) {
       args.push('--sbom', inputs.sbom);
@@ -277,6 +280,24 @@ export const asyncForEach = async (array, callback) => {
     await callback(array[index], index, array);
   }
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromPayload(path: string): any {
+  return select(github.context.payload, path);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function select(obj: any, path: string): any {
+  if (!obj) {
+    return undefined;
+  }
+  const i = path.indexOf('.');
+  if (i < 0) {
+    return obj[path];
+  }
+  const key = path.slice(0, i);
+  return select(obj[key], path.slice(i + 1));
+}
 
 function getProvenanceInput(name: string): string {
   const input = core.getInput(name);
