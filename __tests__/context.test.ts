@@ -557,7 +557,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
-        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        "--provenance", 'false',
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '.'
       ]
@@ -634,6 +634,43 @@ nproc=3`],
         'build',
         '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
         "--provenance", 'builder-id=foo',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      23,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['outputs', 'type=docker'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--output", 'type=docker',
+        '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
+        '.'
+      ]
+    ],
+    [
+      24,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'true'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', '/tmp/.docker-build-push-jest/iidfile',
+        "--load",
         '--metadata-file', '/tmp/.docker-build-push-jest/metadata-file',
         '.'
       ]
