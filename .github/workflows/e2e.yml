@@ -35,50 +35,80 @@ jobs:
             slug: ghactionstest/ghactionstest
             username_secret: DOCKERHUB_USERNAME
             password_secret: DOCKERHUB_TOKEN
+            insecure: false
           -
             registry: ghcr.io
             slug: ghcr.io/docker-ghactiontest/test
             username_secret: GHCR_USERNAME
             password_secret: GHCR_PAT
+            insecure: false
           -
             registry: registry.gitlab.com
             slug: registry.gitlab.com/test1716/test
             username_secret: GITLAB_USERNAME
             password_secret: GITLAB_TOKEN
+            insecure: false
           -
             registry: 175142243308.dkr.ecr.us-east-2.amazonaws.com
             slug: 175142243308.dkr.ecr.us-east-2.amazonaws.com/sandbox/test-docker-action
             username_secret: AWS_ACCESS_KEY_ID
             password_secret: AWS_SECRET_ACCESS_KEY
+            insecure: false
           -
             registry: public.ecr.aws
             slug: public.ecr.aws/q3b5f1u4/test-docker-action
             username_secret: AWS_ACCESS_KEY_ID
             password_secret: AWS_SECRET_ACCESS_KEY
+            insecure: false
           -
             registry: us-east4-docker.pkg.dev
             slug: us-east4-docker.pkg.dev/sandbox-298914/docker-official-github-actions/test-docker-action
             username_secret: GAR_USERNAME
             password_secret: GAR_JSON_KEY
+            insecure: false
           -
             registry: gcr.io
             slug: gcr.io/sandbox-298914/test-docker-action
             username_secret: GCR_USERNAME
             password_secret: GCR_JSON_KEY
+            insecure: false
           -
             registry: officialgithubactions.azurecr.io
             slug: officialgithubactions.azurecr.io/test-docker-action
             username_secret: AZURE_CLIENT_ID
             password_secret: AZURE_CLIENT_SECRET
+            insecure: false
           -
-            registry: demo.goharbor.io
-            slug: demo.goharbor.io/build-push-action/test-docker-action
+            registry: 3.137.83.14:8081
+            slug: 3.137.83.14:8081/test-docker-action/test-docker-action
             username_secret: HARBOR_USERNAME
             password_secret: HARBOR_TOKEN
+            insecure: true
     steps:
       -
         name: Checkout
         uses: actions/checkout@v3
+      -
+        name: Set up BuildKit config
+        run: |
+          touch /tmp/buildkitd.toml
+          if [ "${{ matrix.insecure }}" = "true" ]; then
+            cat >> /tmp/buildkitd.toml <<EOF
+          [registry."${{ matrix.registry }}"]
+          http = true
+          insecure = true
+          EOF
+          fi
+      -
+        name: Set up Docker daemon
+        if: matrix.insecure
+        run: |
+          if [ ! -e /etc/docker/daemon.json ]; then
+          echo '{}' | tee /etc/docker/daemon.json >/dev/null
+          fi
+          DOCKERD_CONFIG=$(jq '.+{"insecure-registries":["http://${{ matrix.registry }}"]}' /etc/docker/daemon.json)
+          sudo tee /etc/docker/daemon.json <<<"$DOCKERD_CONFIG" >/dev/null
+          sudo service docker restart
       -
         name: Docker meta
         id: meta
@@ -95,6 +125,7 @@ jobs:
           version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
           driver-opts: |
             image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+          config: /tmp/buildkitd.toml
       -
         name: Login to Registry
         if: github.event_name != 'pull_request'
