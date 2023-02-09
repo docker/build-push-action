@@ -11,13 +11,16 @@ on:
         description: 'BuildKit image'
         default: 'moby/buildkit:buildx-stable-1'
         required: false
+      tag:
+        description: 'Additional tag to push'
+        required: false
   schedule:
     - cron: '0 10 * * *'
   push:
     branches:
       - 'master'
     tags:
-      - v*
+      - 'v*'
 
 env:
   BUILDX_VERSION: latest
@@ -70,6 +73,11 @@ jobs:
             slug: officialgithubactions.azurecr.io/test-docker-action
             username_secret: AZURE_CLIENT_ID
             password_secret: AZURE_CLIENT_SECRET
+          -
+            registry: quay.io
+            slug: quay.io/crazymax/build-push-action
+            username_secret: QUAY_USERNAME
+            password_secret: QUAY_TOKEN
     steps:
       -
         name: Checkout
@@ -80,6 +88,10 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ matrix.slug }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
