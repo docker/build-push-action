@@ -70,6 +70,11 @@ jobs:
             slug: officialgithubactions.azurecr.io/test-docker-action
             username_secret: AZURE_CLIENT_ID
             password_secret: AZURE_CLIENT_SECRET
+          -
+            registry: quay.io
+            slug: quay.io/crazymax/build-push-action
+            username_secret: QUAY_USERNAME
+            password_secret: QUAY_TOKEN
     steps:
       -
         name: Checkout
