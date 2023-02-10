@@ -26,6 +26,7 @@ env:
   BUILDX_VERSION: latest
   BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
   HARBOR_VERSION: v2.7.0
+  NEXUS_VERSION: 3.47.1
 
 jobs:
   build:
@@ -100,6 +101,10 @@ jobs:
           -
             name: Harbor
             id: harbor
+            type: local
+          -
+            name: Nexus
+            id: nexus
             type: local
     steps:
       -
