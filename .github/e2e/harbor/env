@@ -1,0 +1,8 @@
+REGISTRY_FQDN=localhost:8081
+REGISTRY_USER=admin
+REGISTRY_PASSWORD=Harbor12345
+REGISTRY_SLUG=localhost:8081/test-docker-action/test-docker-action
+
+HARBOR_HOST=localhost
+HARBOR_PORT=8081
+HARBOR_PROJECT=test-docker-action

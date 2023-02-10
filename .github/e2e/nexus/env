@@ -1,0 +1,9 @@
+REGISTRY_FQDN=localhost:8082
+REGISTRY_USER=admin
+REGISTRY_PASSWORD=Nexus12345
+REGISTRY_SLUG=localhost:8082/test-docker-action
+
+NEXUS_HOST=localhost
+NEXUS_PORT=8081
+NEXUS_REGISTRY_PORT=8082
+NEXUS_REPO=test-docker-action
