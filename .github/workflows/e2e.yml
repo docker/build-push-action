@@ -99,6 +99,13 @@ jobs:
             password_secret: QUAY_TOKEN
             type: remote
           -
+            name: Artifactory
+            registry: buildkitghactiontests.jfrog.io
+            slug: buildkitghactiontests.jfrog.io/ghactiontest/test-docker-action
+            username_secret: ARTIFACTORY_USERNAME
+            password_secret: ARTIFACTORY_TOKEN
+            type: remote
+          -
             name: Harbor
             id: harbor
             type: local
