@@ -94,7 +94,7 @@ jobs:
           -
             name: Quay
             registry: quay.io
-            slug: quay.io/crazymax/build-push-action
+            slug: quay.io/docker_build_team/ghactiontest
             username_secret: QUAY_USERNAME
             password_secret: QUAY_TOKEN
             type: remote
