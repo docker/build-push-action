@@ -1,0 +1,5 @@
+REGISTRY_FQDN=localhost:8080
+REGISTRY_SLUG=localhost:8080/test-docker-action
+
+DISTRIBUTION_HOST=localhost
+DISTRIBUTION_PORT=8080
