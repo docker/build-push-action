@@ -27,6 +27,7 @@ env:
   BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
   HARBOR_VERSION: v2.7.0
   NEXUS_VERSION: 3.47.1
+  DISTRIBUTION_VERSION: 2.8.1
 
 jobs:
   build:
@@ -173,7 +174,7 @@ jobs:
             network=host
       -
         name: Login to Registry
-        if: github.event_name != 'pull_request' && env.REGISTRY_USER != ''
+        if: github.event_name != 'pull_request' && (env.REGISTRY_USER || matrix.username_secret) != ''
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY_FQDN || matrix.registry }}
