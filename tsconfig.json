@@ -1,19 +1,22 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "target": "es6",
     "module": "commonjs",
+    "strict": true,
     "newLine": "lf",
     "outDir": "./lib",
     "rootDir": "./src",
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
     "noImplicitAny": false,
+    "resolveJsonModule": true,
     "useUnknownInCatchVariables": false,
   },
   "exclude": [
+    "./__mocks__/**/*",
+    "./__tests__/**/*",
+    "./lib/**/*",
     "node_modules",
-    "**/*.test.ts",
     "jest.config.ts"
   ]
 }

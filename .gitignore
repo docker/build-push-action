@@ -1,10 +1,6 @@
 node_modules
 lib
 
-# Jetbrains
-/.idea
-/*.iml
-
 # Rest of the file pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
 logs

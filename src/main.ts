@@ -1,71 +1,62 @@
 import * as fs from 'fs';
-import * as buildx from './buildx';
-import * as context from './context';
-import * as docker from './docker';
-import * as github from './github';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
+import * as actionsToolkit from '@docker/actions-toolkit';
+import {Context} from '@docker/actions-toolkit/lib/context';
+import {Docker} from '@docker/actions-toolkit/lib/docker';
+import {Exec} from '@docker/actions-toolkit/lib/exec';
+import {GitHub} from '@docker/actions-toolkit/lib/github';
+import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 
-async function run(): Promise<void> {
-  try {
-    const defContext = context.defaultContext();
-    const inputs: context.Inputs = await context.getInputs(defContext);
+import * as context from './context';
 
-    // standalone if docker cli not available
-    const standalone = !(await docker.isAvailable());
+actionsToolkit.run(
+  // main
+  async () => {
+    const inputs: context.Inputs = await context.getInputs();
+    const toolkit = new Toolkit();
 
-    await core.group(`GitHub Actions runtime token access controls`, async () => {
-      const actionsRuntimeToken = process.env['ACTIONS_RUNTIME_TOKEN'];
-      if (actionsRuntimeToken) {
-        core.info(JSON.stringify(JSON.parse(github.parseRuntimeToken(actionsRuntimeToken).ac as string), undefined, 2));
-      } else {
-        core.info(`ACTIONS_RUNTIME_TOKEN not set`);
+    await core.group(`GitHub Actions runtime token ACs`, async () => {
+      try {
+        await GitHub.printActionsRuntimeTokenACs();
+      } catch (e) {
+        core.warning(e.message);
       }
     });
 
-    core.startGroup(`Docker info`);
-    if (standalone) {
-      core.info(`Docker info skipped in standalone mode`);
-    } else {
-      await exec.exec('docker', ['version'], {
-        failOnStdErr: false
-      });
-      await exec.exec('docker', ['info'], {
-        failOnStdErr: false
-      });
-    }
-    core.endGroup();
+    await core.group(`Docker info`, async () => {
+      try {
+        await Docker.printVersion();
+        await Docker.printInfo();
+      } catch (e) {
+        core.info(e.message);
+      }
+    });
 
-    if (!(await buildx.isAvailable(standalone))) {
+    if (!(await toolkit.buildx.isAvailable())) {
       core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
       return;
     }
-    stateHelper.setTmpDir(context.tmpDir());
 
-    const buildxVersion = await buildx.getVersion(standalone);
+    stateHelper.setTmpDir(Context.tmpDir());
+
     await core.group(`Buildx version`, async () => {
-      const versionCmd = buildx.getCommand(['version'], standalone);
-      await exec.exec(versionCmd.command, versionCmd.args, {
-        failOnStdErr: false
-      });
+      await toolkit.buildx.printVersion();
     });
 
-    const args: string[] = await context.getArgs(inputs, defContext, buildxVersion, standalone);
-    const buildCmd = buildx.getCommand(args, standalone);
-    await exec
-      .getExecOutput(buildCmd.command, buildCmd.args, {
-        ignoreReturnCode: true
-      })
-      .then(res => {
-        if (res.stderr.length > 0 && res.exitCode != 0) {
-          throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
-        }
-      });
+    const args: string[] = await context.getArgs(inputs, toolkit);
+    const buildCmd = await toolkit.buildx.getCommand(args);
+    await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
+      ignoreReturnCode: true
+    }).then(res => {
+      if (res.stderr.length > 0 && res.exitCode != 0) {
+        throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+      }
+    });
 
-    const imageID = await buildx.getImageID();
-    const metadata = await buildx.getMetadata();
-    const digest = await buildx.getDigest(metadata);
+    const imageID = await toolkit.buildx.inputs.resolveBuildImageID();
+    const metadata = await toolkit.buildx.inputs.resolveBuildMetadata();
+    const digest = await toolkit.buildx.inputs.resolveDigest();
 
     if (imageID) {
       await core.group(`ImageID`, async () => {
@@ -85,21 +76,13 @@ async function run(): Promise<void> {
         core.setOutput('metadata', metadata);
       });
     }
-  } catch (error) {
-    core.setFailed(error.message);
+  },
+  // post
+  async () => {
+    if (stateHelper.tmpDir.length > 0) {
+      await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
+        fs.rmSync(stateHelper.tmpDir, {recursive: true});
+      });
+    }
   }
-}
-
-async function cleanup(): Promise<void> {
-  if (stateHelper.tmpDir.length > 0) {
-    core.startGroup(`Removing temp folder ${stateHelper.tmpDir}`);
-    fs.rmSync(stateHelper.tmpDir, {recursive: true});
-    core.endGroup();
-  }
-}
-
-if (!stateHelper.IsPost) {
-  run();
-} else {
-  cleanup();
-}
+);
