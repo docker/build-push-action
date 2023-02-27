@@ -444,29 +444,6 @@ jobs:
             docker:10.180.0.1
             foo:10.0.0.1
 
-  build-contexts:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
-          driver-opts: |
-            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
-      -
-        name: Build
-        uses: ./
-        with:
-          context: ./test
-          file: ./test/buildcontext.Dockerfile
-          build-contexts: |
-            alpine=docker-image://debian:stable-slim
-          tags: name/app:latest
-
   no-cache-filters:
     runs-on: ubuntu-latest
     steps:
@@ -873,3 +850,90 @@ jobs:
         with:
           context: ./test
           file: ./test/Dockerfile
+
+  named-context-pin:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build base image
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/named-context.Dockerfile
+          build-contexts: |
+            alpine=docker-image://alpine:edge
+
+  named-context-docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver: docker
+      -
+        name: Build base image
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/named-context-base.Dockerfile
+          load: true
+          tags: my-base-image:local
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/named-context.Dockerfile
+          build-contexts: |
+            base=docker-image://my-base-image:local
+
+  named-context-container:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+            network=host
+      -
+        name: Build base image
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/named-context-base.Dockerfile
+          tags: localhost:5000/my-base-image:latest
+          push: true
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/named-context.Dockerfile
+          build-contexts: |
+            alpine=docker-image://localhost:5000/my-base-image:latest
