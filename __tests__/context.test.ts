@@ -4,7 +4,7 @@ import * as path from 'path';
 import {Builder} from '@docker/actions-toolkit/lib/buildx/builder';
 import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
 import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker';
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/builder';
@@ -42,9 +42,9 @@ jest.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<Bu
     lastActivity: new Date('2023-01-16 09:45:23 +0000 UTC'),
     nodes: [
       {
-        buildkitVersion: 'v0.11.0',
-        buildkitdFlags: '--debug --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host',
-        driverOpts: ['BUILDKIT_STEP_LOG_MAX_SIZE=10485760', 'BUILDKIT_STEP_LOG_MAX_SPEED=10485760', 'JAEGER_TRACE=localhost:6831', 'image=moby/buildkit:latest', 'network=host'],
+        buildkit: 'v0.11.0',
+        'buildkitd-flags': '--debug --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host',
+        'driver-opts': ['BUILDKIT_STEP_LOG_MAX_SIZE=10485760', 'BUILDKIT_STEP_LOG_MAX_SPEED=10485760', 'JAEGER_TRACE=localhost:6831', 'image=moby/buildkit:latest', 'network=host'],
         endpoint: 'unix:///var/run/docker.sock',
         name: 'builder20',
         platforms: 'linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/mips64le,linux/mips64,linux/arm/v7,linux/arm/v6',
@@ -609,7 +609,7 @@ nproc=3`],
       jest.spyOn(Buildx.prototype, 'version').mockImplementation(async (): Promise<string> => {
         return buildxVersion;
       });
-      const inp = await context.getInputs();
+      const inp = await context.getInputs(toolkit);
       const res = await context.getArgs(inp, toolkit);
       expect(res).toEqual(expected);
     }

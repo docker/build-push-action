@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import {parse} from 'csv-parse/sync';
 import * as handlebars from 'handlebars';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
@@ -40,7 +39,7 @@ export interface Inputs {
   githubToken: string;
 }
 
-export async function getInputs(): Promise<Inputs> {
+export async function getInputs(toolkit: Toolkit): Promise<Inputs> {
   return {
     addHosts: Util.getInputList('add-hosts'),
     allow: Util.getInputList('allow'),
@@ -60,7 +59,7 @@ export async function getInputs(): Promise<Inputs> {
     noCacheFilters: Util.getInputList('no-cache-filters'),
     outputs: Util.getInputList('outputs', {ignoreComma: true}),
     platforms: Util.getInputList('platforms'),
-    provenance: getProvenanceInput('provenance'),
+    provenance: toolkit.buildx.inputs.getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
@@ -145,10 +144,10 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
       if (GitHub.context.payload.repository?.private ?? false) {
         // if this is a private repository, we set the default provenance
         // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
-        args.push('--provenance', getProvenanceAttrs(`mode=min,inline-only=true`));
+        args.push('--provenance', toolkit.buildx.inputs.resolveProvenanceAttrs(`mode=min,inline-only=true`));
       } else {
         // for a public repository, we set max provenance mode.
-        args.push('--provenance', getProvenanceAttrs(`mode=max`));
+        args.push('--provenance', toolkit.buildx.inputs.resolveProvenanceAttrs(`mode=max`));
       }
     }
     if (inputs.sbom) {
@@ -214,38 +213,4 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
     args.push('--push');
   }
   return args;
-}
-
-function getProvenanceInput(name: string): string {
-  const input = core.getInput(name);
-  if (!input) {
-    // if input is not set, default values will be set later.
-    return input;
-  }
-  try {
-    return core.getBooleanInput(name) ? `builder-id=${Context.provenanceBuilderID()}` : 'false';
-  } catch (err) {
-    // not a valid boolean, so we assume it's a string
-    return getProvenanceAttrs(input);
-  }
-}
-
-function getProvenanceAttrs(input: string): string {
-  // parse attributes from input
-  const fields = parse(input, {
-    relaxColumnCount: true,
-    skipEmptyLines: true
-  })[0];
-  // check if builder-id attribute exists in the input
-  for (const field of fields) {
-    const parts = field
-      .toString()
-      .split(/(?<=^[^=]+?)=/)
-      .map(item => item.trim());
-    if (parts[0] == 'builder-id') {
-      return input;
-    }
-  }
-  // if not add builder-id attribute
-  return `${input},builder-id=${Context.provenanceBuilderID()}`;
 }

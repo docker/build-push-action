@@ -3,7 +3,7 @@ import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
 import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker';
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Exec} from '@docker/actions-toolkit/lib/exec';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
@@ -13,8 +13,8 @@ import * as context from './context';
 actionsToolkit.run(
   // main
   async () => {
-    const inputs: context.Inputs = await context.getInputs();
     const toolkit = new Toolkit();
+    const inputs: context.Inputs = await context.getInputs(toolkit);
 
     await core.group(`GitHub Actions runtime token ACs`, async () => {
       try {
