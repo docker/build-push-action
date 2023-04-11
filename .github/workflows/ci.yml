@@ -11,12 +11,13 @@ on:
         description: 'BuildKit image'
         default: 'moby/buildkit:buildx-stable-1'
         required: false
+  schedule:
+    - cron: '0 10 * * *'
   push:
     branches:
       - 'master'
+      - 'releases/v*'
   pull_request:
-    branches:
-      - 'master'
 
 env:
   BUILDX_VERSION: latest
@@ -198,6 +199,69 @@ jobs:
             echo "::error::Digest should not be empty"
             exit 1
           fi
+
+  example:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE: localhost:5000/name/app
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            network=host
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build and export to Docker client
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      -
+        name: Build and push to local registry
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      -
+        name: Inspect image
+        run: |
+          docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}
+      -
+        name: Check manifest
+        if: github.event_name != 'pull_request'
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }} --format '{{json .}}'
 
   error:
     runs-on: ubuntu-latest
