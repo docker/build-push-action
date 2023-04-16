@@ -609,7 +609,7 @@ nproc=3`],
       jest.spyOn(Buildx.prototype, 'version').mockImplementation(async (): Promise<string> => {
         return buildxVersion;
       });
-      const inp = await context.getInputs(toolkit);
+      const inp = await context.getInputs();
       const res = await context.getArgs(inp, toolkit);
       expect(res).toEqual(expected);
     }
