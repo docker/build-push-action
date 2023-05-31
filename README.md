@@ -128,7 +128,7 @@ to the default Git context:
 
 Building from the current repository automatically uses the [GitHub Token](https://docs.github.com/en/actions/security-guides/automatic-token-authentication),
 so it does not need to be passed. If you want to authenticate against another
-private repository, you have to use a [secret](https://docs.docker.com/build/ci/github-actions/examples/#secrets)
+private repository, you have to use a [secret](https://docs.docker.com/build/ci/github-actions/secrets)
 named `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
 
 ```yaml
