@@ -52,7 +52,7 @@ export async function getInputs(): Promise<Inputs> {
     cgroupParent: core.getInput('cgroup-parent'),
     context: core.getInput('context') || Context.gitContext(),
     file: core.getInput('file'),
-    labels: Util.getInputList('labels', {ignoreComma: true}),
+    labels: Util.getInputList('labels'),
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
     noCache: core.getBooleanInput('no-cache'),
