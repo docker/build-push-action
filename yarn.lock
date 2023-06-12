@@ -598,10 +598,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@docker/actions-toolkit@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.3.0.tgz#822c810af3a304ef793061a11263546a6c0649cf"
-  integrity sha512-TayOSJZ6Oe/koUPC01tiesgB26Nsqre7z/fwscaVp2GMk8V+b8dcjLWkUhDvbcfdMeUWOgxvAmdF0YcT5rdvDg==
+"@docker/actions-toolkit@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.4.0.tgz#8177bc220fbff1ce03e92e636ce29a653454bf36"
+  integrity sha512-FQ1EruG5QG01MwZTKZl9nOTrysi7d+ebI5uwzIByElm2vv+4WI/aulOcoom2Go0dUUFrDHyqbhcmSOfYQ7+dXw==
   dependencies:
     "@actions/core" "^1.10.0"
     "@actions/exec" "^1.1.1"
