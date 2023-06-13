@@ -598,10 +598,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@docker/actions-toolkit@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.3.0.tgz#822c810af3a304ef793061a11263546a6c0649cf"
-  integrity sha512-TayOSJZ6Oe/koUPC01tiesgB26Nsqre7z/fwscaVp2GMk8V+b8dcjLWkUhDvbcfdMeUWOgxvAmdF0YcT5rdvDg==
+"@docker/actions-toolkit@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.5.0.tgz#4f2c215a1e67ce27edb10acf658b5289f8da7d7e"
+  integrity sha512-VgU9KDmCgSVqpLwNVkf4JUP8Bg38dymuDJhMU0A5DRXtII/K+85peEY/in6U7ThyO1wSSef19ImpiIKYLFBqvA==
   dependencies:
     "@actions/core" "^1.10.0"
     "@actions/exec" "^1.1.1"
@@ -609,6 +609,7 @@
     "@actions/http-client" "^2.0.1"
     "@actions/io" "^1.1.2"
     "@actions/tool-cache" "^2.0.1"
+    "@octokit/plugin-rest-endpoint-methods" "^7.2.1"
     async-retry "^1.3.3"
     csv-parse "^5.4.0"
     handlebars "^4.7.7"
@@ -997,6 +998,11 @@
   resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-11.2.0.tgz#b38d7fc3736d52a1e96b230c1ccd4a58a2f400a6"
   integrity sha512-PBsVO+15KSlGmiI8QAzaqvsNlZlrDlyAJYcrXBCvVUxCp7VnXjkwPoFHgjEJXx3WF9BAwkA6nfCUA7i9sODzKA==
 
+"@octokit/openapi-types@^18.0.0":
+  version "18.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-18.0.0.tgz#f43d765b3c7533fd6fb88f3f25df079c24fccf69"
+  integrity sha512-V8GImKs3TeQRxRtXFpG2wl19V7444NIOTDF24AWuIbmNaNYOQMWRbjcGDXV5B+0n887fgDcuMNOmlul+k+oJtw==
+
 "@octokit/openapi-types@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-7.0.0.tgz#0f6992db9854af15eca77d71ab0ec7fad2f20411"
@@ -1016,6 +1022,13 @@
   dependencies:
     "@octokit/types" "^6.34.0"
     deprecation "^2.3.1"
+
+"@octokit/plugin-rest-endpoint-methods@^7.2.1":
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-7.2.1.tgz#0e086930c8b4470b0eabaa7d68b67fd1b245bb3a"
+  integrity sha512-UmlNrrcF+AXxcxhZslTt1a/8aDxUKH0trrt/mJCxEPrWbW1ZEc+6xxcd5/n0iw3b+Xo8UBJQUKDr71+vNCBpRQ==
+  dependencies:
+    "@octokit/types" "^9.3.1"
 
 "@octokit/request-error@^2.0.0":
   version "2.0.2"
@@ -1090,6 +1103,13 @@
   integrity sha512-s1zLBjWhdEI2zwaoSgyOFoKSl109CUcVBCc7biPJ3aAf6LGLU6szDvi31JPU7bxfla2lqfhjbbg/5DdFNxOwHw==
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
+
+"@octokit/types@^9.3.1":
+  version "9.3.1"
+  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-9.3.1.tgz#9eb20390f8cfcc975635d813f9a2094efd4aa2dd"
+  integrity sha512-zfJzyXLHC42sWcn2kS+oZ/DRvFZBYCCbfInZtwp1Uopl1qh6pRg4NSP/wFX1xCOpXvEkctiG1sxlSlkZmzvxdw==
+  dependencies:
+    "@octokit/openapi-types" "^18.0.0"
 
 "@sinclair/typebox@^0.25.16":
   version "0.25.24"
