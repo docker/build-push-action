@@ -599,6 +599,26 @@ nproc=3`],
         '.'
       ]
     ],
+    [
+      25,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['build-args', `FOO=bar#baz`],
+        ['load', 'true'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--build-arg', 'FOO=bar#baz',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--load',
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
