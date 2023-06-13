@@ -34,6 +34,22 @@ actionsToolkit.run(
       }
     });
 
+    const dockerConfig = await Docker.configFile();
+    if (dockerConfig && dockerConfig.proxies) {
+      await core.group(`Proxy configuration found`, async () => {
+        for (const host in dockerConfig.proxies) {
+          let prefix = '';
+          if (dockerConfig.proxies.length > 1) {
+            prefix = '  ';
+            core.info(host);
+          }
+          for (const key in dockerConfig.proxies[host]) {
+            core.info(`${prefix}${key}: ${dockerConfig.proxies[host][key]}`);
+          }
+        }
+      });
+    }
+
     if (!(await toolkit.buildx.isAvailable())) {
       core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
       return;
