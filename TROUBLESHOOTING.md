@@ -4,6 +4,7 @@
   * [BuildKit container logs](#buildkit-container-logs)
   * [With containerd](#with-containerd)
 * [`repository name must be lowercase`](#repository-name-must-be-lowercase)
+* [Image not loaded](#image-not-loaded)
 
 ## Cannot push to a registry
 
@@ -135,3 +136,29 @@ Or a dedicated step to sanitize the slug:
     push: true
     tags: ${{ steps.repo_slug.outputs.result }}:latest
 ```
+
+## Image not loaded
+
+Sometimes when your workflows are heavy consumers of disk storage, it can happen that build-push-action declares that the built image is loaded, but then not found in the following workflow steps.
+
+- You can use the following solution as workaround, to free space on disk before building docker image using the following workflow step
+
+```yaml
+      # Free disk space
+      - name: Free Disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android  # will release about 10 GB if you don't need Android
+          sudo rm -rf /usr/share/dotnet # will release about 20GB if you don't need .NET
+```
+
+- Another workaround can be to call `docker/setup-buildx-action` with docker driver
+
+```yaml
+name: Set up Docker Buildx
+uses: docker/setup-buildx-action@v2
+with:
+  driver: docker
+```
+
+More details in the [related issue](https://github.com/docker/build-push-action/issues/321)
