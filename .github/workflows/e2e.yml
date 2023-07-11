@@ -105,8 +105,8 @@ jobs:
             type: remote
           -
             name: Artifactory
-            registry: buildkitghactiontests.jfrog.io
-            slug: buildkitghactiontests.jfrog.io/ghactiontest/test-docker-action
+            registry: sforzando-build-team-local.jfrog.io
+            slug: sforzando-build-team-local.jfrog.io/build-push-action-e2e
             username_secret: ARTIFACTORY_USERNAME
             password_secret: ARTIFACTORY_TOKEN
             type: remote
