@@ -118,7 +118,7 @@ to the default Git context:
           tags: user/app:latest
 ```
 
-> **Warning**
+> [!WARNING]
 >
 > Subdirectory for Git context is available from [BuildKit v0.9.0](https://github.com/moby/buildkit/releases/tag/v0.9.0).
 > If you're using the `docker` builder (default if `setup-buildx-action` not used),
@@ -246,7 +246,7 @@ Following inputs can be used as `step.with` keys
 | `ulimit`           | List        | [Ulimit](https://docs.docker.com/engine/reference/commandline/buildx_build/#ulimit) options (e.g., `nofile=1024:1024`)                                                            |
 | `github-token`     | String      | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`)                                                            |
 
-> **Note**
+> [!NOTE]
 >
 > * ¹ multiple `outputs` are [not yet supported](https://github.com/moby/buildkit/issues/1555)
 
