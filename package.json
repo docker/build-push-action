@@ -30,7 +30,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@docker/actions-toolkit": "^0.6.0",
-    "handlebars": "^4.7.7"
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/csv-parse": "^1.2.2",
