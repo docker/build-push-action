@@ -11,6 +11,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    versioning-strategy: "increase"
     allow:
       - dependency-type: "production"
     labels:
