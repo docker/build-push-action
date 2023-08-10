@@ -1001,3 +1001,74 @@ jobs:
           file: ./test/named-context.Dockerfile
           build-contexts: |
             alpine=docker-image://localhost:5000/my-base-image:latest
+
+  proxy-docker-config:
+    runs-on: ubuntu-latest
+    services:
+      squid-proxy:
+        image: ubuntu/squid:latest
+        ports:
+          - 3128:3128
+    steps:
+      -
+        name: Check proxy
+        run: |
+          netstat -aptn
+          curl --retry 5 --retry-all-errors --retry-delay 0 --connect-timeout 5 --proxy http://127.0.0.1:3128 -v --insecure --head https://www.google.com
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set proxy config
+        run: |
+          mkdir -p ~/.docker
+          echo '{"proxies":{"default":{"httpProxy":"http://127.0.0.1:3128","httpsProxy":"http://127.0.0.1:3128"}}}' > ~/.docker/config.json
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+            network=host
+          buildkitd-flags: --debug
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/proxy.Dockerfile
+
+  proxy-buildkitd:
+    runs-on: ubuntu-latest
+    services:
+      squid-proxy:
+        image: ubuntu/squid:latest
+        ports:
+          - 3128:3128
+    steps:
+      -
+        name: Check proxy
+        run: |
+          netstat -aptn
+          curl --retry 5 --retry-all-errors --retry-delay 0 --connect-timeout 5 --proxy http://127.0.0.1:3128 -v --insecure --head https://www.google.com
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+            network=host
+            env.http_proxy=http://127.0.0.1:3128
+            env.https_proxy=http://127.0.0.1:3128
+          buildkitd-flags: --debug
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
