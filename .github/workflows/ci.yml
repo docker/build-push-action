@@ -735,12 +735,6 @@ jobs:
           - driver: docker-container
             load: true
             push: true
-          - driver: docker
-            load: false
-            push: false
-          - driver: docker-container
-            load: false
-            push: false
     services:
       registry:
         image: registry:2
@@ -774,9 +768,13 @@ jobs:
           docker image ls --no-trunc
       -
         name: Check digest
-        if: ${{ matrix.push }}
         run: |
-          if [ -z "${{ steps.docker_build.outputs.digest }}" ]; then
+          if [[ "${{ matrix.driver }}" = "docker-container" ]] && [[ "${{ matrix.load }}" = "false" ]] && [[ "${{ matrix.push }}" = "false" ]]; then
+            if [ -n "${{ steps.docker_build.outputs.digest }}" ]; then
+              echo "::error::Digest should be empty"
+              exit 1
+            fi
+          elif [[ "${{ matrix.push }}" = "true" ]] && [[ -z "${{ steps.docker_build.outputs.digest }}" ]]; then
             echo "::error::Digest should not be empty"
             exit 1
           fi
@@ -789,7 +787,12 @@ jobs:
       -
         name: Check image ID
         run: |
-          if [ -z "${{ steps.docker_build.outputs.imageid }}" ]; then
+          if [[ "${{ matrix.driver }}" = "docker-container" ]] && [[ "${{ matrix.load }}" = "false" ]] && [[ "${{ matrix.push }}" = "false" ]]; then
+            if [ -n "${{ steps.docker_build.outputs.imageid }}" ]; then
+              echo "::error::Image ID should be empty"
+              exit 1
+            fi
+          elif [ -z "${{ steps.docker_build.outputs.imageid }}" ]; then
             echo "::error::Image ID should not be empty"
             exit 1
           fi
