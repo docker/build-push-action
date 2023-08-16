@@ -1,0 +1,101 @@
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+name: Bug Report
+description: Report a bug
+labels:
+  - status/triage
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug!
+        If this is a security issue please report it to the [Docker Security team](mailto:security@docker.com).
+        Before submitting a bug report, check out the [Troubleshooting doc](https://github.com/docker/build-push-action/blob/master/TROUBLESHOOTING.md).
+
+  - type: checkboxes
+    attributes:
+      label: Contributing guidelines
+      description: >
+        Make sure you've read the contributing guidelines before proceeding.
+      options:
+        - label: I've read the [contributing guidelines](https://github.com/docker/build-push-action/blob/master/.github/CONTRIBUTING.md) and wholeheartedly agree
+          required: true
+
+  - type: checkboxes
+    attributes:
+      label: "I've found a bug, and:"
+      description: |
+        Make sure that your request fulfills all of the following requirements.
+        If one requirement cannot be satisfied, explain in detail why.
+      options:
+        - label: The documentation does not mention anything about my problem
+        - label: There are no open or closed issues that are related to my problem
+
+  - type: textarea
+    attributes:
+      label: Description
+      description: >
+        Provide a brief description of the bug in 1-2 sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behaviour
+      description: >
+        Describe precisely what you'd expect to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual behaviour
+      description: >
+        Describe precisely what is actually happening.
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Repository URL
+      description: >
+        Enter the URL of the repository where you are experiencing the
+        issue. If your repository is private, provide a link to a minimal
+        repository that reproduces the issue.
+
+  - type: input
+    attributes:
+      label: Workflow run URL
+      description: >
+        Enter the URL of the GitHub Action workflow run, if public.
+
+  - type: textarea
+    attributes:
+      label: YAML workflow
+      description: |
+        Provide the YAML of the workflow that's causing the issue.
+        Make sure to remove any sensitive information.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Workflow logs
+      description: >
+        [Attach](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files)
+        the [log file of your workflow run](https://docs.github.com/en/actions/managing-workflow-runs/using-workflow-run-logs#downloading-logs)
+        and make sure to remove any sensitive information.
+
+  - type: textarea
+    attributes:
+      label: BuildKit logs
+      description: >
+        If applicable, provide the [BuildKit container logs](https://docs.docker.com/build/ci/github-actions/configure-builder/#buildkit-container-logs)
+      render: text
+
+  - type: textarea
+    attributes:
+      label: Additional info
+      description: |
+        Provide any additional information that could be useful.

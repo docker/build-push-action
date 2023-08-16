@@ -1,0 +1,9 @@
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#configuring-the-template-chooser
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and Discussions
+    url: https://github.com/docker/build-push-action/discussions/new
+    about: Use Github Discussions to ask questions and/or open discussion topics.
+  - name: Documentation
+    url: https://docs.docker.com/build/ci/github-actions/
+    about: Read the documentation.
