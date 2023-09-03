@@ -1,0 +1,66 @@
+
+How To Install Private Git Hosted Dependencies Inside Docker Image Using SSH
+#
+docker
+#
+devops
+#
+security
+#
+python
+Introduction
+This quick guide will show you how to mount a ssh key inside a container in build time, to allow you to install private dependencies, that won't be persisted in the final image. It uses python but could work with any language/package manager that uses git + ssh.
+
+Dockerfile
+First you need to set Dockerfile syntax to docker/dockerfile:1.2. Put this in the beggining of the file:
+
+# syntax = docker/dockerfile:1.2
+Now install git and openssh, and setup ssh folders:
+
+RUN apt update && \
+    apt install -y git openssh-client && \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts
+May vary depending on the base image you're using, just change with the package manager you use.
+
+Make sure to change github.com with your git host.
+
+Now you have to mount the ssh key in the step that installs the dependency:
+
+RUN --mount=type=secret,id=id_rsa,dst=/root/.ssh/id_rsa \
+    pip install git+ssh://git@github.com/username/repository.git@version
+This will mount secret identified by id_rsa on /root/.ssh/id_rsa.
+
+Building
+When building you need to specify your ssh key as id_rsa secret:
+
+docker build . \
+    -f Dockerfile \
+    --secret id=id_rsa,src=/home/user/.ssh/id_rsa
+Or using docker compose:
+
+version: '3.7' 
+services:
+  your_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      secrets:
+        - id_rsa
+secrets:
+  id_rsa:
+    file: /home/user/.ssh/id_rsa
+Final file
+# syntax = docker/dockerfile:1.2
+
+FROM python:3.11
+
+RUN apt update && \
+    apt install -y git openssh-client && \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+RUN --mount=type=secret,id=id_rsa,dst=/root/.ssh/id_rsa \
+    pip install git+ssh://git@github.com/username
+example 
+    pip install git+ssh://git@github.com/sammyfilly
