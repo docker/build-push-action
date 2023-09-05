@@ -272,7 +272,7 @@ jobs:
       -
         name: Stop docker
         run: |
-          sudo systemctl stop docker
+          sudo systemctl stop docker docker.socket
       -
         name: Build
         id: docker_build
@@ -900,9 +900,13 @@ jobs:
         name: Checkout
         uses: actions/checkout@v3
       -
-        name: Uninstall moby cli
+        name: Uninstall docker cli
         run: |
-          sudo apt-get purge -y moby-cli moby-buildx
+          if dpkg -s "docker-ce" >/dev/null 2>&1; then
+            sudo dpkg -r --force-depends docker-ce-cli docker-buildx-plugin
+          else
+            sudo apt-get purge -y moby-cli moby-buildx
+          fi
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
