@@ -48,7 +48,7 @@ actionsToolkit.run(
       if (dockerConfig && dockerConfig.proxies) {
         for (const host in dockerConfig.proxies) {
           let prefix = '';
-          if (dockerConfig.proxies.length > 1) {
+          if (Object.keys(dockerConfig.proxies).length > 1) {
             prefix = '  ';
             core.info(host);
           }
