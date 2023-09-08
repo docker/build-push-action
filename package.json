@@ -23,13 +23,7 @@
     "build",
     "push"
   ],
-  "author": "Docker",
-  "contributors": [
-    {
-      "name": "CrazyMax",
-      "url": "https://crazymax.dev"
-    }
-  ],
+  "author": "Docker Inc.",
   "license": "Apache-2.0",
   "dependencies": {
     "@actions/core": "^1.10.0",
