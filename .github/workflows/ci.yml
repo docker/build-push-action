@@ -1013,6 +1013,23 @@ jobs:
           build-contexts: |
             alpine=docker-image://localhost:5000/my-base-image:latest
 
+  docker-config-malformed:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set malformed docker config
+        run: |
+          mkdir -p ~/.docker
+          echo 'foo_bar' >> ~/.docker/config.json
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+
   proxy-docker-config:
     runs-on: ubuntu-latest
     services:
