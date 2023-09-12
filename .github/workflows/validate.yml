@@ -40,6 +40,6 @@ jobs:
         uses: actions/checkout@v4
       -
         name: Validate
-        uses: docker/bake-action@v3
+        uses: docker/bake-action@v4
         with:
           targets: ${{ matrix.target }}
