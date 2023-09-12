@@ -48,10 +48,10 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         with:
           buildkitd-flags: --debug
       -
@@ -59,7 +59,7 @@ jobs:
         uses: crazy-max/ghaction-setup-containerd@v2
       -
         name: Build Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -112,7 +112,7 @@ to generate sanitized tags:
     tags: latest
 
 - name: Build and push
-  uses: docker/build-push-action@v4
+  uses: docker/build-push-action@v5
   with:
     context: .
     push: true
@@ -130,7 +130,7 @@ Or a dedicated step to sanitize the slug:
     script: return 'ghcr.io/${{ github.repository }}'.toLowerCase()
 
 - name: Build and push
-  uses: docker/build-push-action@v4
+  uses: docker/build-push-action@v5
   with:
     context: .
     push: true
@@ -156,7 +156,7 @@ Sometimes when your workflows are heavy consumers of disk storage, it can happen
 
 ```yaml
 name: Set up Docker Buildx
-uses: docker/setup-buildx-action@v2
+uses: docker/setup-buildx-action@v3
 with:
   driver: docker
 ```
