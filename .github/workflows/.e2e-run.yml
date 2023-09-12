@@ -101,7 +101,7 @@ jobs:
       -
         name: Login to Registry
         if: github.event_name != 'pull_request' && (env.REGISTRY_USER || inputs.username_secret) != ''
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
           username: ${{ env.REGISTRY_USER || secrets[inputs.username_secret] }}
