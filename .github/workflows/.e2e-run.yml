@@ -75,6 +75,7 @@ jobs:
         if: inputs.type == 'local'
         run: |
           sudo -E bash ./.github/e2e/${{ inputs.id }}/install.sh
+          sudo chown $(id -u):$(id -g) -R ~/.docker
       -
         name: Docker meta
         id: meta
