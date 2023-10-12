@@ -81,7 +81,7 @@ inputs:
     description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
     required: false
   secret-envs:
-    description: "List of secrets to expose to the build using environment variables (e.g., MY_SECRET=MY_ENV_VAR)"
+    description: "List of secret env vars to expose to the build (e.g., key=envname, MY_SECRET=MY_ENV_VAR)"
     required: false
   secret-files:
     description: "List of secret files to expose to the build (e.g., key=filename, MY_SECRET=./secret.txt)"

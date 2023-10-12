@@ -393,7 +393,7 @@ jobs:
             MYSECRET=foo
             INVALID_SECRET=
 
-  secret-env:
+  secret-envs:
     runs-on: ubuntu-latest
     steps:
       -
