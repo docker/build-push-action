@@ -393,6 +393,31 @@ jobs:
             MYSECRET=foo
             INVALID_SECRET=
 
+  secret-env:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./
+        env:
+          ENV_SECRET: foo
+        with:
+          context: .
+          file: ./test/secret.Dockerfile
+          secret-envs: |
+            MYSECRET=ENV_SECRET
+            INVALID_SECRET=
+
   network:
     runs-on: ubuntu-latest
     steps:

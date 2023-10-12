@@ -619,6 +619,49 @@ nproc=3`],
         '.'
       ]
     ],
+    [
+      25,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['no-cache', 'false'],
+        ['load', 'true'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['secret-envs', `MY_SECRET=MY_SECRET_ENV
+ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
+      ]),
+      [
+        'build',
+        '--secret', 'id=MY_SECRET,env=MY_SECRET_ENV',
+        '--secret', 'id=ANOTHER_SECRET,env=ANOTHER_SECRET_ENV',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--load',
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
+    [
+      26,
+      '0.10.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['no-cache', 'false'],
+        ['load', 'true'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['secret-envs', 'MY_SECRET=MY_SECRET_ENV,ANOTHER_SECRET=ANOTHER_SECRET_ENV']
+      ]),
+      [
+        'build',
+        '--secret', 'id=MY_SECRET,env=MY_SECRET_ENV',
+        '--secret', 'id=ANOTHER_SECRET,env=ANOTHER_SECRET_ENV',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--load',
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {

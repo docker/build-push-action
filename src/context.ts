@@ -30,6 +30,7 @@ export interface Inputs {
   push: boolean;
   sbom: string;
   secrets: string[];
+  secretEnvs: string[];
   secretFiles: string[];
   shmSize: string;
   ssh: string[];
@@ -64,6 +65,7 @@ export async function getInputs(): Promise<Inputs> {
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
     secrets: Util.getInputList('secrets', {ignoreComma: true}),
+    secretEnvs: Util.getInputList('secret-envs'),
     secretFiles: Util.getInputList('secret-files', {ignoreComma: true}),
     shmSize: core.getInput('shm-size'),
     ssh: Util.getInputList('ssh'),
@@ -116,6 +118,13 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   if (inputs.cgroupParent) {
     args.push('--cgroup-parent', inputs.cgroupParent);
   }
+  await Util.asyncForEach(inputs.secretEnvs, async secretEnv => {
+    try {
+      args.push('--secret', BuildxInputs.resolveBuildSecretEnv(secretEnv));
+    } catch (err) {
+      core.warning(err.message);
+    }
+  });
   if (inputs.file) {
     args.push('--file', inputs.file);
   }
