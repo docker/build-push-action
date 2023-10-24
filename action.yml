@@ -13,6 +13,9 @@ inputs:
   allow:
     description: "List of extra privileged entitlement (e.g., network.host,security.insecure)"
     required: false
+  annotations:
+    description: "List of annotation to set to the image"
+    required: false
   attests:
     description: "List of attestation parameters (e.g., type=sbom,generator=image)"
     required: false

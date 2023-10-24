@@ -9,6 +9,7 @@ import {Util} from '@docker/actions-toolkit/lib/util';
 export interface Inputs {
   addHosts: string[];
   allow: string[];
+  annotations: string[];
   attests: string[];
   buildArgs: string[];
   buildContexts: string[];
@@ -44,6 +45,7 @@ export async function getInputs(): Promise<Inputs> {
   return {
     addHosts: Util.getInputList('add-hosts'),
     allow: Util.getInputList('allow'),
+    annotations: Util.getInputList('annotations', {ignoreComma: true}),
     attests: Util.getInputList('attests', {ignoreComma: true}),
     buildArgs: Util.getInputList('build-args', {ignoreComma: true}),
     buildContexts: Util.getInputList('build-contexts', {ignoreComma: true}),
@@ -99,6 +101,11 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   if (await toolkit.buildx.versionSatisfies('>=0.10.0')) {
     await Util.asyncForEach(inputs.attests, async attest => {
       args.push('--attest', attest);
+    });
+  }
+  if (await toolkit.buildx.versionSatisfies('>=0.12.0')) {
+    await Util.asyncForEach(inputs.annotations, async annotation => {
+      args.push('--annotation', annotation);
     });
   }
   await Util.asyncForEach(inputs.buildArgs, async buildArg => {

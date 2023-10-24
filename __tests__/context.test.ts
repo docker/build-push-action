@@ -662,6 +662,50 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '.'
       ]
     ],
+    [
+      27,
+      '0.11.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['annotations', 'example1=www\nindex:example2=xxx\nmanifest:example3=yyy\nmanifest-descriptor[linux/amd64]:example4=zzz'],
+        ['outputs', 'type=local,dest=./release-out'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--output', 'type=local,dest=./release-out',
+        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
+    [
+      28,
+      '0.12.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['annotations', 'example1=www\nindex:example2=xxx\nmanifest:example3=yyy\nmanifest-descriptor[linux/amd64]:example4=zzz'],
+        ['outputs', 'type=local,dest=./release-out'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--annotation', 'example1=www',
+        '--annotation', 'index:example2=xxx',
+        '--annotation', 'manifest:example3=yyy',
+        '--annotation', 'manifest-descriptor[linux/amd64]:example4=zzz',
+        '--output', 'type=local,dest=./release-out',
+        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ]
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
