@@ -45,6 +45,7 @@ if [ -n "$(git status --porcelain -- dist)" ]; then
   exit 1
 fi
 EOT
+COPY --from=format /out/
 
 FROM deps AS format
 RUN --mount=type=bind,target=.,rw \
