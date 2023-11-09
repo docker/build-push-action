@@ -38,6 +38,7 @@ export interface Inputs {
   target: string;
   ulimit: string[];
   githubToken: string;
+  sign: boolean;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -72,7 +73,8 @@ export async function getInputs(): Promise<Inputs> {
     tags: Util.getInputList('tags'),
     target: core.getInput('target'),
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
-    githubToken: core.getInput('github-token')
+    githubToken: core.getInput('github-token'),
+    sign: core.getBooleanInput('sign')
   };
 }
 

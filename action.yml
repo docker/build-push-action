@@ -105,6 +105,10 @@ inputs:
     description: "GitHub Token used to authenticate against a repository for Git context"
     default: ${{ github.token }}
     required: false
+  sign:
+    description: "If true, sign the image with the GitHub Actions identity using Cosign."
+    default: 'false'
+    required: false
 
 outputs:
   imageid:

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
+import * as io from '@actions/io';
 import * as actionsToolkit from '@docker/actions-toolkit';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
@@ -103,6 +104,48 @@ actionsToolkit.run(
         core.info(metadata);
         core.setOutput('metadata', metadata);
       });
+    }
+
+    if (inputs.sign) {
+      // TODO: Check if `id-token: write` is specified and ID token is available.
+
+      // Check if cosign is installed.
+      const cosignAvailable = await io
+        .which('cosign', true)
+        .then(res => {
+          core.debug(`cosignAvailable ok: ${res}`);
+          return true;
+        })
+        .catch(error => {
+          core.debug(`cosignAvailable error: ${error}`);
+          return false;
+        });
+      if (!cosignAvailable) {
+        core.setFailed(`Cosign is required to sign. See https://github.com/sigstore/cosign-installer to set up cosign.`);
+        return;
+      }
+
+      await core.group(`Cosign version`, async () => {
+        await Exec.getExecOutput('cosign', ['version'], {
+          ignoreReturnCode: true
+        }).then(res => {
+          if (res.stderr.length > 0 && res.exitCode != 0) {
+            throw new Error(`cosign version failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+          }
+        });
+      });
+
+      if (!digest) {
+        throw new Error('Digest is required to sign.');
+      }
+
+      for (const img of inputs.tags) {
+        const ref = `${img}@${digest}`;
+        await core.group(`Signing image ${ref}`, async () => {
+          // TODO: Annotate with workflow run ID, etc, from env vars.
+          await Exec.exec('cosign', ['sign', ref, '--yes']);
+        });
+      }
     }
   },
   // post
