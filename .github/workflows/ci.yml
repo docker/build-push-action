@@ -598,12 +598,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        attrs:
-          - ''
-          - mode=max
-          - builder-id=foo
-          - false
-          - true
+        include:
+          - target: image
+            output: type=image,name=localhost:5000/name/app:latest,push=true
+            attr: mode=max
+          - target: image
+            output: type=image,name=localhost:5000/name/app:latest,push=true
+            attr: ''
+          - target: binary
+            output: /tmp/buildx-build
+            attr: mode=max
+          - target: binary
+            output: /tmp/buildx-build
+            attr: ''
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       -
         name: Checkout
@@ -622,11 +634,24 @@ jobs:
         with:
           context: ./test/go
           file: ./test/go/Dockerfile
-          target: binary
-          outputs: type=oci,dest=/tmp/build.tar
-          provenance: ${{ matrix.attrs }}
-          cache-from: type=gha,scope=provenance
-          cache-to: type=gha,scope=provenance,mode=max
+          target: ${{ matrix.target }}
+          outputs: ${{ matrix.output }}
+          provenance: ${{ matrix.attr }}
+      -
+        name: Inspect Provenance
+        if: matrix.target == 'image'
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .Provenance}}'
+      -
+        name: Check output folder
+        if: matrix.target == 'binary'
+        run: |
+          tree /tmp/buildx-build
+      -
+        name: Print local Provenance
+        if: matrix.target == 'binary'
+        run: |
+          cat /tmp/buildx-build/provenance.json | jq
 
   sbom:
     runs-on: ubuntu-latest
@@ -667,22 +692,17 @@ jobs:
           cache-from: type=gha,scope=attests-${{ matrix.target }}
           cache-to: type=gha,scope=attests-${{ matrix.target }},mode=max
       -
-        name: Inspect image
+        name: Inspect SBOM
         if: matrix.target == 'image'
         run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .SBOM}}'
       -
         name: Check output folder
         if: matrix.target == 'binary'
         run: |
           tree /tmp/buildx-build
       -
-        name: Print provenance
-        if: matrix.target == 'binary'
-        run: |
-          cat /tmp/buildx-build/provenance.json | jq
-      -
-        name: Print SBOM
+        name: Print local SBOM
         if: matrix.target == 'binary'
         run: |
           cat /tmp/buildx-build/sbom.spdx.json | jq
