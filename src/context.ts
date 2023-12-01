@@ -102,11 +102,15 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     await Util.asyncForEach(inputs.attests, async attest => {
       args.push('--attest', attest);
     });
+  } else if (inputs.attests.length > 0) {
+    core.warning("Attestations are only supported by buildx >= 0.10.0; the input 'attests' is ignored.");
   }
   if (await toolkit.buildx.versionSatisfies('>=0.12.0')) {
     await Util.asyncForEach(inputs.annotations, async annotation => {
       args.push('--annotation', annotation);
     });
+  } else if (inputs.annotations.length > 0) {
+    core.warning("Annotations are only supported by buildx >= 0.12.0; the input 'annotations' is ignored.");
   }
   await Util.asyncForEach(inputs.buildArgs, async buildArg => {
     args.push('--build-arg', buildArg);
@@ -115,6 +119,8 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     await Util.asyncForEach(inputs.buildContexts, async buildContext => {
       args.push('--build-context', buildContext);
     });
+  } else if (inputs.buildContexts.length > 0) {
+    core.warning("Build contexts are only supported by buildx >= 0.8.0; the input 'build-contexts' is ignored.");
   }
   await Util.asyncForEach(inputs.cacheFrom, async cacheFrom => {
     args.push('--cache-from', cacheFrom);
@@ -169,6 +175,8 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     if (inputs.sbom) {
       args.push('--sbom', inputs.sbom);
     }
+  } else if (inputs.provenance || inputs.sbom) {
+    core.warning("Attestations are only supported by buildx >= 0.10.0; the inputs 'provenance' and 'sbom' are ignored.");
   }
   await Util.asyncForEach(inputs.secrets, async secret => {
     try {
