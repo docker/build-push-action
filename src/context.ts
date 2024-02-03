@@ -160,16 +160,23 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     if (inputs.provenance) {
       args.push('--provenance', inputs.provenance);
     } else if ((await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !BuildxInputs.hasDockerExporter(inputs.outputs, inputs.load)) {
-      // if provenance not specified and BuildKit version compatible for
-      // attestation, set default provenance. Also needs to make sure user
-      // doesn't want to explicitly load the image to docker.
-      if (GitHub.context.payload.repository?.private ?? false) {
-        // if this is a private repository, we set the default provenance
-        // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
-        args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=min,inline-only=true`));
+      const provenanceMode = process.env['BUILDX_PROVENANCE_MODE'] || 'auto';
+      if (provenanceMode === 'auto') {
+        // if provenance not specified and BuildKit version compatible for
+        // attestation, set default provenance. Also needs to make sure user
+        // doesn't want to explicitly load the image to docker.
+        if (GitHub.context.payload.repository?.private ?? false) {
+          // if this is a private repository, we set the default provenance
+          // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
+          args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=min,inline-only=true`));
+        } else {
+          // for a public repository, we set max provenance mode.
+          args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=max`));
+        }
+      } else if (provenanceMode === 'min' || provenanceMode === 'max') {
+        args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=${provenanceMode}`));
       } else {
-        // for a public repository, we set max provenance mode.
-        args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=max`));
+        throw new Error(`Invalid BUILDX_PROVENANCE_MODE: ${provenanceMode}`);
       }
     }
     if (inputs.sbom) {

@@ -653,6 +653,46 @@ jobs:
         run: |
           cat /tmp/buildx-build/provenance.json | jq
 
+  provenance-env-mode:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode:
+          - min
+          - max
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            network=host
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test/go
+          file: ./test/go/Dockerfile
+          target: image
+          outputs: type=image,name=localhost:5000/name/app:latest,push=true
+        env:
+          BUILDX_PROVENANCE_MODE: ${{ matrix.mode }}
+      -
+        name: Inspect Provenance
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .Provenance}}'
+
   sbom:
     runs-on: ubuntu-latest
     strategy:

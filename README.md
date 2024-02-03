@@ -34,6 +34,7 @@ ___
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
+  * [environment variables](#environment-variables)
 * [Troubleshooting](#troubleshooting)
 * [Contributing](#contributing)
 
@@ -261,6 +262,12 @@ The following outputs are available:
 | `imageid`  | String  | Image ID              |
 | `digest`   | String  | Image digest          |
 | `metadata` | JSON    | Build result metadata |
+
+### environment variables
+
+| Name                     | Type   | Description                                                                   |
+|--------------------------|--------|-------------------------------------------------------------------------------|
+| `BUILDX_PROVENANCE_MODE` | String | Set attestation provenance mode. One of `auto`, `min`, `max` (default `auto`) |
 
 ## Troubleshooting
 
