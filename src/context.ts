@@ -60,7 +60,7 @@ export async function getInputs(): Promise<Inputs> {
     network: core.getInput('network'),
     noCache: core.getBooleanInput('no-cache'),
     noCacheFilters: Util.getInputList('no-cache-filters'),
-    outputs: Util.getInputList('outputs', {ignoreComma: true}),
+    outputs: Util.getInputList('outputs', {ignoreComma: true, quote: false}),
     platforms: Util.getInputList('platforms'),
     provenance: BuildxInputs.getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),

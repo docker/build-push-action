@@ -705,6 +705,26 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
+    ],
+    [
+      29,
+      '0.12.0',
+      new Map<string, string>([
+        ['context', '.'],
+        ['outputs', `type=image,"name=localhost:5000/name/app:latest,localhost:5000/name/app:foo",push-by-digest=true,name-canonical=true,push=true`],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        "--output", `type=image,"name=localhost:5000/name/app:latest,localhost:5000/name/app:foo",push-by-digest=true,name-canonical=true,push=true`,
+        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
     ]
   ])(
     '[%d] given %p with %p as inputs, returns %p',
