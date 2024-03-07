@@ -17,6 +17,8 @@ actionsToolkit.run(
   // main
   async () => {
     const inputs: context.Inputs = await context.getInputs();
+    core.debug(`inputs: ${JSON.stringify(inputs)}`);
+
     const toolkit = new Toolkit();
 
     await core.group(`GitHub Actions runtime token ACs`, async () => {
@@ -73,7 +75,12 @@ actionsToolkit.run(
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
+    core.debug(`context.getArgs: ${JSON.stringify(args)}`);
+
     const buildCmd = await toolkit.buildx.getCommand(args);
+    core.debug(`buildCmd.command: ${buildCmd.command}`);
+    core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
+
     await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
       ignoreReturnCode: true
     }).then(res => {
