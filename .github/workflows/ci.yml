@@ -1254,3 +1254,95 @@ jobs:
         name: Check manifest
         run: |
           docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }} --format '{{json .}}'
+
+  multi-output:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          # TODO: use buildx-stable-1 image when v0.13 promoted
+          driver-opts: |
+            network=host
+            image=moby/buildkit:v0.13.0
+          buildkitd-flags: --debug
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+          outputs: |
+            type=image,name=localhost:5000/name/app:latest,push=true
+            type=docker,name=app:local
+            type=oci,dest=/tmp/oci.tar
+      -
+        name: Check registry
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+      -
+        name: Check docker
+        run: |
+          docker image inspect app:local
+      -
+        name: Check oci
+        run: |
+          set -ex
+          mkdir -p /tmp/oci-out
+          tar xf /tmp/oci.tar -C /tmp/oci-out
+          tree -nh /tmp/oci-out
+
+  load-and-push:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          # TODO: use buildx-stable-1 image when v0.13 promoted
+          driver-opts: |
+            network=host
+            image=moby/buildkit:v0.13.0
+          buildkitd-flags: --debug
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/Dockerfile
+          load: true
+          push: true
+          tags: localhost:5000/name/app:latest
+      -
+        name: Check registry
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+      -
+        name: Check docker
+        run: |
+          docker image inspect localhost:5000/name/app:latest
