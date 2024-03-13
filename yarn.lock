@@ -56,10 +56,10 @@
     "@actions/core" "^1.2.6"
     minimatch "^3.0.4"
 
-"@actions/http-client@^2.0.1", "@actions/http-client@^2.1.1", "@actions/http-client@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@actions/http-client/-/http-client-2.2.0.tgz#f8239f375be6185fcd07765efdcf0031ad5df1a0"
-  integrity sha512-q+epW0trjVUUHboliPb4UF9g2msf+w61b32tAkFEwL/IwP0DQWgbCMM0Hbe3e3WXSKz5VcUXbzJQgy8Hkra/Lg==
+"@actions/http-client@^2.0.1", "@actions/http-client@^2.1.1", "@actions/http-client@^2.2.0", "@actions/http-client@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@actions/http-client/-/http-client-2.2.1.tgz#ed3fe7a5a6d317ac1d39886b0bb999ded229bb38"
+  integrity sha512-KhC/cZsq7f8I4LfZSJKgCvEwfkE8o1538VoBeoGzokVLLnbFDEAdFD3UhoMklxo2un9NJVBdANOresx7vTHlHw==
   dependencies:
     tunnel "^0.0.6"
     undici "^5.25.4"
@@ -765,16 +765,16 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@docker/actions-toolkit@0.18.0":
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.18.0.tgz#628e9396ae90b596348312058296aeb20a27360d"
-  integrity sha512-F0DwpVe2TNAQuZO540wJpu2QxXACNKZX3Tgi8yPfChsgUG0Z20Fmr6BNToQxlaVxG6LiMQdujfemoHo4slnLEw==
+"@docker/actions-toolkit@0.19.0":
+  version "0.19.0"
+  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.19.0.tgz#3b17d06c46d60142423651ddb9d390f65f109a8c"
+  integrity sha512-Es08sgfIBOsEBQLfrJQtfgf5mM9Rl4nfZ7byYQ+umbI7VcUEF4AusyNfqsZob7ZRGu+YUw2jJivZysjVCz6LMg==
   dependencies:
     "@actions/cache" "^3.2.4"
     "@actions/core" "^1.10.1"
     "@actions/exec" "^1.1.1"
     "@actions/github" "^6.0.0"
-    "@actions/http-client" "^2.2.0"
+    "@actions/http-client" "^2.2.1"
     "@actions/io" "^1.1.3"
     "@actions/tool-cache" "^2.0.1"
     "@octokit/core" "^5.1.0"
@@ -784,7 +784,7 @@
     handlebars "^4.7.8"
     jwt-decode "^4.0.0"
     semver "^7.5.4"
-    tmp "^0.2.2"
+    tmp "^0.2.3"
 
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
   version "4.4.0"
@@ -3854,7 +3854,7 @@ titleize@^3.0.0:
   resolved "https://registry.yarnpkg.com/titleize/-/titleize-3.0.0.tgz#71c12eb7fdd2558aa8a44b0be83b8a76694acd53"
   integrity sha512-KxVu8EYHDPBdUYdKZdKtU2aj2XfEx9AfjXxE/Aj0vT06w2icA09Vus1rh6eSu1y01akYg6BjIK/hxyLJINoMLQ==
 
-tmp@^0.2.2:
+tmp@^0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.2.3.tgz#eb783cc22bc1e8bebd0671476d46ea4eb32a79ae"
   integrity sha512-nZD7m9iCPC5g0pYmcaxogYKggSfLsdxl8of3Q/oIbqCqLLIO9IAF0GWjX1z9NZRHPiXv8Wex4yDCaZsgEw0Y8w==
