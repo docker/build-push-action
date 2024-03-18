@@ -94,7 +94,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           version: ${{ matrix.buildx_version }}
-          config: /tmp/buildkitd.toml
+          buildkitd-config: /tmp/buildkitd.toml
           buildkitd-flags: --debug --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
           driver-opts: |
             image=${{ matrix.buildkit_image }}
