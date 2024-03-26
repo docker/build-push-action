@@ -481,7 +481,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
-        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
@@ -500,7 +500,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
-        "--provenance", `builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
@@ -519,7 +519,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
-        "--provenance", `mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
@@ -538,7 +538,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
-        "--provenance", 'false',
+        '--attest', 'type=provenance,disabled=true',
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
@@ -557,7 +557,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
-        "--provenance", 'builder-id=foo',
+        '--attest', 'type=provenance,builder-id=foo',
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
@@ -620,7 +620,7 @@ nproc=3`],
       ]
     ],
     [
-      25,
+      26,
       '0.10.0',
       new Map<string, string>([
         ['context', '.'],
@@ -642,7 +642,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]
     ],
     [
-      26,
+      27,
       '0.10.0',
       new Map<string, string>([
         ['context', '.'],
@@ -663,7 +663,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]
     ],
     [
-      27,
+      28,
       '0.11.0',
       new Map<string, string>([
         ['context', '.'],
@@ -677,13 +677,13 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       [
         'build',
         '--output', 'type=local,dest=./release-out',
-        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
     ],
     [
-      28,
+      29,
       '0.12.0',
       new Map<string, string>([
         ['context', '.'],
@@ -701,13 +701,13 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--annotation', 'manifest:example3=yyy',
         '--annotation', 'manifest-descriptor[linux/amd64]:example4=zzz',
         '--output', 'type=local,dest=./release-out',
-        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
     ],
     [
-      29,
+      30,
       '0.12.0',
       new Map<string, string>([
         ['context', '.'],
@@ -721,11 +721,71 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         'build',
         '--iidfile', path.join(tmpDir, 'iidfile'),
         "--output", `type=image,"name=localhost:5000/name/app:latest,localhost:5000/name/app:foo",push-by-digest=true,name-canonical=true,push=true`,
-        "--provenance", `mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--metadata-file', path.join(tmpDir, 'metadata-file'),
         '.'
       ]
-    ]
+    ],
+    [
+      31,
+      '0.13.1',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['provenance', 'mode=max'],
+        ['sbom', 'true'],
+      ]),
+      [
+        'build',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=sbom,disabled=false`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
+    [
+      32,
+      '0.13.1',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['attests', 'type=provenance,mode=min'],
+        ['provenance', 'mode=max'],
+      ]),
+      [
+        'build',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
+    [
+      33,
+      '0.13.1',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['attests', 'type=provenance,mode=min'],
+      ]),
+      [
+        'build',
+        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--attest', `type=provenance,mode=min,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '.'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
