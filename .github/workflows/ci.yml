@@ -1274,10 +1274,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
-          # TODO: use buildx-stable-1 image when v0.13 promoted
           driver-opts: |
             network=host
-            image=moby/buildkit:v0.13.0
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
           buildkitd-flags: --debug
       -
         name: Build
@@ -1324,10 +1323,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
-          # TODO: use buildx-stable-1 image when v0.13 promoted
           driver-opts: |
             network=host
-            image=moby/buildkit:v0.13.0
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
           buildkitd-flags: --debug
       -
         name: Build
