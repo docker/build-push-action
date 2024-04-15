@@ -765,10 +765,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@docker/actions-toolkit@0.20.0":
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.20.0.tgz#9619ff5da7f282e02e22509a5f2f1d707d4437fe"
-  integrity sha512-oAHSQnWjEyRGmGXePt5A/rZG76U/gddQWF/JmD8lZQOL5WZ7WgfUd2MucOaxq3cd66rMew+iwkfqDzFJQewQQw==
+"@docker/actions-toolkit@0.21.1":
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/@docker/actions-toolkit/-/actions-toolkit-0.21.1.tgz#d4a4630d117dcb2f040e121e1f918c0b19ceebf8"
+  integrity sha512-JPdPr9AesJQ47kRB+ylGdCxTisEL5ptOtqeGGtpXZjX7zb3S//2EmptiNDV+G5F2LrMvnCz67ZZGipf0LGDPJQ==
   dependencies:
     "@actions/cache" "^3.2.4"
     "@actions/core" "^1.10.1"
@@ -783,7 +783,7 @@
     csv-parse "^5.5.5"
     handlebars "^4.7.8"
     jwt-decode "^4.0.0"
-    semver "^7.5.4"
+    semver "^7.6.0"
     tmp "^0.2.3"
 
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
@@ -3677,10 +3677,10 @@ semver@^6.0.0, semver@^6.1.0, semver@^6.3.0, semver@^6.3.1:
   resolved "https://registry.yarnpkg.com/semver/-/semver-6.3.1.tgz#556d2ef8689146e46dcea4bfdd095f3434dffcb4"
   integrity sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==
 
-semver@^7.3.5, semver@^7.5.3, semver@^7.5.4:
-  version "7.5.4"
-  resolved "https://registry.yarnpkg.com/semver/-/semver-7.5.4.tgz#483986ec4ed38e1c6c48c34894a9182dbff68a6e"
-  integrity sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==
+semver@^7.3.5, semver@^7.5.3, semver@^7.5.4, semver@^7.6.0:
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.6.0.tgz#1a46a4db4bffcccd97b743b5005c8325f23d4e2d"
+  integrity sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==
   dependencies:
     lru-cache "^6.0.0"
 
