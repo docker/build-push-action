@@ -118,14 +118,6 @@ to the default Git context:
           tags: user/app:latest
 ```
 
-> **Warning**
->
-> Subdirectory for Git context is available from [BuildKit v0.9.0](https://github.com/moby/buildkit/releases/tag/v0.9.0).
-> If you're using the `docker` builder (default if `setup-buildx-action` not used),
-> then BuildKit in Docker Engine will be used. As Docker Engine < v22.x.x embeds
-> Buildkit 0.8.2 at the moment, it does not support this feature. It's therefore
-> required to use the `setup-buildx-action` at the moment.
-
 Building from the current repository automatically uses the [GitHub Token](https://docs.github.com/en/actions/security-guides/automatic-token-authentication),
 so it does not need to be passed. If you want to authenticate against another
 private repository, you have to use a [secret](https://docs.docker.com/build/ci/github-actions/secrets)
@@ -232,7 +224,7 @@ Following inputs can be used as `step.with` keys
 | `network`          | String      | Set the networking mode for the `RUN` instructions during build                                                                                                                   |
 | `no-cache`         | Bool        | Do not use cache when building the image (default `false`)                                                                                                                        |
 | `no-cache-filters` | List/CSV    | Do not cache specified stages                                                                                                                                                     |
-| `outputs`¹         | List        | List of [output destinations](https://docs.docker.com/engine/reference/commandline/buildx_build/#output) (format: `type=local,dest=path`)                                         |
+| `outputs`          | List        | List of [output destinations](https://docs.docker.com/engine/reference/commandline/buildx_build/#output) (format: `type=local,dest=path`)                                         |
 | `platforms`        | List/CSV    | List of [target platforms](https://docs.docker.com/engine/reference/commandline/buildx_build/#platform) for build                                                                 |
 | `provenance`       | Bool/String | Generate [provenance](https://docs.docker.com/build/attestations/slsa-provenance/) attestation for the build (shorthand for `--attest=type=provenance`)                           |
 | `pull`             | Bool        | Always attempt to pull all referenced images (default `false`)                                                                                                                    |
@@ -247,10 +239,6 @@ Following inputs can be used as `step.with` keys
 | `target`           | String      | Sets the target stage to build                                                                                                                                                    |
 | `ulimit`           | List        | [Ulimit](https://docs.docker.com/engine/reference/commandline/buildx_build/#ulimit) options (e.g., `nofile=1024:1024`)                                                            |
 | `github-token`     | String      | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`)                                                            |
-
-> **Note**
->
-> * ¹ multiple `outputs` are [not yet supported](https://github.com/moby/buildkit/issues/1555)
 
 ### outputs
 
