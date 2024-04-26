@@ -3,12 +3,14 @@ import * as path from 'path';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
+
+import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Exec} from '@docker/actions-toolkit/lib/exec';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Inputs as BuildxInputs} from '@docker/actions-toolkit/lib/buildx/inputs';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
+
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker';
 
 import * as context from './context';
@@ -89,9 +91,9 @@ actionsToolkit.run(
       }
     });
 
-    const imageID = BuildxInputs.resolveBuildImageID();
-    const metadata = BuildxInputs.resolveBuildMetadata();
-    const digest = BuildxInputs.resolveDigest();
+    const imageID = Build.resolveImageID();
+    const metadata = Build.resolveMetadata();
+    const digest = Build.resolveDigest();
 
     if (imageID) {
       await core.group(`ImageID`, async () => {
@@ -107,8 +109,9 @@ actionsToolkit.run(
     }
     if (metadata) {
       await core.group(`Metadata`, async () => {
-        core.info(metadata);
-        core.setOutput('metadata', metadata);
+        const metadatadt = JSON.stringify(metadata, null, 2);
+        core.info(metadatadt);
+        core.setOutput('metadata', metadatadt);
       });
     }
   },
