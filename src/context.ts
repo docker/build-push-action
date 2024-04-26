@@ -98,13 +98,6 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   if (inputs.allow.length > 0) {
     args.push('--allow', inputs.allow.join(','));
   }
-  if (await toolkit.buildx.versionSatisfies('>=0.10.0')) {
-    await Util.asyncForEach(inputs.attests, async attest => {
-      args.push('--attest', attest);
-    });
-  } else if (inputs.attests.length > 0) {
-    core.warning("Attestations are only supported by buildx >= 0.10.0; the input 'attests' is ignored.");
-  }
   if (await toolkit.buildx.versionSatisfies('>=0.12.0')) {
     await Util.asyncForEach(inputs.annotations, async annotation => {
       args.push('--annotation', annotation);
@@ -157,26 +150,9 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     args.push('--platform', inputs.platforms.join(','));
   }
   if (await toolkit.buildx.versionSatisfies('>=0.10.0')) {
-    if (inputs.provenance) {
-      args.push('--provenance', inputs.provenance);
-    } else if ((await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !BuildxInputs.hasDockerExporter(inputs.outputs, inputs.load)) {
-      // if provenance not specified and BuildKit version compatible for
-      // attestation, set default provenance. Also needs to make sure user
-      // doesn't want to explicitly load the image to docker.
-      if (GitHub.context.payload.repository?.private ?? false) {
-        // if this is a private repository, we set the default provenance
-        // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
-        args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=min,inline-only=true`));
-      } else {
-        // for a public repository, we set max provenance mode.
-        args.push('--provenance', BuildxInputs.resolveProvenanceAttrs(`mode=max`));
-      }
-    }
-    if (inputs.sbom) {
-      args.push('--sbom', inputs.sbom);
-    }
-  } else if (inputs.provenance || inputs.sbom) {
-    core.warning("Attestations are only supported by buildx >= 0.10.0; the inputs 'provenance' and 'sbom' are ignored.");
+    args.push(...(await getAttestArgs(inputs, toolkit)));
+  } else {
+    core.warning("Attestations are only supported by buildx >= 0.10.0; the inputs 'attests', 'provenance' and 'sbom' are ignored.");
   }
   await Util.asyncForEach(inputs.secrets, async secret => {
     try {
@@ -236,5 +212,54 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   if (inputs.push) {
     args.push('--push');
   }
+  return args;
+}
+
+async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<string>> {
+  const args: Array<string> = [];
+
+  // check if provenance attestation is set in attests input
+  let hasAttestProvenance = false;
+  await Util.asyncForEach(inputs.attests, async (attest: string) => {
+    if (BuildxInputs.hasAttestationType('provenance', attest)) {
+      hasAttestProvenance = true;
+    }
+  });
+
+  let provenanceSet = false;
+  let sbomSet = false;
+  if (inputs.provenance) {
+    args.push('--attest', BuildxInputs.resolveAttestationAttrs(`type=provenance,${inputs.provenance}`));
+    provenanceSet = true;
+  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !BuildxInputs.hasDockerExporter(inputs.outputs, inputs.load)) {
+    // if provenance not specified in provenance or attests inputs and BuildKit
+    // version compatible for attestation, set default provenance. Also needs
+    // to make sure user doesn't want to explicitly load the image to docker.
+    if (GitHub.context.payload.repository?.private ?? false) {
+      // if this is a private repository, we set the default provenance
+      // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
+      args.push('--attest', `type=provenance,${BuildxInputs.resolveProvenanceAttrs(`mode=min,inline-only=true`)}`);
+    } else {
+      // for a public repository, we set max provenance mode.
+      args.push('--attest', `type=provenance,${BuildxInputs.resolveProvenanceAttrs(`mode=max`)}`);
+    }
+  }
+  if (inputs.sbom) {
+    args.push('--attest', BuildxInputs.resolveAttestationAttrs(`type=sbom,${inputs.sbom}`));
+    sbomSet = true;
+  }
+
+  // set attests but check if provenance or sbom types already set as
+  // provenance and sbom inputs take precedence over attests input.
+  await Util.asyncForEach(inputs.attests, async (attest: string) => {
+    if (!BuildxInputs.hasAttestationType('provenance', attest) && !BuildxInputs.hasAttestationType('sbom', attest)) {
+      args.push('--attest', BuildxInputs.resolveAttestationAttrs(attest));
+    } else if (!provenanceSet && BuildxInputs.hasAttestationType('provenance', attest)) {
+      args.push('--attest', BuildxInputs.resolveProvenanceAttrs(attest));
+    } else if (!sbomSet && BuildxInputs.hasAttestationType('sbom', attest)) {
+      args.push('--attest', attest);
+    }
+  });
+
   return args;
 }
