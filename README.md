@@ -31,6 +31,9 @@ ___
   * [Named contexts](https://docs.docker.com/build/ci/github-actions/named-contexts/)
   * [Copy image between registries](https://docs.docker.com/build/ci/github-actions/copy-image-registries/)
   * [Update Docker Hub repo description](https://docs.docker.com/build/ci/github-actions/update-dockerhub-desc/)
+  * [SBOM and provenance attestations](https://docs.docker.com/build/ci/github-actions/attestations/)
+  * [Annotations](https://docs.docker.com/build/ci/github-actions/annotations/)
+  * [Reproducible builds](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -186,6 +189,9 @@ jobs:
 * [Named contexts](https://docs.docker.com/build/ci/github-actions/named-contexts/)
 * [Copy image between registries](https://docs.docker.com/build/ci/github-actions/copy-image-registries/)
 * [Update Docker Hub repo description](https://docs.docker.com/build/ci/github-actions/update-dockerhub-desc/)
+* [SBOM and provenance attestations](https://docs.docker.com/build/ci/github-actions/attestations/)
+* [Annotations](https://docs.docker.com/build/ci/github-actions/annotations/)
+* [Reproducible builds](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
 
 ## Customizing
 
