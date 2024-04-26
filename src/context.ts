@@ -1,8 +1,9 @@
 import * as core from '@actions/core';
 import * as handlebars from 'handlebars';
+
+import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Inputs as BuildxInputs} from '@docker/actions-toolkit/lib/buildx/inputs';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {Util} from '@docker/actions-toolkit/lib/util';
 
@@ -62,7 +63,7 @@ export async function getInputs(): Promise<Inputs> {
     noCacheFilters: Util.getInputList('no-cache-filters'),
     outputs: Util.getInputList('outputs', {ignoreComma: true, quote: false}),
     platforms: Util.getInputList('platforms'),
-    provenance: BuildxInputs.getProvenanceInput('provenance'),
+    provenance: Build.getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
@@ -126,7 +127,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   }
   await Util.asyncForEach(inputs.secretEnvs, async secretEnv => {
     try {
-      args.push('--secret', BuildxInputs.resolveBuildSecretEnv(secretEnv));
+      args.push('--secret', Build.resolveSecretEnv(secretEnv));
     } catch (err) {
       core.warning(err.message);
     }
@@ -134,8 +135,8 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   if (inputs.file) {
     args.push('--file', inputs.file);
   }
-  if (!BuildxInputs.hasLocalExporter(inputs.outputs) && !BuildxInputs.hasTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || (await toolkit.buildx.versionSatisfies('>=0.4.2')))) {
-    args.push('--iidfile', BuildxInputs.getBuildImageIDFilePath());
+  if (!Build.hasLocalExporter(inputs.outputs) && !Build.hasTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || (await toolkit.buildx.versionSatisfies('>=0.4.2')))) {
+    args.push('--iidfile', Build.getImageIDFilePath());
   }
   await Util.asyncForEach(inputs.labels, async label => {
     args.push('--label', label);
@@ -156,20 +157,20 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   }
   await Util.asyncForEach(inputs.secrets, async secret => {
     try {
-      args.push('--secret', BuildxInputs.resolveBuildSecretString(secret));
+      args.push('--secret', Build.resolveSecretString(secret));
     } catch (err) {
       core.warning(err.message);
     }
   });
   await Util.asyncForEach(inputs.secretFiles, async secretFile => {
     try {
-      args.push('--secret', BuildxInputs.resolveBuildSecretFile(secretFile));
+      args.push('--secret', Build.resolveSecretFile(secretFile));
     } catch (err) {
       core.warning(err.message);
     }
   });
-  if (inputs.githubToken && !BuildxInputs.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
-    args.push('--secret', BuildxInputs.resolveBuildSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+  if (inputs.githubToken && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
+    args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
   }
   if (inputs.shmSize) {
     args.push('--shm-size', inputs.shmSize);
@@ -198,7 +199,7 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
     args.push('--load');
   }
   if (await toolkit.buildx.versionSatisfies('>=0.6.0')) {
-    args.push('--metadata-file', BuildxInputs.getBuildMetadataFilePath());
+    args.push('--metadata-file', Build.getMetadataFilePath());
   }
   if (inputs.network) {
     args.push('--network', inputs.network);
@@ -221,7 +222,7 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   // check if provenance attestation is set in attests input
   let hasAttestProvenance = false;
   await Util.asyncForEach(inputs.attests, async (attest: string) => {
-    if (BuildxInputs.hasAttestationType('provenance', attest)) {
+    if (Build.hasAttestationType('provenance', attest)) {
       hasAttestProvenance = true;
     }
   });
@@ -229,34 +230,34 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   let provenanceSet = false;
   let sbomSet = false;
   if (inputs.provenance) {
-    args.push('--attest', BuildxInputs.resolveAttestationAttrs(`type=provenance,${inputs.provenance}`));
+    args.push('--attest', Build.resolveAttestationAttrs(`type=provenance,${inputs.provenance}`));
     provenanceSet = true;
-  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !BuildxInputs.hasDockerExporter(inputs.outputs, inputs.load)) {
+  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !Build.hasDockerExporter(inputs.outputs, inputs.load)) {
     // if provenance not specified in provenance or attests inputs and BuildKit
     // version compatible for attestation, set default provenance. Also needs
     // to make sure user doesn't want to explicitly load the image to docker.
     if (GitHub.context.payload.repository?.private ?? false) {
       // if this is a private repository, we set the default provenance
       // attributes being set in buildx: https://github.com/docker/buildx/blob/fb27e3f919dcbf614d7126b10c2bc2d0b1927eb6/build/build.go#L603
-      args.push('--attest', `type=provenance,${BuildxInputs.resolveProvenanceAttrs(`mode=min,inline-only=true`)}`);
+      args.push('--attest', `type=provenance,${Build.resolveProvenanceAttrs(`mode=min,inline-only=true`)}`);
     } else {
       // for a public repository, we set max provenance mode.
-      args.push('--attest', `type=provenance,${BuildxInputs.resolveProvenanceAttrs(`mode=max`)}`);
+      args.push('--attest', `type=provenance,${Build.resolveProvenanceAttrs(`mode=max`)}`);
     }
   }
   if (inputs.sbom) {
-    args.push('--attest', BuildxInputs.resolveAttestationAttrs(`type=sbom,${inputs.sbom}`));
+    args.push('--attest', Build.resolveAttestationAttrs(`type=sbom,${inputs.sbom}`));
     sbomSet = true;
   }
 
   // set attests but check if provenance or sbom types already set as
   // provenance and sbom inputs take precedence over attests input.
   await Util.asyncForEach(inputs.attests, async (attest: string) => {
-    if (!BuildxInputs.hasAttestationType('provenance', attest) && !BuildxInputs.hasAttestationType('sbom', attest)) {
-      args.push('--attest', BuildxInputs.resolveAttestationAttrs(attest));
-    } else if (!provenanceSet && BuildxInputs.hasAttestationType('provenance', attest)) {
-      args.push('--attest', BuildxInputs.resolveProvenanceAttrs(attest));
-    } else if (!sbomSet && BuildxInputs.hasAttestationType('sbom', attest)) {
+    if (!Build.hasAttestationType('provenance', attest) && !Build.hasAttestationType('sbom', attest)) {
+      args.push('--attest', Build.resolveAttestationAttrs(attest));
+    } else if (!provenanceSet && Build.hasAttestationType('provenance', attest)) {
+      args.push('--attest', Build.resolveProvenanceAttrs(attest));
+    } else if (!sbomSet && Build.hasAttestationType('sbom', attest)) {
       args.push('--attest', attest);
     }
   });
