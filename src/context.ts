@@ -8,23 +8,23 @@ import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {Util} from '@docker/actions-toolkit/lib/util';
 
 export interface Inputs {
-  addHosts: string[];
+  'add-hosts': string[];
   allow: string[];
   annotations: string[];
   attests: string[];
-  buildArgs: string[];
-  buildContexts: string[];
+  'build-args': string[];
+  'build-contexts': string[];
   builder: string;
-  cacheFrom: string[];
-  cacheTo: string[];
-  cgroupParent: string;
+  'cache-from': string[];
+  'cache-to': string[];
+  'cgroup-parent': string;
   context: string;
   file: string;
   labels: string[];
   load: boolean;
   network: string;
-  noCache: boolean;
-  noCacheFilters: string[];
+  'no-cache': boolean;
+  'no-cache-filters': string[];
   outputs: string[];
   platforms: string[];
   provenance: string;
@@ -32,35 +32,35 @@ export interface Inputs {
   push: boolean;
   sbom: string;
   secrets: string[];
-  secretEnvs: string[];
-  secretFiles: string[];
-  shmSize: string;
+  'secret-envs': string[];
+  'secret-files': string[];
+  'shm-size': string;
   ssh: string[];
   tags: string[];
   target: string;
   ulimit: string[];
-  githubToken: string;
+  'github-token': string;
 }
 
 export async function getInputs(): Promise<Inputs> {
   return {
-    addHosts: Util.getInputList('add-hosts'),
+    'add-hosts': Util.getInputList('add-hosts'),
     allow: Util.getInputList('allow'),
     annotations: Util.getInputList('annotations', {ignoreComma: true}),
     attests: Util.getInputList('attests', {ignoreComma: true}),
-    buildArgs: Util.getInputList('build-args', {ignoreComma: true}),
-    buildContexts: Util.getInputList('build-contexts', {ignoreComma: true}),
+    'build-args': Util.getInputList('build-args', {ignoreComma: true}),
+    'build-contexts': Util.getInputList('build-contexts', {ignoreComma: true}),
     builder: core.getInput('builder'),
-    cacheFrom: Util.getInputList('cache-from', {ignoreComma: true}),
-    cacheTo: Util.getInputList('cache-to', {ignoreComma: true}),
-    cgroupParent: core.getInput('cgroup-parent'),
+    'cache-from': Util.getInputList('cache-from', {ignoreComma: true}),
+    'cache-to': Util.getInputList('cache-to', {ignoreComma: true}),
+    'cgroup-parent': core.getInput('cgroup-parent'),
     context: core.getInput('context') || Context.gitContext(),
     file: core.getInput('file'),
     labels: Util.getInputList('labels', {ignoreComma: true}),
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
-    noCache: core.getBooleanInput('no-cache'),
-    noCacheFilters: Util.getInputList('no-cache-filters'),
+    'no-cache': core.getBooleanInput('no-cache'),
+    'no-cache-filters': Util.getInputList('no-cache-filters'),
     outputs: Util.getInputList('outputs', {ignoreComma: true, quote: false}),
     platforms: Util.getInputList('platforms'),
     provenance: Build.getProvenanceInput('provenance'),
@@ -68,14 +68,14 @@ export async function getInputs(): Promise<Inputs> {
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
     secrets: Util.getInputList('secrets', {ignoreComma: true}),
-    secretEnvs: Util.getInputList('secret-envs'),
-    secretFiles: Util.getInputList('secret-files', {ignoreComma: true}),
-    shmSize: core.getInput('shm-size'),
+    'secret-envs': Util.getInputList('secret-envs'),
+    'secret-files': Util.getInputList('secret-files', {ignoreComma: true}),
+    'shm-size': core.getInput('shm-size'),
     ssh: Util.getInputList('ssh'),
     tags: Util.getInputList('tags'),
     target: core.getInput('target'),
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
-    githubToken: core.getInput('github-token')
+    'github-token': core.getInput('github-token')
   };
 }
 
@@ -93,7 +93,7 @@ export async function getArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<s
 
 async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): Promise<Array<string>> {
   const args: Array<string> = ['build'];
-  await Util.asyncForEach(inputs.addHosts, async addHost => {
+  await Util.asyncForEach(inputs['add-hosts'], async addHost => {
     args.push('--add-host', addHost);
   });
   if (inputs.allow.length > 0) {
@@ -106,26 +106,26 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   } else if (inputs.annotations.length > 0) {
     core.warning("Annotations are only supported by buildx >= 0.12.0; the input 'annotations' is ignored.");
   }
-  await Util.asyncForEach(inputs.buildArgs, async buildArg => {
+  await Util.asyncForEach(inputs['build-args'], async buildArg => {
     args.push('--build-arg', buildArg);
   });
   if (await toolkit.buildx.versionSatisfies('>=0.8.0')) {
-    await Util.asyncForEach(inputs.buildContexts, async buildContext => {
+    await Util.asyncForEach(inputs['build-contexts'], async buildContext => {
       args.push('--build-context', buildContext);
     });
-  } else if (inputs.buildContexts.length > 0) {
+  } else if (inputs['build-contexts'].length > 0) {
     core.warning("Build contexts are only supported by buildx >= 0.8.0; the input 'build-contexts' is ignored.");
   }
-  await Util.asyncForEach(inputs.cacheFrom, async cacheFrom => {
+  await Util.asyncForEach(inputs['cache-from'], async cacheFrom => {
     args.push('--cache-from', cacheFrom);
   });
-  await Util.asyncForEach(inputs.cacheTo, async cacheTo => {
+  await Util.asyncForEach(inputs['cache-to'], async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
-  if (inputs.cgroupParent) {
-    args.push('--cgroup-parent', inputs.cgroupParent);
+  if (inputs['cgroup-parent']) {
+    args.push('--cgroup-parent', inputs['cgroup-parent']);
   }
-  await Util.asyncForEach(inputs.secretEnvs, async secretEnv => {
+  await Util.asyncForEach(inputs['secret-envs'], async secretEnv => {
     try {
       args.push('--secret', Build.resolveSecretEnv(secretEnv));
     } catch (err) {
@@ -141,7 +141,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   await Util.asyncForEach(inputs.labels, async label => {
     args.push('--label', label);
   });
-  await Util.asyncForEach(inputs.noCacheFilters, async noCacheFilter => {
+  await Util.asyncForEach(inputs['no-cache-filters'], async noCacheFilter => {
     args.push('--no-cache-filter', noCacheFilter);
   });
   await Util.asyncForEach(inputs.outputs, async output => {
@@ -162,18 +162,18 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
       core.warning(err.message);
     }
   });
-  await Util.asyncForEach(inputs.secretFiles, async secretFile => {
+  await Util.asyncForEach(inputs['secret-files'], async secretFile => {
     try {
       args.push('--secret', Build.resolveSecretFile(secretFile));
     } catch (err) {
       core.warning(err.message);
     }
   });
-  if (inputs.githubToken && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
-    args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN=${inputs.githubToken}`));
+  if (inputs['github-token'] && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
+    args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN=${inputs['github-token']}`));
   }
-  if (inputs.shmSize) {
-    args.push('--shm-size', inputs.shmSize);
+  if (inputs['shm-size']) {
+    args.push('--shm-size', inputs['shm-size']);
   }
   await Util.asyncForEach(inputs.ssh, async ssh => {
     args.push('--ssh', ssh);
@@ -204,7 +204,7 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   if (inputs.network) {
     args.push('--network', inputs.network);
   }
-  if (inputs.noCache) {
+  if (inputs['no-cache']) {
     args.push('--no-cache');
   }
   if (inputs.pull) {
