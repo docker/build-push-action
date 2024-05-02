@@ -23,6 +23,7 @@ actionsToolkit.run(
     const startedTime = new Date();
     const inputs: context.Inputs = await context.getInputs();
     core.debug(`inputs: ${JSON.stringify(inputs)}`);
+    stateHelper.setInputs(inputs);
 
     const toolkit = new Toolkit();
 
@@ -139,17 +140,22 @@ actionsToolkit.run(
   // post
   async () => {
     if (stateHelper.buildRef.length > 0) {
-      await core.group(`Exporting build record`, async () => {
+      await core.group(`Generating build summary`, async () => {
         try {
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({
             refs: [stateHelper.buildRef]
           });
           core.info(`Build record exported to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
-          await GitHub.uploadArtifact({
+          const uploadRes = await GitHub.uploadArtifact({
             filename: exportRes.dockerbuildFilename,
             mimeType: 'application/gzip',
             retentionDays: 90
+          });
+          await GitHub.writeBuildSummary({
+            exportRes: exportRes,
+            uploadRes: uploadRes,
+            inputs: stateHelper.inputs
           });
         } catch (e) {
           core.warning(e.message);
