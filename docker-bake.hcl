@@ -3,7 +3,7 @@ group "default" {
 }
 
 group "pre-checkin" {
-  targets = ["vendor-update", "format", "build"]
+  targets = ["vendor", "format", "build"]
 }
 
 group "validate" {
@@ -34,7 +34,7 @@ target "lint" {
   output = ["type=cacheonly"]
 }
 
-target "vendor-update" {
+target "vendor" {
   dockerfile = "dev.Dockerfile"
   target = "vendor-update"
   output = ["."]
