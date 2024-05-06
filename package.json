@@ -1,17 +1,16 @@
 {
   "name": "docker-build-push",
   "description": "Build and push Docker images",
-  "main": "lib/main.js",
+  "main": "src/main.ts",
   "scripts": {
-    "build": "ncc build src/main.ts --source-map --minify --license licenses.txt",
+    "build": "ncc build --source-map --minify --license licenses.txt",
     "lint": "yarn run prettier && yarn run eslint",
     "format": "yarn run prettier:fix && yarn run eslint:fix",
     "eslint": "eslint --max-warnings=0 .",
     "eslint:fix": "eslint --fix .",
     "prettier": "prettier --check \"./**/*.ts\"",
     "prettier:fix": "prettier --write \"./**/*.ts\"",
-    "test": "jest",
-    "all": "yarn run build && yarn run format && yarn test"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -25,6 +24,7 @@
   ],
   "author": "Docker Inc.",
   "license": "Apache-2.0",
+  "packageManager": "yarn@3.6.3",
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@docker/actions-toolkit": "0.22.0",
