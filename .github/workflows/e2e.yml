@@ -88,13 +88,13 @@ jobs:
             username_secret: QUAY_USERNAME
             password_secret: QUAY_TOKEN
             type: remote
-#          -
-#            name: Artifactory
-#            registry: sforzando-build-team-local.jfrog.io
-#            slug: sforzando-build-team-local.jfrog.io/build-push-action-e2e
-#            username_secret: ARTIFACTORY_USERNAME
-#            password_secret: ARTIFACTORY_TOKEN
-#            type: remote
+          -
+            name: Artifactory
+            registry: infradock.jfrog.io
+            slug: infradock.jfrog.io/test-ghaction
+            username_secret: ARTIFACTORY_USERNAME
+            password_secret: ARTIFACTORY_TOKEN
+            type: remote
           -
             name: Harbor
             id: harbor
