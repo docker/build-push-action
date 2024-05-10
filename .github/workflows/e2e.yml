@@ -91,7 +91,7 @@ jobs:
           -
             name: Artifactory
             registry: infradock.jfrog.io
-            slug: infradock.jfrog.io/test-ghaction
+            slug: infradock.jfrog.io/test-ghaction/build-push-action
             username_secret: ARTIFACTORY_USERNAME
             password_secret: ARTIFACTORY_TOKEN
             type: remote
