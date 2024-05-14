@@ -136,7 +136,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     args.push('--file', inputs.file);
   }
   if (!Build.hasLocalExporter(inputs.outputs) && !Build.hasTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || (await toolkit.buildx.versionSatisfies('>=0.4.2')))) {
-    args.push('--iidfile', Build.getImageIDFilePath());
+    args.push('--iidfile', toolkit.buildxBuild.getImageIDFilePath());
   }
   await Util.asyncForEach(inputs.labels, async label => {
     args.push('--label', label);
@@ -199,7 +199,7 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
     args.push('--load');
   }
   if (await toolkit.buildx.versionSatisfies('>=0.6.0')) {
-    args.push('--metadata-file', Build.getMetadataFilePath());
+    args.push('--metadata-file', toolkit.buildxBuild.getMetadataFilePath());
   }
   if (inputs.network) {
     args.push('--network', inputs.network);

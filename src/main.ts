@@ -4,7 +4,6 @@ import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
 
-import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Exec} from '@docker/actions-toolkit/lib/exec';
@@ -91,9 +90,9 @@ actionsToolkit.run(
       }
     });
 
-    const imageID = Build.resolveImageID();
-    const metadata = Build.resolveMetadata();
-    const digest = Build.resolveDigest();
+    const imageID = toolkit.buildxBuild.resolveImageID();
+    const metadata = toolkit.buildxBuild.resolveMetadata();
+    const digest = toolkit.buildxBuild.resolveDigest();
 
     if (imageID) {
       await core.group(`ImageID`, async () => {
