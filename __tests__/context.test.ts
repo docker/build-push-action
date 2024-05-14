@@ -1,12 +1,15 @@
 import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
+
 import {Builder} from '@docker/actions-toolkit/lib/buildx/builder';
 import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
+import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
+
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/builder';
 import {GitHubRepo} from '@docker/actions-toolkit/lib/types/github';
 
@@ -33,6 +36,16 @@ jest.spyOn(Context, 'tmpName').mockImplementation((): string => {
 
 jest.spyOn(Docker, 'isAvailable').mockImplementation(async (): Promise<boolean> => {
   return true;
+});
+
+const metadataJson = path.join(tmpDir, 'metadata.json');
+jest.spyOn(Build.prototype, 'getMetadataFilePath').mockImplementation((): string => {
+  return metadataJson;
+});
+
+const imageIDFilePath = path.join(tmpDir, 'iidfile.txt');
+jest.spyOn(Build.prototype, 'getImageIDFilePath').mockImplementation((): string => {
+  return imageIDFilePath;
 });
 
 jest.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<BuilderInfo> => {
@@ -78,7 +91,7 @@ describe('getArgs', () => {
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '.'
       ]
     ],
@@ -101,7 +114,7 @@ ccc"`],
         '--build-arg', 'MY_ARG=val1,val2,val3',
         '--build-arg', 'ARG=val',
         '--build-arg', `MULTILINE=aaaa\nbbbb\nccc`,
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         'https://github.com/docker/build-push-action.git#refs/heads/master'
       ]
     ],
@@ -117,7 +130,7 @@ ccc"`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
@@ -172,7 +185,7 @@ ccc"`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '.'
       ]
     ],
@@ -189,7 +202,7 @@ ccc"`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '.'
       ]
@@ -230,7 +243,7 @@ ccc"`],
       [
         'build',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--platform', 'linux/amd64,linux/arm64',
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '--builder', 'builder-git-context-2',
@@ -264,7 +277,7 @@ ccc"`],
       [
         'build',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--platform', 'linux/amd64,linux/arm64',
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '--secret', `id=MYSECRET,src=${tmpName}`,
@@ -301,7 +314,7 @@ ccc`],
       [
         'build',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--platform', 'linux/amd64,linux/arm64',
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '--secret', `id=MYSECRET,src=${tmpName}`,
@@ -330,7 +343,7 @@ ccc`],
       [
         'build',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--secret', `id=MY_SECRET,src=${tmpName}`,
         '--builder', 'builder-git-context-2',
         '--network', 'host',
@@ -377,8 +390,8 @@ ccc`],
         '--add-host', 'docker:10.180.0.1',
         '--add-host', 'foo:10.0.0.1',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--iidfile', imageIDFilePath,
+        '--metadata-file', metadataJson,
         '--network', 'host',
         '--push',
         '.'
@@ -406,11 +419,11 @@ nproc=3`],
         '--add-host', 'foo:10.0.0.1',
         '--cgroup-parent', 'foo',
         '--file', './test/Dockerfile',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--shm-size', '2g',
         '--ulimit', 'nofile=1024:1024',
         '--ulimit', 'nproc=3',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -426,8 +439,8 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--iidfile', imageIDFilePath,
+        '--metadata-file', metadataJson,
         'https://github.com/docker/build-push-action.git#refs/heads/master:docker'
       ]
     ],
@@ -444,9 +457,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         'https://github.com/docker/build-push-action.git#refs/heads/master:subdir'
       ]
     ],
@@ -463,8 +476,8 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--iidfile', imageIDFilePath,
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -480,9 +493,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -499,9 +512,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -518,9 +531,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -537,9 +550,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', 'type=provenance,disabled=true',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -556,9 +569,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', 'type=provenance,builder-id=foo',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -575,9 +588,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         "--output", 'type=docker',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -593,9 +606,9 @@ nproc=3`],
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--load',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -613,9 +626,9 @@ nproc=3`],
       [
         'build',
         '--build-arg', 'FOO=bar#baz',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--load',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -635,9 +648,9 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         'build',
         '--secret', 'id=MY_SECRET,env=MY_SECRET_ENV',
         '--secret', 'id=ANOTHER_SECRET,env=ANOTHER_SECRET_ENV',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--load',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -656,9 +669,9 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         'build',
         '--secret', 'id=MY_SECRET,env=MY_SECRET_ENV',
         '--secret', 'id=ANOTHER_SECRET,env=ANOTHER_SECRET_ENV',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--load',
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -678,7 +691,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         'build',
         '--output', 'type=local,dest=./release-out',
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -702,7 +715,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--annotation', 'manifest-descriptor[linux/amd64]:example4=zzz',
         '--output', 'type=local,dest=./release-out',
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -719,10 +732,10 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         "--output", `type=image,"name=localhost:5000/name/app:latest,localhost:5000/name/app:foo",push-by-digest=true,name-canonical=true,push=true`,
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -740,10 +753,10 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
         '--attest', `type=sbom,disabled=false`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -761,9 +774,9 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],
@@ -780,9 +793,9 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ]),
       [
         'build',
-        '--iidfile', path.join(tmpDir, 'iidfile'),
+        '--iidfile', imageIDFilePath,
         '--attest', `type=provenance,mode=min,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
-        '--metadata-file', path.join(tmpDir, 'metadata-file'),
+        '--metadata-file', metadataJson,
         '.'
       ]
     ],

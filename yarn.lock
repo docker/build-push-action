@@ -1055,9 +1055,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.22.0":
-  version: 0.22.0
-  resolution: "@docker/actions-toolkit@npm:0.22.0"
+"@docker/actions-toolkit@npm:0.23.0":
+  version: 0.23.0
+  resolution: "@docker/actions-toolkit@npm:0.23.0"
   dependencies:
     "@actions/artifact": ^2.1.7
     "@actions/cache": ^3.2.4
@@ -1071,12 +1071,12 @@ __metadata:
     "@octokit/core": ^5.1.0
     "@octokit/plugin-rest-endpoint-methods": ^10.4.0
     async-retry: ^1.3.3
-    csv-parse: ^5.5.5
+    csv-parse: ^5.5.6
     handlebars: ^4.7.8
     jwt-decode: ^4.0.0
-    semver: ^7.6.0
+    semver: ^7.6.2
     tmp: ^0.2.3
-  checksum: 860bfe0f4b161181ffae47a9f82612b5d812b0197f582f5308fc80e8e3c55a47595134619cc7805df71a79a891fd10b6b1c4fb95c498423df1ea82a5fd84b44e
+  checksum: 7bac57e9d1af6214a16509051d7ac1f276880f332d44a0d52a3d9d3601204c0cbf9a23933772c5a0974e705d4295b32d036c4d37afe8965330d8f116df07faac
   languageName: node
   linkType: hard
 
@@ -3113,10 +3113,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csv-parse@npm:*, csv-parse@npm:^5.5.5":
+"csv-parse@npm:*":
   version: 5.5.5
   resolution: "csv-parse@npm:5.5.5"
   checksum: 9e76b3dc3dbbf0a9b1c3529843e3891f0da23d094bdb0540a3d8f4083d00110dd545399f9cf510498def6c1fc7012cc6bc00046d281f16d705add64099467973
+  languageName: node
+  linkType: hard
+
+"csv-parse@npm:^5.5.6":
+  version: 5.5.6
+  resolution: "csv-parse@npm:5.5.6"
+  checksum: ee06f97f674487dc1d001b360de8ea510a41b9d971abf43bcf9c3be22c83a3634df0d3ebfbe52fd49d145077066be7ff9f25de3fc6b71aefb973099b04147a25
   languageName: node
   linkType: hard
 
@@ -3260,7 +3267,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.10.1
-    "@docker/actions-toolkit": 0.22.0
+    "@docker/actions-toolkit": 0.23.0
     "@types/csv-parse": ^1.2.2
     "@types/node": ^20.5.9
     "@typescript-eslint/eslint-plugin": ^6.6.0
@@ -6064,7 +6071,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0":
+"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4":
   version: 7.6.0
   resolution: "semver@npm:7.6.0"
   dependencies:
@@ -6072,6 +6079,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 7427f05b70786c696640edc29fdd4bc33b2acf3bbe1740b955029044f80575fc664e1a512e4113c3af21e767154a94b4aa214bf6cd6e42a1f6dba5914e0b208c
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.6.2":
+  version: 7.6.2
+  resolution: "semver@npm:7.6.2"
+  bin:
+    semver: bin/semver.js
+  checksum: 40f6a95101e8d854357a644da1b8dd9d93ce786d5c6a77227bc69dbb17bea83d0d1d1d7c4cd5920a6df909f48e8bd8a5909869535007f90278289f2451d0292d
   languageName: node
   linkType: hard
 
