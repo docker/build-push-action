@@ -141,6 +141,10 @@ actionsToolkit.run(
   async () => {
     if (stateHelper.buildRef.length > 0) {
       await core.group(`Generating build summary`, async () => {
+        if (process.env.DOCKER_BUILD_NO_SUMMARY && Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY)) {
+          core.info('Summary disabled');
+          return;
+        }
         try {
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({

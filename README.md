@@ -37,6 +37,7 @@ ___
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
+  * [environment variables](#environment-variables)
 * [Troubleshooting](#troubleshooting)
 * [Contributing](#contributing)
 
@@ -255,6 +256,12 @@ The following outputs are available:
 | `imageid`  | String  | Image ID              |
 | `digest`   | String  | Image digest          |
 | `metadata` | JSON    | Build result metadata |
+
+### environment variables
+
+| Name                      | Type | Description                                                                                                       |
+|---------------------------|------|-------------------------------------------------------------------------------------------------------------------|
+| `DOCKER_BUILD_NO_SUMMARY` | Bool | If `true`, [build summary](https://docs.docker.com/build/ci/github-actions/build-summary/) generation is disabled |
 
 ## Troubleshooting
 
