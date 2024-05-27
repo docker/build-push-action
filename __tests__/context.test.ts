@@ -10,7 +10,7 @@ import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 
-import {BuilderInfo} from '@docker/actions-toolkit/lib/types/builder';
+import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {GitHubRepo} from '@docker/actions-toolkit/lib/types/github';
 
 import * as context from '../src/context';
