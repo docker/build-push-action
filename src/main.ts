@@ -83,6 +83,7 @@ actionsToolkit.run(
     await core.group(`Builder info`, async () => {
       const builder = await toolkit.builder.inspect(inputs.builder);
       core.info(JSON.stringify(builder, null, 2));
+      stateHelper.setBuilder(builder);
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
@@ -143,6 +144,10 @@ actionsToolkit.run(
       await core.group(`Generating build summary`, async () => {
         if (process.env.DOCKER_BUILD_NO_SUMMARY && Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY)) {
           core.info('Summary disabled');
+          return;
+        }
+        if (stateHelper.builder && stateHelper.builder.driver === 'cloud') {
+          core.info('Summary is not yet supported with Docker Build Cloud');
           return;
         }
         try {
