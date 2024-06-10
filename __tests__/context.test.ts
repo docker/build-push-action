@@ -494,7 +494,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -513,7 +513,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -532,7 +532,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -690,7 +690,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       [
         'build',
         '--output', 'type=local,dest=./release-out',
-        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -714,7 +714,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--annotation', 'manifest:example3=yyy',
         '--annotation', 'manifest-descriptor[linux/amd64]:example4=zzz',
         '--output', 'type=local,dest=./release-out',
-        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -734,7 +734,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         'build',
         '--iidfile', imageIDFilePath,
         "--output", `type=image,"name=localhost:5000/name/app:latest,localhost:5000/name/app:foo",push-by-digest=true,name-canonical=true,push=true`,
-        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -754,7 +754,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--attest', `type=sbom,disabled=false`,
         '--metadata-file', metadataJson,
         '.'
@@ -775,7 +775,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
@@ -794,7 +794,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--attest', `type=provenance,mode=min,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789`,
+        '--attest', `type=provenance,mode=min,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
       ]
