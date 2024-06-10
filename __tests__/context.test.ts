@@ -799,6 +799,27 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '.'
       ]
     ],
+    [
+      34,
+      '0.14.1',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+        ['cache-to', 'type=gha'],
+        ['github-token', `abcd1234`],
+      ]),
+      [
+        'build',
+        '--cache-to', 'type=gha,repository=docker/build-push-action,ghtoken=abcd1234',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--metadata-file', metadataJson,
+        '.'
+      ]
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
