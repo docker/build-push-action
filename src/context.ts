@@ -139,7 +139,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     args.push('--cache-from', cacheFrom);
   });
   await Util.asyncForEach(inputs['cache-to'], async cacheTo => {
-    args.push('--cache-to', cacheTo);
+    args.push('--cache-to', Build.resolveCacheToAttrs(cacheTo, inputs['github-token']));
   });
   if (inputs['cgroup-parent']) {
     args.push('--cgroup-parent', inputs['cgroup-parent']);
