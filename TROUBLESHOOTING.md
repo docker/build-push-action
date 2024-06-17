@@ -59,7 +59,7 @@ jobs:
         uses: crazy-max/ghaction-setup-containerd@v2
       -
         name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -112,7 +112,7 @@ to generate sanitized tags:
     tags: latest
 
 - name: Build and push
-  uses: docker/build-push-action@v5
+  uses: docker/build-push-action@v6
   with:
     context: .
     push: true
@@ -130,7 +130,7 @@ Or a dedicated step to sanitize the slug:
     script: return 'ghcr.io/${{ github.repository }}'.toLowerCase()
 
 - name: Build and push
-  uses: docker/build-push-action@v5
+  uses: docker/build-push-action@v6
   with:
     context: .
     push: true

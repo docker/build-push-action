@@ -90,7 +90,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           tags: user/app:latest
@@ -115,7 +115,7 @@ to the default Git context:
         uses: docker/setup-buildx-action@v3
       -
         name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: "{{defaultContext}}:mysubdir"
           push: true
@@ -130,7 +130,7 @@ named `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
 ```yaml
       -
         name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           tags: user/app:latest
@@ -169,7 +169,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
