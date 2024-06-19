@@ -1345,7 +1345,7 @@ jobs:
         run: |
           docker image inspect localhost:5000/name/app:latest
 
-  disable-summary:
+  summary-disabled:
     runs-on: ubuntu-latest
     steps:
       -
@@ -1367,3 +1367,22 @@ jobs:
           file: ./test/Dockerfile
         env:
           DOCKER_BUILD_NO_SUMMARY: true
+
+  summary-not-supported:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: action
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: v0.11.2
+      -
+        name: Build
+        uses: ./action
+        with:
+          file: ./test/Dockerfile

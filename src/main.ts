@@ -13,6 +13,7 @@ import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {Util} from '@docker/actions-toolkit/lib/util';
 
+import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 
 import * as context from './context';
@@ -80,10 +81,10 @@ actionsToolkit.run(
       await toolkit.buildx.printVersion();
     });
 
+    let builder: BuilderInfo;
     await core.group(`Builder info`, async () => {
-      const builder = await toolkit.builder.inspect(inputs.builder);
+      builder = await toolkit.builder.inspect(inputs.builder);
       core.info(JSON.stringify(builder, null, 2));
-      stateHelper.setBuilder(builder);
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
@@ -125,13 +126,30 @@ actionsToolkit.run(
         core.setOutput('metadata', metadatadt);
       });
     }
+
+    let ref: string;
     await core.group(`Reference`, async () => {
-      const ref = await buildRef(toolkit, startedTime, inputs.builder);
+      ref = await buildRef(toolkit, startedTime, inputs.builder);
       if (ref) {
         core.info(ref);
         stateHelper.setBuildRef(ref);
       } else {
-        core.warning('No build ref found');
+        core.warning('No build reference found');
+      }
+    });
+
+    await core.group(`Check build summary support`, async () => {
+      if (process.env.DOCKER_BUILD_NO_SUMMARY && Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY)) {
+        core.info('Build summary disabled');
+      } else if (!ref) {
+        core.warning('Build summary requires a build reference');
+      } else if (builder && builder.driver === 'cloud') {
+        core.warning('Build summary is not yet supported with Docker Build Cloud');
+      } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
+        core.warning('Build summary requires Buildx >= 0.13.0');
+      } else {
+        core.info('Build summary supported!');
+        stateHelper.setSummarySupported();
       }
     });
     if (err) {
@@ -140,16 +158,8 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.buildRef.length > 0) {
+    if (stateHelper.isSummarySupported && stateHelper.buildRef.length > 0) {
       await core.group(`Generating build summary`, async () => {
-        if (process.env.DOCKER_BUILD_NO_SUMMARY && Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY)) {
-          core.info('Summary disabled');
-          return;
-        }
-        if (stateHelper.builder && stateHelper.builder.driver === 'cloud') {
-          core.info('Summary is not yet supported with Docker Build Cloud');
-          return;
-        }
         try {
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({
