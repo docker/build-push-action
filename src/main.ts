@@ -151,6 +151,7 @@ actionsToolkit.run(
           return;
         }
         try {
+          const exportRetentionDays = buildExportRetentionDays();
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({
             refs: [stateHelper.buildRef]
@@ -159,7 +160,7 @@ actionsToolkit.run(
           const uploadRes = await GitHub.uploadArtifact({
             filename: exportRes.dockerbuildFilename,
             mimeType: 'application/gzip',
-            retentionDays: 90
+            retentionDays: exportRetentionDays
           });
           await GitHub.writeBuildSummary({
             exportRes: exportRes,
@@ -196,4 +197,14 @@ async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promis
     since: since
   });
   return Object.keys(refs).length > 0 ? Object.keys(refs)[0] : '';
+}
+
+function buildExportRetentionDays(): number | undefined {
+  if (process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS) {
+    const res = parseInt(process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS);
+    if (isNaN(res)) {
+      throw Error(`Invalid build export retention days: ${process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS}`);
+    }
+    return res;
+  }
 }
