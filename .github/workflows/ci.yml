@@ -1367,3 +1367,32 @@ jobs:
           file: ./test/Dockerfile
         env:
           DOCKER_BUILD_NO_SUMMARY: true
+
+  export-retention-days:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        days:
+          - 2
+          - 0
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: action
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./action
+        with:
+          file: ./test/Dockerfile
+        env:
+          DOCKER_BUILD_EXPORT_RETENTION_DAYS: ${{ matrix.days }}
