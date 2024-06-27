@@ -19,21 +19,7 @@ ___
   * [Git context](#git-context)
   * [Path context](#path-context)
 * [Examples](#examples)
-  * [Multi-platform image](https://docs.docker.com/build/ci/github-actions/multi-platform/)
-  * [Secrets](https://docs.docker.com/build/ci/github-actions/secrets/)
-  * [Push to multi-registries](https://docs.docker.com/build/ci/github-actions/push-multi-registries/)
-  * [Manage tags and labels](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
-  * [Cache management](https://docs.docker.com/build/ci/github-actions/cache/)
-  * [Export to Docker](https://docs.docker.com/build/ci/github-actions/export-docker/)
-  * [Test before push](https://docs.docker.com/build/ci/github-actions/test-before-push/)
-  * [Local registry](https://docs.docker.com/build/ci/github-actions/local-registry/)
-  * [Share built image between jobs](https://docs.docker.com/build/ci/github-actions/share-image-jobs/)
-  * [Named contexts](https://docs.docker.com/build/ci/github-actions/named-contexts/)
-  * [Copy image between registries](https://docs.docker.com/build/ci/github-actions/copy-image-registries/)
-  * [Update Docker Hub repo description](https://docs.docker.com/build/ci/github-actions/update-dockerhub-desc/)
-  * [SBOM and provenance attestations](https://docs.docker.com/build/ci/github-actions/attestations/)
-  * [Annotations](https://docs.docker.com/build/ci/github-actions/annotations/)
-  * [Reproducible builds](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
+* [Summaries](#summaries)
 * [Customizing](#customizing)
   * [inputs](#inputs)
   * [outputs](#outputs)
@@ -193,6 +179,26 @@ jobs:
 * [SBOM and provenance attestations](https://docs.docker.com/build/ci/github-actions/attestations/)
 * [Annotations](https://docs.docker.com/build/ci/github-actions/annotations/)
 * [Reproducible builds](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
+
+## Summaries
+
+This action generates a [job summary](https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/)
+that provides a detailed overview of the build execution. The summary shows an
+overview of all the steps executed during the build, including the build inputs
+and eventual errors.
+
+![build-push-action job summary](./.github/build-push-summary.png)
+
+The summary also includes a link for downloading the build record with
+additional details about the build, including build stats, logs, outputs, and
+more. The build record can be imported to Docker Desktop for inspecting the
+build in greater detail.
+
+Summaries are enabled by default, but can be disabled with the
+`DOCKER_BUILD_NO_SUMMARY` [environment variable](#environment-variables).
+
+For more information about summaries, refer to the
+[documentation](https://docs.docker.com/go/build-summary/).
 
 ## Customizing
 
