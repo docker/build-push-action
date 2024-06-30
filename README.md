@@ -55,8 +55,6 @@ name: ci
 
 on:
   push:
-    branches:
-      - 'main'
 
 jobs:
   docker:
@@ -95,11 +93,6 @@ to the default Git context:
 
 ```yaml
       -
-        # Setting up Docker Buildx with docker-container driver is required
-        # at the moment to be able to use a subdirectory with Git context
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
         name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -131,8 +124,6 @@ name: ci
 
 on:
   push:
-    branches:
-      - 'main'
 
 jobs:
   docker:
@@ -204,7 +195,7 @@ For more information about summaries, refer to the
 
 ### inputs
 
-Following inputs can be used as `step.with` keys
+The following inputs can be used as `step.with` keys:
 
 > `List` type is a newline-delimited string
 > ```yaml
