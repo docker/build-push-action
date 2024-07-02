@@ -138,7 +138,7 @@ actionsToolkit.run(
     });
 
     await core.group(`Check build summary support`, async () => {
-      if (buildSummaryDisabled()) {
+      if (!buildSummaryEnabled()) {
         core.info('Build summary disabled');
       } else if (GitHub.isGHES) {
         core.warning('Build summary is not yet supported on GHES');
@@ -211,14 +211,14 @@ async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promis
   return Object.keys(refs).length > 0 ? Object.keys(refs)[0] : '';
 }
 
-function buildSummaryDisabled(): boolean {
+function buildSummaryEnabled(): boolean {
   if (process.env.DOCKER_BUILD_NO_SUMMARY) {
-    core.warning('DOCKER_BUILD_NO_SUMMARY is deprecated. Use DOCKER_BUILD_SUMMARY_DISABLE instead.');
-    return Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
-  } else if (process.env.DOCKER_BUILD_SUMMARY_DISABLE) {
-    return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY_DISABLE);
+    core.warning('DOCKER_BUILD_NO_SUMMARY is deprecated. Set DOCKER_BUILD_SUMMARY to false instead.');
+    return !Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
+  } else if (process.env.DOCKER_BUILD_SUMMARY) {
+    return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
   }
-  return false;
+  return true;
 }
 
 function buildExportRetentionDays(): number | undefined {
