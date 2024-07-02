@@ -186,7 +186,7 @@ more. The build record can be imported to Docker Desktop for inspecting the
 build in greater detail.
 
 Summaries are enabled by default, but can be disabled with the
-`DOCKER_BUILD_NO_SUMMARY` [environment variable](#environment-variables).
+`DOCKER_BUILD_SUMMARY` [environment variable](#environment-variables).
 
 For more information about summaries, refer to the
 [documentation](https://docs.docker.com/go/build-summary/).
@@ -256,10 +256,10 @@ The following outputs are available:
 
 ### environment variables
 
-| Name                                 | Type   | Description                                                                                                                                                                                                                                                        |
-|--------------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `DOCKER_BUILD_SUMMARY_DISABLE`       | Bool   | If `true`, [build summary](https://docs.docker.com/build/ci/github-actions/build-summary/) generation is disabled                                                                                                                                                  |
-| `DOCKER_BUILD_EXPORT_RETENTION_DAYS` | Number | Duration after which build export artifact will expire in days. Defaults to repository/org [retention settings](https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#artifact-and-log-retention-policy) if unset or `0` |
+| Name                                 | Type   | Default | Description                                                                                                                                                                                                                                                        |
+|--------------------------------------|--------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `DOCKER_BUILD_SUMMARY`               | Bool   | `true`  | If `false`, [build summary](https://docs.docker.com/build/ci/github-actions/build-summary/) generation is disabled                                                                                                                                                 |
+| `DOCKER_BUILD_EXPORT_RETENTION_DAYS` | Number |         | Duration after which build export artifact will expire in days. Defaults to repository/org [retention settings](https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#artifact-and-log-retention-policy) if unset or `0` |
 
 ## Troubleshooting
 
