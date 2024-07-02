@@ -165,9 +165,9 @@ actionsToolkit.run(
       await core.group(`Generating build summary`, async () => {
         try {
           const recordUploadEnabled = buildRecordUploadEnabled();
-          let exportRetentionDays: number | undefined;
+          let recordRetentionDays: number | undefined;
           if (recordUploadEnabled) {
-            exportRetentionDays = buildExportRetentionDays();
+            recordRetentionDays = buildRecordRetentionDays();
           }
 
           const buildxHistory = new BuildxHistory();
@@ -181,7 +181,7 @@ actionsToolkit.run(
             uploadRes = await GitHub.uploadArtifact({
               filename: exportRes.dockerbuildFilename,
               mimeType: 'application/gzip',
-              retentionDays: exportRetentionDays
+              retentionDays: recordRetentionDays
             });
           }
 
@@ -239,11 +239,18 @@ function buildRecordUploadEnabled(): boolean {
   return true;
 }
 
-function buildExportRetentionDays(): number | undefined {
+function buildRecordRetentionDays(): number | undefined {
+  let val: string | undefined;
   if (process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS) {
-    const res = parseInt(process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS);
+    core.warning('DOCKER_BUILD_EXPORT_RETENTION_DAYS is deprecated. Use DOCKER_BUILD_RECORD_RETENTION_DAYS instead.');
+    val = process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS;
+  } else if (process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS) {
+    val = process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS;
+  }
+  if (val) {
+    const res = parseInt(val);
     if (isNaN(res)) {
-      throw Error(`Invalid build export retention days: ${process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS}`);
+      throw Error(`Invalid build record retention days: ${val}`);
     }
     return res;
   }

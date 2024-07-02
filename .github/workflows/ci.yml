@@ -1435,7 +1435,7 @@ jobs:
         env:
           DOCKER_BUILD_RECORD_UPLOAD: false
 
-  export-retention-days:
+  record-retention-days:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1462,4 +1462,4 @@ jobs:
         with:
           file: ./test/Dockerfile
         env:
-          DOCKER_BUILD_EXPORT_RETENTION_DAYS: ${{ matrix.days }}
+          DOCKER_BUILD_RECORD_RETENTION_DAYS: ${{ matrix.days }}
