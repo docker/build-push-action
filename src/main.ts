@@ -15,6 +15,7 @@ import {Util} from '@docker/actions-toolkit/lib/util';
 
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
+import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 
 import * as context from './context';
 
@@ -163,17 +164,27 @@ actionsToolkit.run(
     if (stateHelper.isSummarySupported) {
       await core.group(`Generating build summary`, async () => {
         try {
-          const exportRetentionDays = buildExportRetentionDays();
+          const recordUploadEnabled = buildRecordUploadEnabled();
+          let recordRetentionDays: number | undefined;
+          if (recordUploadEnabled) {
+            recordRetentionDays = buildRecordRetentionDays();
+          }
+
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({
             refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
           });
-          core.info(`Build record exported to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
-          const uploadRes = await GitHub.uploadArtifact({
-            filename: exportRes.dockerbuildFilename,
-            mimeType: 'application/gzip',
-            retentionDays: exportRetentionDays
-          });
+          core.info(`Build record written to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
+
+          let uploadRes: UploadArtifactResponse | undefined;
+          if (recordUploadEnabled) {
+            uploadRes = await GitHub.uploadArtifact({
+              filename: exportRes.dockerbuildFilename,
+              mimeType: 'application/gzip',
+              retentionDays: recordRetentionDays
+            });
+          }
+
           await GitHub.writeBuildSummary({
             exportRes: exportRes,
             uploadRes: uploadRes,
@@ -221,11 +232,25 @@ function buildSummaryEnabled(): boolean {
   return true;
 }
 
-function buildExportRetentionDays(): number | undefined {
+function buildRecordUploadEnabled(): boolean {
+  if (process.env.DOCKER_BUILD_RECORD_UPLOAD) {
+    return Util.parseBool(process.env.DOCKER_BUILD_RECORD_UPLOAD);
+  }
+  return true;
+}
+
+function buildRecordRetentionDays(): number | undefined {
+  let val: string | undefined;
   if (process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS) {
-    const res = parseInt(process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS);
+    core.warning('DOCKER_BUILD_EXPORT_RETENTION_DAYS is deprecated. Use DOCKER_BUILD_RECORD_RETENTION_DAYS instead.');
+    val = process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS;
+  } else if (process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS) {
+    val = process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS;
+  }
+  if (val) {
+    const res = parseInt(val);
     if (isNaN(res)) {
-      throw Error(`Invalid build export retention days: ${process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS}`);
+      throw Error(`Invalid build record retention days: ${val}`);
     }
     return res;
   }
