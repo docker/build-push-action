@@ -1366,7 +1366,7 @@ jobs:
         with:
           file: ./test/Dockerfile
         env:
-          DOCKER_BUILD_NO_SUMMARY: true
+          DOCKER_BUILD_SUMMARY_DISABLE: true
 
   summary-not-supported:
     runs-on: ubuntu-latest
