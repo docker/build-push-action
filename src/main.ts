@@ -15,6 +15,7 @@ import {Util} from '@docker/actions-toolkit/lib/util';
 
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
+import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 
 import * as context from './context';
 
@@ -163,17 +164,27 @@ actionsToolkit.run(
     if (stateHelper.isSummarySupported) {
       await core.group(`Generating build summary`, async () => {
         try {
-          const exportRetentionDays = buildExportRetentionDays();
+          const recordUploadEnabled = buildRecordUploadEnabled();
+          let exportRetentionDays: number | undefined;
+          if (recordUploadEnabled) {
+            exportRetentionDays = buildExportRetentionDays();
+          }
+
           const buildxHistory = new BuildxHistory();
           const exportRes = await buildxHistory.export({
             refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
           });
-          core.info(`Build record exported to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
-          const uploadRes = await GitHub.uploadArtifact({
-            filename: exportRes.dockerbuildFilename,
-            mimeType: 'application/gzip',
-            retentionDays: exportRetentionDays
-          });
+          core.info(`Build record written to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
+
+          let uploadRes: UploadArtifactResponse | undefined;
+          if (recordUploadEnabled) {
+            uploadRes = await GitHub.uploadArtifact({
+              filename: exportRes.dockerbuildFilename,
+              mimeType: 'application/gzip',
+              retentionDays: exportRetentionDays
+            });
+          }
+
           await GitHub.writeBuildSummary({
             exportRes: exportRes,
             uploadRes: uploadRes,
@@ -217,6 +228,13 @@ function buildSummaryEnabled(): boolean {
     return !Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
   } else if (process.env.DOCKER_BUILD_SUMMARY) {
     return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
+  }
+  return true;
+}
+
+function buildRecordUploadEnabled(): boolean {
+  if (process.env.DOCKER_BUILD_RECORD_UPLOAD) {
+    return Util.parseBool(process.env.DOCKER_BUILD_RECORD_UPLOAD);
   }
   return true;
 }
