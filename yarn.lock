@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/artifact@npm:^2.1.7":
-  version: 2.1.7
-  resolution: "@actions/artifact@npm:2.1.7"
+"@actions/artifact@npm:^2.1.8":
+  version: 2.1.8
+  resolution: "@actions/artifact@npm:2.1.8"
   dependencies:
     "@actions/core": ^1.10.0
     "@actions/github": ^5.1.1
@@ -30,7 +30,7 @@ __metadata:
     jwt-decode: ^3.1.2
     twirp-ts: ^2.5.0
     unzip-stream: ^0.3.1
-  checksum: 346c7caf43bdeb4a96c044ca3a6a005d82b977178b1a6be2c6954dfd59fef3344d2576bdd07c6cac9b54207cc88d7b1161cabd08c7cc15a1db86bf82463b36c7
+  checksum: 51a47c21bcdac705abb61dbaef923f2760354c39bcad44a31b129e18bf31f646e5148f92ee7e1198275d1dba7bebfd1d1500ad7f62f6de1e65b57b2d092d5341
   languageName: node
   linkType: hard
 
@@ -1055,11 +1055,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.31.0":
-  version: 0.31.0
-  resolution: "@docker/actions-toolkit@npm:0.31.0"
+"@docker/actions-toolkit@npm:0.33.0":
+  version: 0.33.0
+  resolution: "@docker/actions-toolkit@npm:0.33.0"
   dependencies:
-    "@actions/artifact": ^2.1.7
+    "@actions/artifact": ^2.1.8
     "@actions/cache": ^3.2.4
     "@actions/core": ^1.10.1
     "@actions/exec": ^1.1.1
@@ -1080,7 +1080,7 @@ __metadata:
     semver: ^7.6.2
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 34fdc08b6380bbee05fc740b161bb1172658da6d3e58f0f9cf8bc12011da638b37314e2a92a689542955189459ace241769c9f247a6917bf8365bc461221eecd
+  checksum: 510273d28bcf0c8a6acd4ffffa0b52cf98f46018f7f3f0772026b8fdb9422cf1dc851558140a0e95e8af3c584eb087ecb2dc48bdab0bc4f8dd9994959b052a22
   languageName: node
   linkType: hard
 
@@ -3150,7 +3150,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.10.1
-    "@docker/actions-toolkit": 0.31.0
+    "@docker/actions-toolkit": 0.33.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
