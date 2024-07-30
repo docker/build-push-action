@@ -1463,3 +1463,29 @@ jobs:
           file: ./test/Dockerfile
         env:
           DOCKER_BUILD_RECORD_RETENTION_DAYS: ${{ matrix.days }}
+
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        buildx-version:
+          - latest
+          - v0.14.1
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ matrix.buildx-version }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/lint.Dockerfile
