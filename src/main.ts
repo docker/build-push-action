@@ -143,16 +143,18 @@ actionsToolkit.run(
       }
     });
 
-    const warnings = toolkit.buildxBuild.resolveWarnings(metadata);
-    if (ref && warnings && warnings.length > 0) {
-      const annotations = await Buildx.convertWarningsToGitHubAnnotations(warnings, [ref]);
-      core.debug(`annotations: ${JSON.stringify(annotations, null, 2)}`);
-      if (annotations && annotations.length > 0) {
-        await core.group(`Generating GitHub annotations (${annotations.length} build checks found)`, async () => {
-          for (const annotation of annotations) {
-            core.warning(annotation.message, annotation);
-          }
-        });
+    if (buildChecksAnnotationsEnabled()) {
+      const warnings = toolkit.buildxBuild.resolveWarnings(metadata);
+      if (ref && warnings && warnings.length > 0) {
+        const annotations = await Buildx.convertWarningsToGitHubAnnotations(warnings, [ref]);
+        core.debug(`annotations: ${JSON.stringify(annotations, null, 2)}`);
+        if (annotations && annotations.length > 0) {
+          await core.group(`Generating GitHub annotations (${annotations.length} build checks found)`, async () => {
+            for (const annotation of annotations) {
+              core.warning(annotation.message, annotation);
+            }
+          });
+        }
       }
     }
 
@@ -238,6 +240,13 @@ async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promis
     since: since
   });
   return Object.keys(refs).length > 0 ? Object.keys(refs)[0] : '';
+}
+
+function buildChecksAnnotationsEnabled(): boolean {
+  if (process.env.DOCKER_BUILD_CHECKS_ANNOTATIONS) {
+    return Util.parseBool(process.env.DOCKER_BUILD_CHECKS_ANNOTATIONS);
+  }
+  return true;
 }
 
 function buildSummaryEnabled(): boolean {
