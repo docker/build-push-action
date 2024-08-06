@@ -97,7 +97,12 @@ actionsToolkit.run(
 
     let err: Error | undefined;
     await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
-      ignoreReturnCode: true
+      ignoreReturnCode: true,
+      env: Object.assign({}, process.env, {
+        BUILDX_METADATA_WARNINGS: 'true'
+      }) as {
+        [key: string]: string;
+      }
     }).then(res => {
       if (res.stderr.length > 0 && res.exitCode != 0) {
         err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
@@ -106,7 +111,7 @@ actionsToolkit.run(
 
     const imageID = toolkit.buildxBuild.resolveImageID();
     const metadata = toolkit.buildxBuild.resolveMetadata();
-    const digest = toolkit.buildxBuild.resolveDigest();
+    const digest = toolkit.buildxBuild.resolveDigest(metadata);
     if (imageID) {
       await core.group(`ImageID`, async () => {
         core.info(imageID);
@@ -127,7 +132,7 @@ actionsToolkit.run(
       });
     }
 
-    let ref: string;
+    let ref: string | undefined;
     await core.group(`Reference`, async () => {
       ref = await buildRef(toolkit, startedTime, inputs.builder);
       if (ref) {
@@ -137,6 +142,21 @@ actionsToolkit.run(
         core.info('No build reference found');
       }
     });
+
+    if (buildChecksAnnotationsEnabled()) {
+      const warnings = toolkit.buildxBuild.resolveWarnings(metadata);
+      if (ref && warnings && warnings.length > 0) {
+        const annotations = await Buildx.convertWarningsToGitHubAnnotations(warnings, [ref]);
+        core.debug(`annotations: ${JSON.stringify(annotations, null, 2)}`);
+        if (annotations && annotations.length > 0) {
+          await core.group(`Generating GitHub annotations (${annotations.length} build checks found)`, async () => {
+            for (const annotation of annotations) {
+              core.warning(annotation.message, annotation);
+            }
+          });
+        }
+      }
+    }
 
     await core.group(`Check build summary support`, async () => {
       if (!buildSummaryEnabled()) {
@@ -220,6 +240,13 @@ async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promis
     since: since
   });
   return Object.keys(refs).length > 0 ? Object.keys(refs)[0] : '';
+}
+
+function buildChecksAnnotationsEnabled(): boolean {
+  if (process.env.DOCKER_BUILD_CHECKS_ANNOTATIONS) {
+    return Util.parseBool(process.env.DOCKER_BUILD_CHECKS_ANNOTATIONS);
+  }
+  return true;
 }
 
 function buildSummaryEnabled(): boolean {
