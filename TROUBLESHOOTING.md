@@ -152,7 +152,11 @@ Sometimes when your workflows are heavy consumers of disk storage, it can happen
           sudo rm -rf /usr/share/dotnet # will release about 20GB if you don't need .NET
 ```
 
-- Another workaround can be to call `docker/setup-buildx-action` with docker driver
+- Another solution is to use a [local registry](https://docs.docker.com/build/ci/github-actions/local-registry/).
+
+More details in the [related issue](https://github.com/docker/build-push-action/issues/1176)
+
+- If the above fails, a workaround can be to call `docker/setup-buildx-action` with docker driver
 
 ```yaml
 name: Set up Docker Buildx
