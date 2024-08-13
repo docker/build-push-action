@@ -162,13 +162,13 @@ actionsToolkit.run(
       if (!buildSummaryEnabled()) {
         core.info('Build summary disabled');
       } else if (GitHub.isGHES) {
-        core.warning('Build summary is not yet supported on GHES');
+        core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
-        core.warning('Build summary requires Buildx >= 0.13.0');
+        core.info('Build summary requires Buildx >= 0.13.0');
       } else if (builder && builder.driver === 'cloud') {
-        core.warning('Build summary is not yet supported with Docker Build Cloud');
+        core.info('Build summary is not yet supported with Docker Build Cloud');
       } else if (!ref) {
-        core.warning('Build summary requires a build reference');
+        core.info('Build summary requires a build reference');
       } else {
         core.info('Build summary supported!');
         stateHelper.setSummarySupported();
