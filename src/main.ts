@@ -4,20 +4,101 @@ import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
 
-import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
-import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history';
-import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
-import {Exec} from '@docker/actions-toolkit/lib/exec';
-import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
-import {Util} from '@docker/actions-toolkit/lib/util';
+import { Buildx } from '@docker/actions-toolkit/lib/buildx/buildx';
+import { History as BuildxHistory } from '@docker/actions-toolkit/lib/buildx/history';
+import { Context } from '@docker/actions-toolkit/lib/context';
+import { Docker } from '@docker/actions-toolkit/lib/docker/docker';
+import { Exec } from '@docker/actions-toolkit/lib/exec';
+import { GitHub } from '@docker/actions-toolkit/lib/github';
+import { Toolkit } from '@docker/actions-toolkit/lib/toolkit';
+import { Util } from '@docker/actions-toolkit/lib/util';
 
-import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
-import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
-import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
+import { BuilderInfo } from '@docker/actions-toolkit/lib/types/buildx/builder';
+import { ConfigFile } from '@docker/actions-toolkit/lib/types/docker/docker';
+import { UploadArtifactResponse } from '@docker/actions-toolkit/lib/types/github';
+import axios, { AxiosInstance } from 'axios';
 
 import * as context from './context';
+
+const buildxVersion = "v0.17.0"
+
+async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
+  return axios.create({
+    baseURL: process.env.BUILDER_URL || 'https://d04fa050a7b2.ngrok.app/build_tasks',
+    headers: {
+      Authorization: `Bearer ${process.env.BLACKSMITH_ANVIL_TOKEN}`
+    }
+  });
+}
+
+// getBuildkitdAddr resolves the address to a remote Docker builder.
+// If it is unable to do so because of a timeout or an error it returns null.
+async function getBuildkitdAddr(): Promise<string | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  try {
+    const client = await getBlacksmithHttpClient();
+    const response = await client.post('');
+
+    const data = response.data;
+    const taskId = data['id'] as string;
+    stateHelper.setBlacksmithBuildTaskId(taskId);
+    const clientKey = data['client_key'] as string;
+    stateHelper.setBlacksmithClientKey(clientKey);
+    const clientCaCertificate = data['client_ca_certificate'] as string;
+    stateHelper.setBlacksmithClientCaCertificate(clientCaCertificate);
+    const rootCaCertificate = data['root_ca_certificate'] as string;
+    stateHelper.setBlacksmithRootCaCertificate(rootCaCertificate);
+
+    const startTime = Date.now();
+    while (Date.now() - startTime < 60000) {
+      const response = await client.get(`/${taskId}`);
+      const data = response.data;
+      core.info(`Got response from Blacksmith builder ${taskId}: ${JSON.stringify(data, null, 2)}`);
+      const ec2Instance = data['ec2_instance'] ?? null;
+      if (ec2Instance) {
+        const elapsedTime = Date.now() - startTime;
+        core.info(`Got EC2 instance IP after ${elapsedTime} ms`);
+        return `tcp://${ec2Instance['instance_ip']}:4242` as string;
+      }
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    await client.post(`/${stateHelper.blacksmithBuildTaskId}/abandon`);
+    return null;
+  } catch (error) {
+    core.warning(`Error in getBuildkitdAddr: ${error.message}`);
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
+  let toolPath;
+  const standalone = await toolkit.buildx.isStandalone();
+
+  if (!(await toolkit.buildx.isAvailable()) || version) {
+    await core.group(`Download buildx from GitHub Releases`, async () => {
+      toolPath = await toolkit.buildxInstall.download(version || 'latest', true);
+    });
+  }
+
+  if (toolPath) {
+    await core.group(`Install buildx`, async () => {
+      if (standalone) {
+        await toolkit.buildxInstall.installStandalone(toolPath);
+      } else {
+        await toolkit.buildxInstall.installPlugin(toolPath);
+      }
+    });
+  }
+
+  await core.group(`Buildx version`, async () => {
+    await toolkit.buildx.printVersion();
+  });
+}
+
 
 actionsToolkit.run(
   // main
@@ -46,6 +127,58 @@ actionsToolkit.run(
       }
     });
 
+    await core.group(`Setup buildx`, async () => {
+      await setupBuildx(buildxVersion, toolkit);
+
+      if (!(await toolkit.buildx.isAvailable())) {
+        core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
+        return;
+      }
+    });
+
+
+    let buildkitdAddr: string | null = null;
+    await core.group(`Starting Blacksmith remote builder`, async () => {
+      // TODO(adityamaru): Plumb the dockerfile path as the entity name.
+      buildkitdAddr = await getBuildkitdAddr();
+      if (buildkitdAddr) {
+        core.info(`Successfully obtained Blacksmith remote builder address: ${buildkitdAddr}`);
+      } else {
+        core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
+      }
+    });
+
+    if (buildkitdAddr) {
+      await core.group(`Creating a remote builder instance`, async () => {
+        // TODO(during review): do we want this to be something useful?
+        const name = `test-name`
+        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, inputs, toolkit));
+        core.info(`Creating builder with command: ${createCmd.command}`);
+        await Exec.getExecOutput(createCmd.command, createCmd.args, {
+          ignoreReturnCode: true
+        }).then(res => {
+          if (res.stderr.length > 0 && res.exitCode != 0) {
+            throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
+          }
+        });
+      });
+    } else {
+      // If we failed to obtain the address, let's check if we have an already configured builder.
+      await core.group(`Checking for configured builder`, async () => {
+        try {
+          const builder = await toolkit.builder.inspect();
+          if (builder) {
+            core.debug(`Found configured builder: ${builder.name}`);
+          } else {
+            // TODO(adityamaru): Setup a "default" builder that will build locally.
+            core.setFailed("No builder found. Please configure a builder before running this action.");
+          }
+        } catch (error) {
+          core.setFailed(`Error configuring builder: ${error.message}`);
+        }
+      });
+    }
+
     await core.group(`Proxy configuration`, async () => {
       let dockerConfig: ConfigFile | undefined;
       let dockerConfigMalformed = false;
@@ -71,16 +204,7 @@ actionsToolkit.run(
       }
     });
 
-    if (!(await toolkit.buildx.isAvailable())) {
-      core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
-      return;
-    }
-
     stateHelper.setTmpDir(Context.tmpDir());
-
-    await core.group(`Buildx version`, async () => {
-      await toolkit.buildx.printVersion();
-    });
 
     let builder: BuilderInfo;
     await core.group(`Builder info`, async () => {
@@ -217,7 +341,7 @@ actionsToolkit.run(
     }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
-        fs.rmSync(stateHelper.tmpDir, {recursive: true});
+        fs.rmSync(stateHelper.tmpDir, { recursive: true });
       });
     }
   }

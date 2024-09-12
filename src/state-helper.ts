@@ -1,11 +1,15 @@
 import * as core from '@actions/core';
 
-import {Inputs, sanitizeInputs} from './context';
+import { Inputs, sanitizeInputs } from './context';
 
 export const tmpDir = process.env['STATE_tmpDir'] || '';
 export const inputs = process.env['STATE_inputs'] ? JSON.parse(process.env['STATE_inputs']) : undefined;
 export const buildRef = process.env['STATE_buildRef'] || '';
 export const isSummarySupported = !!process.env['STATE_isSummarySupported'];
+export const blacksmithBuildTaskId = process.env['STATE_blacksmithBuildTaskId'] || '';
+export const blacksmithClientKey = process.env['STATE_blacksmithClientKey'] || '';
+export const blacksmithClientCaCertificate = process.env['STATE_blacksmithClientCaCertificate'] || '';
+export const blacksmithRootCaCertificate = process.env['STATE_blacksmithRootCaCertificate'] || '';
 
 export function setTmpDir(tmpDir: string) {
   core.saveState('tmpDir', tmpDir);
@@ -21,4 +25,20 @@ export function setBuildRef(buildRef: string) {
 
 export function setSummarySupported() {
   core.saveState('isSummarySupported', 'true');
+}
+
+export function setBlacksmithBuildTaskId(blacksmithBuildTaskId: string) {
+  core.saveState('blacksmithBuildTaskId', blacksmithBuildTaskId);
+}
+
+export function setBlacksmithClientKey(blacksmithClientKey: string) {
+  core.saveState('blacksmithClientKey', blacksmithClientKey);
+}
+
+export function setBlacksmithClientCaCertificate(blacksmithClientCaCertificate: string) {
+  core.saveState('blacksmithClientCaCertificate', blacksmithClientCaCertificate);
+}
+
+export function setBlacksmithRootCaCertificate(blacksmithRootCaCertificate: string) {
+  core.saveState('blacksmithRootCaCertificate', blacksmithRootCaCertificate);
 }
