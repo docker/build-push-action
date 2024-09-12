@@ -10,6 +10,7 @@ export const blacksmithBuildTaskId = process.env['STATE_blacksmithBuildTaskId'] 
 export const blacksmithClientKey = process.env['STATE_blacksmithClientKey'] || '';
 export const blacksmithClientCaCertificate = process.env['STATE_blacksmithClientCaCertificate'] || '';
 export const blacksmithRootCaCertificate = process.env['STATE_blacksmithRootCaCertificate'] || '';
+export const remoteDockerBuildStatus = process.env['STATE_remoteDockerBuildStatus'] || '';
 
 export function setTmpDir(tmpDir: string) {
   core.saveState('tmpDir', tmpDir);
@@ -41,4 +42,8 @@ export function setBlacksmithClientCaCertificate(blacksmithClientCaCertificate: 
 
 export function setBlacksmithRootCaCertificate(blacksmithRootCaCertificate: string) {
   core.saveState('blacksmithRootCaCertificate', blacksmithRootCaCertificate);
+}
+
+export function setRemoteDockerBuildStatus(remoteDockerBuildStatus: string) {
+  core.saveState('remoteDockerBuildStatus', remoteDockerBuildStatus);
 }

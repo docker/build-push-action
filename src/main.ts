@@ -31,9 +31,32 @@ async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   });
 }
 
-// getBuildkitdAddr resolves the address to a remote Docker builder.
+async function reportBuildCompleted() {
+  try {
+    const client = await getBlacksmithHttpClient();
+    const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/complete`);
+    core.info(`Blacksmith builder ${stateHelper.blacksmithBuildTaskId} completed: ${JSON.stringify(response.data)}`);
+  } catch (error) {
+    core.warning('Error completing Blacksmith build:', error);
+    throw error;
+  }
+}
+
+async function reportBuildFailed() {
+  try {
+    const client = await getBlacksmithHttpClient();
+    // TODO(adityamaru): This endpoint doesn't exist yet.
+    const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/failed`);
+    core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
+  } catch (error) {
+    core.warning('Error completing Blacksmith build:', error);
+    throw error;
+  }
+}
+
+// getRemoteBuilderAddr resolves the address to a remote Docker builder.
 // If it is unable to do so because of a timeout or an error it returns null.
-async function getBuildkitdAddr(): Promise<string | null> {
+async function getRemoteBuilderAddr(): Promise<string | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
@@ -137,18 +160,18 @@ actionsToolkit.run(
     });
 
 
-    let buildkitdAddr: string | null = null;
+    let remoteBuilderAddr: string | null = null;
     await core.group(`Starting Blacksmith remote builder`, async () => {
       // TODO(adityamaru): Plumb the dockerfile path as the entity name.
-      buildkitdAddr = await getBuildkitdAddr();
-      if (buildkitdAddr) {
-        core.info(`Successfully obtained Blacksmith remote builder address: ${buildkitdAddr}`);
+      remoteBuilderAddr = await getRemoteBuilderAddr();
+      if (remoteBuilderAddr) {
+        core.info(`Successfully obtained Blacksmith remote builder address: ${remoteBuilderAddr}`);
       } else {
         core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
       }
     });
 
-    if (buildkitdAddr) {
+    if (remoteBuilderAddr) {
       await core.group(`Creating a remote builder instance`, async () => {
         // TODO(during review): do we want this to be something useful?
         const name = `test-name`
@@ -300,11 +323,24 @@ actionsToolkit.run(
     });
 
     if (err) {
+      if (remoteBuilderAddr) {
+        stateHelper.setRemoteDockerBuildStatus('failure');
+      }
       throw err;
+    }
+    if (remoteBuilderAddr) {
+      stateHelper.setRemoteDockerBuildStatus('success');
     }
   },
   // post
   async () => {
+    if (stateHelper.remoteDockerBuildStatus != '') {
+      if (stateHelper.remoteDockerBuildStatus == 'success') {
+        await reportBuildCompleted();
+      } else {
+        await reportBuildFailed();
+      }
+    }
     if (stateHelper.isSummarySupported) {
       await core.group(`Generating build summary`, async () => {
         try {
