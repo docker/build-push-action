@@ -1,11 +1,11 @@
 import * as core from '@actions/core';
 import * as handlebars from 'handlebars';
 
-import { Build } from '@docker/actions-toolkit/lib/buildx/build';
-import { Context } from '@docker/actions-toolkit/lib/context';
-import { GitHub } from '@docker/actions-toolkit/lib/github';
-import { Toolkit } from '@docker/actions-toolkit/lib/toolkit';
-import { Util } from '@docker/actions-toolkit/lib/util';
+import {Build} from '@docker/actions-toolkit/lib/buildx/build';
+import {Context} from '@docker/actions-toolkit/lib/context';
+import {GitHub} from '@docker/actions-toolkit/lib/github';
+import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
+import {Util} from '@docker/actions-toolkit/lib/util';
 
 export interface Inputs {
   'add-hosts': string[];
@@ -46,37 +46,50 @@ export async function getInputs(): Promise<Inputs> {
   return {
     'add-hosts': Util.getInputList('add-hosts'),
     allow: Util.getInputList('allow'),
-    annotations: Util.getInputList('annotations', { ignoreComma: true }),
-    attests: Util.getInputList('attests', { ignoreComma: true }),
-    'build-args': Util.getInputList('build-args', { ignoreComma: true }),
-    'build-contexts': Util.getInputList('build-contexts', { ignoreComma: true }),
+    annotations: Util.getInputList('annotations', {ignoreComma: true}),
+    attests: Util.getInputList('attests', {ignoreComma: true}),
+    'build-args': Util.getInputList('build-args', {ignoreComma: true}),
+    'build-contexts': Util.getInputList('build-contexts', {ignoreComma: true}),
     builder: core.getInput('builder'),
-    'cache-from': Util.getInputList('cache-from', { ignoreComma: true }),
-    'cache-to': Util.getInputList('cache-to', { ignoreComma: true }),
+    'cache-from': Util.getInputList('cache-from', {ignoreComma: true}),
+    'cache-to': Util.getInputList('cache-to', {ignoreComma: true}),
     'cgroup-parent': core.getInput('cgroup-parent'),
     context: core.getInput('context') || Context.gitContext(),
     file: core.getInput('file'),
-    labels: Util.getInputList('labels', { ignoreComma: true }),
+    labels: Util.getInputList('labels', {ignoreComma: true}),
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
     'no-cache': core.getBooleanInput('no-cache'),
     'no-cache-filters': Util.getInputList('no-cache-filters'),
-    outputs: Util.getInputList('outputs', { ignoreComma: true, quote: false }),
+    outputs: Util.getInputList('outputs', {ignoreComma: true, quote: false}),
     platforms: Util.getInputList('platforms'),
     provenance: Build.getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
-    secrets: Util.getInputList('secrets', { ignoreComma: true }),
+    secrets: Util.getInputList('secrets', {ignoreComma: true}),
     'secret-envs': Util.getInputList('secret-envs'),
-    'secret-files': Util.getInputList('secret-files', { ignoreComma: true }),
+    'secret-files': Util.getInputList('secret-files', {ignoreComma: true}),
     'shm-size': core.getInput('shm-size'),
     ssh: Util.getInputList('ssh'),
     tags: Util.getInputList('tags'),
     target: core.getInput('target'),
-    ulimit: Util.getInputList('ulimit', { ignoreComma: true }),
+    ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
     'github-token': core.getInput('github-token')
   };
+}
+
+// getDockerfilePath resolves the path to the build entity. This is basically
+// {context}/{file} or {context}/{dockerfile} depending on the inputs.
+export function getDockerfilePath(inputs: Inputs): string {
+  const context = inputs.context || Context.gitContext();
+  if (inputs.file) {
+    return context + '/' + inputs.file;
+  } else if (inputs['dockerfile']) {
+    return context + '/' + inputs['dockerfile'];
+  } else {
+    return context;
+  }
 }
 
 export function sanitizeInputs(inputs: Inputs) {
@@ -284,12 +297,12 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   return args;
 }
 
-export async function getRemoteBuilderArgs(name: string, inputs: Inputs, toolkit: Toolkit): Promise<Array<string>> {
+export async function getRemoteBuilderArgs(name: string, builderUrl: string): Promise<Array<string>> {
   const args: Array<string> = ['create', '--name', name, '--driver', 'remote'];
-  if (inputs.platforms.length > 0) {
-    args.push('--platform', inputs.platforms.join(','));
-  }
+  args.push('--platform', 'linux/amd64');
   // Always use the remote builder, overriding whatever has been configured so far.
   args.push('--use');
+  // Use the provided builder URL
+  args.push(builderUrl);
   return args;
 }
