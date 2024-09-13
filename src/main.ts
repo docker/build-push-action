@@ -189,10 +189,16 @@ actionsToolkit.run(
         try {
           const builder = await toolkit.builder.inspect();
           if (builder) {
-            core.debug(`Found configured builder: ${builder.name}`);
+            core.info(`Found configured builder: ${builder.name}`);
           } else {
-            // TODO(adityamaru): Setup a "default" builder that will build locally.
-            core.setFailed('No builder found. Please configure a builder before running this action.');
+            // Create a local builder using the docker-container driver (which is the default driver in setup-buildx)
+            const createLocalBuilderCmd = 'docker buildx create --name local --driver docker-container --use';
+            try {
+              await Exec.exec(createLocalBuilderCmd);
+              core.info('Created and set a local builder for use');
+            } catch (error) {
+              core.setFailed(`Failed to create local builder: ${error.message}`);
+            }
           }
         } catch (error) {
           core.setFailed(`Error configuring builder: ${error.message}`);
