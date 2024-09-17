@@ -79,6 +79,19 @@ export async function getInputs(): Promise<Inputs> {
   };
 }
 
+// getDockerfilePath resolves the path to the build entity. This is basically
+// {context}/{file} or {context}/{dockerfile} depending on the inputs.
+export function getDockerfilePath(inputs: Inputs): string {
+  const context = inputs.context || Context.gitContext();
+  if (inputs.file) {
+    return context + '/' + inputs.file;
+  } else if (inputs['dockerfile']) {
+    return context + '/' + inputs['dockerfile'];
+  } else {
+    return context;
+  }
+}
+
 export function sanitizeInputs(inputs: Inputs) {
   const res = {};
   for (const key of Object.keys(inputs)) {
@@ -281,5 +294,15 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
     }
   });
 
+  return args;
+}
+
+export async function getRemoteBuilderArgs(name: string, builderUrl: string): Promise<Array<string>> {
+  const args: Array<string> = ['create', '--name', name, '--driver', 'remote'];
+  args.push('--platform', 'linux/amd64');
+  // Always use the remote builder, overriding whatever has been configured so far.
+  args.push('--use');
+  // Use the provided builder URL
+  args.push(builderUrl);
   return args;
 }
