@@ -95,7 +95,11 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
     await client.post(`/${stateHelper.blacksmithBuildTaskId}/abandon`);
     return null;
   } catch (error) {
-    core.warning(`Error in getBuildkitdAddr: ${error.message}`);
+    if (error.response && error.response.status === 404) {
+      core.warning('No builder instances were available, falling back to a local build');
+    } else {
+      core.warning(`Error in getBuildkitdAddr: ${error.message}`);
+    }
     return null;
   } finally {
     clearTimeout(timeoutId);
