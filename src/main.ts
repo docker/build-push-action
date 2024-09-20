@@ -24,7 +24,7 @@ const buildxVersion = 'v0.17.0';
 
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   return axios.create({
-    baseURL: process.env.BUILDER_URL || 'https://d04fa050a7b2.ngrok.app/build_tasks',
+    baseURL: process.env.BUILDER_URL || 'https://staginganvil.blacksmith.sh/build_tasks',
     headers: {
       Authorization: `Bearer ${process.env.BLACKSMITH_ANVIL_TOKEN}`
     }
