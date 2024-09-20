@@ -66,6 +66,7 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       payload = {dockerfile_path: dockerfilePath};
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
+    core.info(`Anvil service: ${client.defaults.baseURL}`);
     core.info(`Waiting for Blacksmith builder agent to be ready...`);
     const response = await client.post('', payload);
 
