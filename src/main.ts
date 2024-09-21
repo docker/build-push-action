@@ -174,7 +174,7 @@ actionsToolkit.run(
       remoteBuilderAddr = await getRemoteBuilderAddr(inputs);
       if (!remoteBuilderAddr) {
         if (inputs.nofallback) {
-          core.setFailed('Failed to obtain Blacksmith builder. Failing the build');
+          throw Error('Failed to obtain Blacksmith builder. Failing the build');
         } else {
           core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
         }
