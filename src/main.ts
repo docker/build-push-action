@@ -97,7 +97,9 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
     return null;
   } catch (error) {
     if (error.response && error.response.status === 404) {
-      core.warning('No builder instances were available, falling back to a local build');
+      if (!inputs.nofallback) {
+        core.warning('No builder instances were available, falling back to a local build');
+      }
     } else {
       core.warning(`Error in getBuildkitdAddr: ${error.message}`);
     }
@@ -171,7 +173,11 @@ actionsToolkit.run(
     await core.group(`Starting Blacksmith remote builder`, async () => {
       remoteBuilderAddr = await getRemoteBuilderAddr(inputs);
       if (!remoteBuilderAddr) {
-        core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
+        if (inputs.nofallback) {
+          core.setFailed('Failed to obtain Blacksmith builder. Failing the build');
+        } else {
+          core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
+        }
       }
     });
 

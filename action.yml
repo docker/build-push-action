@@ -7,6 +7,9 @@ branding:
   color: 'blue'
 
 inputs:
+  nofallback:
+    description: "Fail the build if the remote builder is not available; defaults to false"
+    required: false
   add-hosts:
     description: "List of a customs host-to-IP mapping (e.g., docker:10.180.0.1)"
     required: false
