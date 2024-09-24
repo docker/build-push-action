@@ -72,6 +72,7 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
 
     const data = response.data;
     const taskId = data['id'] as string;
+    core.info(`Submitted build task: ${taskId}`);
     stateHelper.setBlacksmithBuildTaskId(taskId);
     const clientKey = data['client_key'] as string;
     stateHelper.setBlacksmithClientKey(clientKey);
