@@ -67,7 +67,24 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
     core.info(`Anvil service: ${client.defaults.baseURL}`);
-    const response = await client.post('', payload);
+    let response;
+    let retries = 0;
+    const maxRetries = 10;
+    const retryDelay = 500;
+
+    while (retries < maxRetries) {
+      try {
+        response = await client.post('', payload);
+        break;
+      } catch (error) {
+        if (retries === maxRetries - 1) {
+          throw error;
+        }
+        retries++;
+        core.warning(`Request failed with status code ${error.response?.status}, retrying (${retries}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
 
     const data = response.data;
     const taskId = data['id'] as string;
