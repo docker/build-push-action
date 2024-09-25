@@ -46,7 +46,9 @@ async function reportBuildCompleted() {
 async function reportBuildAbandoned() {
   try {
     const client = await getBlacksmithHttpClient();
-    const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/abandon`);
+    const abandonURL = `/${stateHelper.blacksmithBuildTaskId}/abandon`;
+    core.info(`Abandoning Blacksmith build: ${abandonURL}`);
+    const response = await client.post(abandonURL);
     core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
   } catch (error) {
     core.warning('Error abandoning Blacksmith build:', error);
