@@ -67,7 +67,6 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
     core.info(`Anvil service: ${client.defaults.baseURL}`);
-    core.info(`Waiting for Blacksmith builder agent to be ready...`);
     const response = await client.post('', payload);
 
     const data = response.data;
@@ -90,11 +89,13 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
         const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
         core.info(`Blacksmith builder agent ready after ${elapsedTime} seconds`);
         return `tcp://${ec2Instance['instance_ip']}:4242` as string;
+      } else {
+        core.info(`Waiting...`);
       }
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    await client.post(`/${stateHelper.blacksmithBuildTaskId}/abandon`);
+    await client.post(`/${taskId}/abandon`);
     return null;
   } catch (error) {
     if (error.response && error.response.status === 404) {
