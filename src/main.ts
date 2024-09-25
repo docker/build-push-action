@@ -19,7 +19,6 @@ import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 import axios, {AxiosInstance} from 'axios';
 
 import * as context from './context';
-import {report} from 'process';
 
 const buildxVersion = 'v0.17.0';
 
@@ -43,11 +42,10 @@ async function reportBuildCompleted() {
   }
 }
 
-async function reportBuildAbandoned() {
+async function reportBuildAbandoned(taskId: string) {
   try {
     const client = await getBlacksmithHttpClient();
-    const abandonURL = `/${stateHelper.blacksmithBuildTaskId}/abandon`;
-    core.info(`Abandoning Blacksmith build: ${abandonURL}`);
+    const abandonURL = `/${taskId}/abandon`;
     const response = await client.post(abandonURL);
     core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
   } catch (error) {
@@ -126,7 +124,7 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    await reportBuildAbandoned();
+    await reportBuildAbandoned(taskId);
     return null;
   } catch (error) {
     if (error.response && error.response.status === 404) {
