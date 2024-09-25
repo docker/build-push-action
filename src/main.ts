@@ -49,7 +49,7 @@ async function reportBuildAbandoned() {
     const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/abandon`);
     core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
   } catch (error) {
-    core.warning('Error completing Blacksmith build:', error);
+    core.warning('Error abandoning Blacksmith build:', error);
     throw error;
   }
 }
@@ -60,7 +60,7 @@ async function reportBuildFailed() {
     const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`);
     core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
   } catch (error) {
-    core.warning('Error completing Blacksmith build:', error);
+    core.warning('Error failing Blacksmith build:', error);
     throw error;
   }
 }
