@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-import { Inputs, sanitizeInputs } from './context';
+import {Inputs, sanitizeInputs} from './context';
 
 export const tmpDir = process.env['STATE_tmpDir'] || '';
 export const inputs = process.env['STATE_inputs'] ? JSON.parse(process.env['STATE_inputs']) : undefined;
@@ -11,6 +11,7 @@ export const blacksmithClientKey = process.env['STATE_blacksmithClientKey'] || '
 export const blacksmithClientCaCertificate = process.env['STATE_blacksmithClientCaCertificate'] || '';
 export const blacksmithRootCaCertificate = process.env['STATE_blacksmithRootCaCertificate'] || '';
 export const remoteDockerBuildStatus = process.env['STATE_remoteDockerBuildStatus'] || '';
+export const blacksmithBuilderLaunchTime = process.env['STATE_blacksmithBuilderLaunchTime'] || '';
 
 export function setTmpDir(tmpDir: string) {
   core.saveState('tmpDir', tmpDir);
@@ -30,6 +31,11 @@ export function setSummarySupported() {
 
 export function setBlacksmithBuildTaskId(blacksmithBuildTaskId: string) {
   core.saveState('blacksmithBuildTaskId', blacksmithBuildTaskId);
+}
+
+// setBlacksmithBuilderLaunchTime sets the time (in seconds) it took to launch the Blacksmith builder
+export function setBlacksmithBuilderLaunchTime(blacksmithBuilderLaunchTime: string) {
+  core.saveState('blacksmithBuilderLaunchTime', blacksmithBuilderLaunchTime);
 }
 
 export function setBlacksmithClientKey(blacksmithClientKey: string) {
