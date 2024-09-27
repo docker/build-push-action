@@ -105,13 +105,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^2.0.1, @actions/http-client@npm:^2.1.0, @actions/http-client@npm:^2.1.1, @actions/http-client@npm:^2.2.0, @actions/http-client@npm:^2.2.1":
+"@actions/http-client@npm:^2.0.1, @actions/http-client@npm:^2.1.0, @actions/http-client@npm:^2.1.1, @actions/http-client@npm:^2.2.0":
   version: 2.2.1
   resolution: "@actions/http-client@npm:2.2.1"
   dependencies:
     tunnel: ^0.0.6
     undici: ^5.25.4
   checksum: c51c003cd697289136c0e81c0f9b8e57a9bb1a038dc7c9a91a71c02f4ae5e27ef7d3e305aefa7c815604049209d114c06e9991a5c5eaa055508519329267f962
+  languageName: node
+  linkType: hard
+
+"@actions/http-client@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "@actions/http-client@npm:2.2.3"
+  dependencies:
+    tunnel: ^0.0.6
+    undici: ^5.25.4
+  checksum: 5d395df575d30ae599efa10dd715e72944b015e753db61f0a823f737acbb0e99743d4a9f25e812b18ec8cc34f86c73565d075c449e01ffa891577b6595212dde
   languageName: node
   linkType: hard
 
@@ -1055,16 +1065,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.37.1":
-  version: 0.37.1
-  resolution: "@docker/actions-toolkit@npm:0.37.1"
+"@docker/actions-toolkit@npm:0.38.0":
+  version: 0.38.0
+  resolution: "@docker/actions-toolkit@npm:0.38.0"
   dependencies:
     "@actions/artifact": ^2.1.9
     "@actions/cache": ^3.2.4
     "@actions/core": ^1.10.1
     "@actions/exec": ^1.1.1
     "@actions/github": ^6.0.0
-    "@actions/http-client": ^2.2.1
+    "@actions/http-client": ^2.2.3
     "@actions/io": ^1.1.3
     "@actions/tool-cache": ^2.0.1
     "@azure/storage-blob": ^12.15.0
@@ -1080,7 +1090,7 @@ __metadata:
     semver: ^7.6.3
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 7024fb86cc72e95df681ccdfdd44f3828f447e759138d5b70bff4f29cb4cb83fc487674adcff3c0c31cdf2e5fa5f1ee55bb6fbd01981fa053b8809e2639580a3
+  checksum: 543a3931fd169033db527208bfb7209591b0de744a00b9c8149062b37077fa02318350e89f881df84a4150735595c234f347f613778ca46e040e50b983f8f188
   languageName: node
   linkType: hard
 
@@ -3150,7 +3160,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.10.1
-    "@docker/actions-toolkit": 0.37.1
+    "@docker/actions-toolkit": 0.38.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
