@@ -6,6 +6,7 @@ import {Context} from '@docker/actions-toolkit/lib/context';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {Util} from '@docker/actions-toolkit/lib/util';
+import * as path from 'path';
 
 export interface Inputs {
   'add-hosts': string[];
@@ -85,12 +86,16 @@ export async function getInputs(): Promise<Inputs> {
 // {context}/{file} or {context}/{dockerfile} depending on the inputs.
 export function getDockerfilePath(inputs: Inputs): string {
   const context = inputs.context || Context.gitContext();
+  const normalizedContext = path.normalize(context);
+
   if (inputs.file) {
-    return context + '/' + inputs.file;
+    const normalizedFile = path.normalize(inputs.file);
+    return normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
   } else if (inputs['dockerfile']) {
-    return context + '/' + inputs['dockerfile'];
+    const normalizedDockerfile = path.normalize(inputs['dockerfile']);
+    return normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
   } else {
-    return context;
+    return normalizedContext;
   }
 }
 
