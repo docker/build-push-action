@@ -118,6 +118,9 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
         response = await client.post('', payload);
         break;
       } catch (error) {
+        if (error.response && error.response.status < 500) {
+          throw error;
+        }
         if (retries === maxRetries - 1) {
           throw error;
         }
