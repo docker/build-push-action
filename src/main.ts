@@ -32,27 +32,55 @@ async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
 }
 
 async function reportBuildCompleted() {
-  try {
-    const builderLaunchTime = stateHelper.blacksmithBuilderLaunchTime;
-    const client = await getBlacksmithHttpClient();
-    client.post(`/${stateHelper.blacksmithBuildTaskId}/complete`, {
-      builder_launch_time: builderLaunchTime
-    });
-  } catch (error) {
-    core.warning('Error completing Blacksmith build:', error);
-    throw error;
+  let retries = 0;
+  const maxRetries = 3;
+  while (retries < maxRetries) {
+    try {
+      const builderLaunchTime = stateHelper.blacksmithBuilderLaunchTime;
+      const client = await getBlacksmithHttpClient();
+      await client.post(`/${stateHelper.blacksmithBuildTaskId}/complete`, {
+        builder_launch_time: builderLaunchTime
+      });
+      return;
+    } catch (error) {
+      if (error.response && error.response.status < 500) {
+        core.warning('Error completing Blacksmith build:', error);
+        throw error;
+      }
+      if (retries === maxRetries - 1) {
+        core.warning('Error completing Blacksmith build:', error);
+        throw error;
+      }
+      retries++;
+      core.warning(`Error completing Blacksmith build, retrying (${retries}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
   }
 }
 
 async function reportBuildAbandoned(taskId: string) {
-  try {
-    const client = await getBlacksmithHttpClient();
-    const abandonURL = `/${taskId}/abandon`;
-    const response = await client.post(abandonURL);
-    core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
-  } catch (error) {
-    core.warning('Error abandoning Blacksmith build:', error);
-    throw error;
+  let retries = 0;
+  const maxRetries = 3;
+  while (retries < maxRetries) {
+    try {
+      const client = await getBlacksmithHttpClient();
+      const abandonURL = `/${taskId}/abandon`;
+      const response = await client.post(abandonURL);
+      core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
+      return;
+    } catch (error) {
+      if (error.response && error.response.status < 500) {
+        core.warning('Error abandoning Blacksmith build:', error);
+        throw error;
+      }
+      if (retries === maxRetries - 1) {
+        core.warning('Error abandoning Blacksmith build:', error);
+        throw error;
+      }
+      retries++;
+      core.warning(`Error abandoning Blacksmith build, retrying (${retries}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
   }
 }
 
