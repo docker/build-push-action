@@ -87,8 +87,8 @@ async function reportBuildAbandoned(taskId: string) {
 async function reportBuildFailed() {
   try {
     const client = await getBlacksmithHttpClient();
-    const response = await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`);
-    core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
+    await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`);
+    core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}`);
   } catch (error) {
     core.warning('Error failing Blacksmith build:', error);
     throw error;
