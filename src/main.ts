@@ -16,7 +16,7 @@ import {Util} from '@docker/actions-toolkit/lib/util';
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
-import axios, {AxiosInstance} from 'axios';
+import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 
 import * as context from './context';
 
@@ -95,6 +95,42 @@ async function reportBuildFailed() {
   }
 }
 
+async function postWithRetry(client: AxiosInstance, url: string, payload: unknown, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+  const maxRetries = 5;
+  const retryDelay = 100;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await client.post(url, payload);
+    } catch (error) {
+      if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
+        throw error;
+      }
+      core.warning(`Request failed, retrying (${attempt}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw new Error('Max retries reached');
+}
+
+async function getWithRetry(client: AxiosInstance, url: string, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+  const maxRetries = 5;
+  const retryDelay = 100;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await client.get(url);
+    } catch (error) {
+      if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
+        throw error;
+      }
+      core.warning(`Request failed, retrying (${attempt}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw new Error('Max retries reached');
+}
+
 // getRemoteBuilderAddr resolves the address to a remote Docker builder.
 // If it is unable to do so because of a timeout or an error it returns null.
 async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | null> {
@@ -103,53 +139,52 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
   try {
     const client = await getBlacksmithHttpClient();
     const dockerfilePath = context.getDockerfilePath(inputs);
-    let payload = {};
+    let payload: {dockerfile_path?: string} = {};
     if (dockerfilePath && dockerfilePath.length > 0) {
       payload = {dockerfile_path: dockerfilePath};
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
-    let response;
-    let retries = 0;
-    const maxRetries = 10;
-    const retryDelay = 500;
 
-    while (retries < maxRetries) {
-      try {
-        response = await client.post('', payload);
-        break;
-      } catch (error) {
-        if (error.response && error.response.status < 500) {
-          throw error;
-        }
-        if (retries === maxRetries - 1) {
-          throw error;
-        }
-        retries++;
-        core.warning(`Request failed with status code ${error.response?.status}, retrying (${retries}/${maxRetries})...`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-      }
-    }
+    const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
+
+    const response = await postWithRetry(client, '', payload, retryCondition);
 
     const data = response.data;
     const taskId = data['id'] as string;
     core.info(`Submitted build task: ${taskId}`);
     stateHelper.setBlacksmithBuildTaskId(taskId);
-    const clientKey = data['client_key'] as string;
-    stateHelper.setBlacksmithClientKey(clientKey);
-    const clientCaCertificate = data['client_ca_certificate'] as string;
-    stateHelper.setBlacksmithClientCaCertificate(clientCaCertificate);
-    const rootCaCertificate = data['root_ca_certificate'] as string;
-    stateHelper.setBlacksmithRootCaCertificate(rootCaCertificate);
 
     const startTime = Date.now();
     while (Date.now() - startTime < 60000) {
-      const response = await client.get(`/${taskId}`);
+      const response = await getWithRetry(client, `/${taskId}`, retryCondition);
       const data = response.data;
       const ec2Instance = data['ec2_instance'] ?? null;
       if (ec2Instance) {
         const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
         core.info(`Blacksmith builder agent ready after ${elapsedTime} seconds`);
         stateHelper.setBlacksmithBuilderLaunchTime(elapsedTime);
+
+        const clientKey = ec2Instance['client_key'] as string;
+        if (clientKey) {
+          stateHelper.setBlacksmithClientKey(clientKey);
+          await fs.promises.writeFile(context.tlsClientKeyPath, clientKey, 'utf8');
+          core.info(`Client key written to ${context.tlsClientKeyPath}`);
+        }
+
+        const clientCaCertificate = ec2Instance['client_cert'] as string;
+        if (clientCaCertificate) {
+          stateHelper.setBlacksmithClientCaCertificate(clientCaCertificate);
+          await fs.promises.writeFile(context.tlsClientCaCertificatePath, clientCaCertificate, 'utf8');
+          core.info(`Client CA certificate written to ${context.tlsClientCaCertificatePath}`);
+        }
+
+        const rootCaCertificate = ec2Instance['root_cert'] as string;
+        if (rootCaCertificate) {
+          stateHelper.setBlacksmithRootCaCertificate(rootCaCertificate);
+          await fs.promises.writeFile(context.tlsRootCaCertificatePath, rootCaCertificate, 'utf8');
+          core.info(`Root CA certificate written to ${context.tlsRootCaCertificatePath}`);
+        }
+
         return `tcp://${ec2Instance['instance_ip']}:4242` as string;
       }
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -158,12 +193,12 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
     await reportBuildAbandoned(taskId);
     return null;
   } catch (error) {
-    if (error.response && error.response.status === 404) {
+    if ((error as AxiosError).response && (error as AxiosError).response!.status === 404) {
       if (!inputs.nofallback) {
         core.warning('No builder instances were available, falling back to a local build');
       }
     } else {
-      core.warning(`Error in getBuildkitdAddr: ${error.message}`);
+      core.warning(`Error in getBuildkitdAddr: ${(error as Error).message}`);
     }
     return null;
   } finally {
@@ -313,9 +348,11 @@ actionsToolkit.run(
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
+    args.push('--debug');
     core.debug(`context.getArgs: ${JSON.stringify(args)}`);
 
     const buildCmd = await toolkit.buildx.getCommand(args);
+
     core.debug(`buildCmd.command: ${buildCmd.command}`);
     core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
 

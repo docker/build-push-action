@@ -304,8 +304,17 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   return args;
 }
 
+export const tlsClientKeyPath = '/tmp/blacksmith_client_key.pem';
+export const tlsClientCaCertificatePath = '/tmp/blacksmith_client_ca_certificate.pem';
+export const tlsRootCaCertificatePath = '/tmp/blacksmith_root_ca_certificate.pem';
+
 export async function getRemoteBuilderArgs(name: string, builderUrl: string): Promise<Array<string>> {
   const args: Array<string> = ['create', '--name', name, '--driver', 'remote'];
+  // Add TLS paths as driver options
+  args.push('--driver-opt', `key=${tlsClientKeyPath},cert=${tlsClientCaCertificatePath},cacert=${tlsRootCaCertificatePath}`);
+
+  // TODO(aayush): Instead of hardcoding the platform, we should fail the build if the platform is
+  // unsupported.
   args.push('--platform', 'linux/amd64');
   // Always use the remote builder, overriding whatever has been configured so far.
   args.push('--use');
