@@ -19,12 +19,13 @@ import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 
 import * as context from './context';
+import {REPL_MODE_SLOPPY} from 'repl';
 
 const buildxVersion = 'v0.17.0';
 
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   return axios.create({
-    baseURL: process.env.BUILDER_URL || 'https://anvil-staging.fly.dev/build_tasks',
+    baseURL: process.env.BUILDER_URL || 'https://anvil.blacksmith.sh/build_tasks',
     headers: {
       Authorization: `Bearer ${process.env.BLACKSMITH_ANVIL_TOKEN}`
     }
@@ -39,7 +40,8 @@ async function reportBuildCompleted() {
       const builderLaunchTime = stateHelper.blacksmithBuilderLaunchTime;
       const client = await getBlacksmithHttpClient();
       await client.post(`/${stateHelper.blacksmithBuildTaskId}/complete`, {
-        builder_launch_time: builderLaunchTime
+        builder_launch_time: builderLaunchTime,
+        repo_name: process.env.GITHUB_REPOSITORY
       });
       return;
     } catch (error) {
@@ -65,8 +67,10 @@ async function reportBuildAbandoned(taskId: string) {
     try {
       const client = await getBlacksmithHttpClient();
       const abandonURL = `/${taskId}/abandon`;
-      const response = await client.post(abandonURL);
-      core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}: ${JSON.stringify(response.data)}`);
+      await client.post(abandonURL, {
+        repo_name: process.env.GITHUB_REPOSITORY
+      });
+      core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}`);
       return;
     } catch (error) {
       if (error.response && error.response.status < 500) {
@@ -87,7 +91,9 @@ async function reportBuildAbandoned(taskId: string) {
 async function reportBuildFailed() {
   try {
     const client = await getBlacksmithHttpClient();
-    await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`);
+    await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`, {
+      repo_name: process.env.GITHUB_REPOSITORY
+    });
     core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}`);
   } catch (error) {
     core.warning('Error failing Blacksmith build:', error);
@@ -139,9 +145,11 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
   try {
     const client = await getBlacksmithHttpClient();
     const dockerfilePath = context.getDockerfilePath(inputs);
-    let payload: {dockerfile_path?: string} = {};
+    const payload: {dockerfile_path?: string; repo_name?: string} = {
+      repo_name: process.env.GITHUB_REPOSITORY
+    };
     if (dockerfilePath && dockerfilePath.length > 0) {
-      payload = {dockerfile_path: dockerfilePath};
+      payload.dockerfile_path = dockerfilePath;
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
 
