@@ -62,6 +62,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@actions/core@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "@actions/core@npm:1.11.0"
+  dependencies:
+    "@actions/exec": ^1.1.1
+    "@actions/http-client": ^2.0.1
+  checksum: ae20d41be9db100a4853fd78b538eeb8549e8dc8f281ae765fdafe44c4f70254de32fbd7b1cb3e4a0649d481dc4b21459353c7d0fd331fed0e173c947ac1d8ac
+  languageName: node
+  linkType: hard
+
 "@actions/exec@npm:^1.0.0, @actions/exec@npm:^1.0.1, @actions/exec@npm:^1.1.1":
   version: 1.1.1
   resolution: "@actions/exec@npm:1.1.1"
@@ -3159,7 +3169,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "docker-build-push@workspace:."
   dependencies:
-    "@actions/core": ^1.10.1
+    "@actions/core": ^1.11.0
     "@docker/actions-toolkit": 0.39.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
