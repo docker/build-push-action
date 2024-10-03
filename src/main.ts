@@ -19,13 +19,17 @@ import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 
 import * as context from './context';
-import {REPL_MODE_SLOPPY} from 'repl';
 
 const buildxVersion = 'v0.17.0';
 
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
+  let baseURL = process.env.BUILDER_URL;
+  if (!baseURL) {
+    baseURL = process.env.PETNAME?.includes('staging') ? 'https://anvil-staging.fly.dev/build_tasks' : 'https://anvil.blacksmith.sh/build_tasks';
+  }
+
   return axios.create({
-    baseURL: process.env.BUILDER_URL || 'https://anvil.blacksmith.sh/build_tasks',
+    baseURL,
     headers: {
       Authorization: `Bearer ${process.env.BLACKSMITH_ANVIL_TOKEN}`
     }
