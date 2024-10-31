@@ -4,114 +4,91 @@ import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
 
-import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
-import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history';
-import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
-import {Exec} from '@docker/actions-toolkit/lib/exec';
-import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
-import {Util} from '@docker/actions-toolkit/lib/util';
+import { Buildx } from '@docker/actions-toolkit/lib/buildx/buildx';
+import { History as BuildxHistory } from '@docker/actions-toolkit/lib/buildx/history';
+import { Context } from '@docker/actions-toolkit/lib/context';
+import { Docker } from '@docker/actions-toolkit/lib/docker/docker';
+import { Exec } from '@docker/actions-toolkit/lib/exec';
+import { GitHub } from '@docker/actions-toolkit/lib/github';
+import { Toolkit } from '@docker/actions-toolkit/lib/toolkit';
+import { Util } from '@docker/actions-toolkit/lib/util';
 
-import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
-import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
-import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
-import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
+import { BuilderInfo } from '@docker/actions-toolkit/lib/types/buildx/builder';
+import { ConfigFile } from '@docker/actions-toolkit/lib/types/docker/docker';
+import { UploadArtifactResponse } from '@docker/actions-toolkit/lib/types/github';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 
 import * as context from './context';
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import * as TOML from '@iarna/toml';
+import portfinder from 'portfinder';
 
 const buildxVersion = 'v0.17.0';
+const mountPoint = '/var/lib/buildkit';
+const device = '/dev/vdb';
+const execAsync = promisify(exec);
 
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
-  let baseURL = process.env.BUILDER_URL;
-  if (!baseURL) {
-    baseURL = process.env.PETNAME?.includes('staging') ? 'https://anvil-staging.fly.dev/build_tasks' : 'https://anvil.blacksmith.sh/build_tasks';
-  }
+  let stickyDiskMgrUrl = 'http://192.168.127.1:5556';
 
+  core.info(`Using Blacksmith base URL: ${stickyDiskMgrUrl}`);
+  core.info(`Using Blacksmith token: ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`);
+  core.info(`Using Github repo name: ${process.env.GITHUB_REPO_NAME}`);
   return axios.create({
-    baseURL,
+    baseURL: stickyDiskMgrUrl,
     headers: {
-      Authorization: `Bearer ${process.env.BLACKSMITH_ANVIL_TOKEN}`
+      'Authorization': `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
     }
   });
 }
 
 async function reportBuildCompleted() {
-  let retries = 0;
-  const maxRetries = 3;
-  while (retries < maxRetries) {
-    try {
-      const builderLaunchTime = stateHelper.blacksmithBuilderLaunchTime;
-      const client = await getBlacksmithHttpClient();
-      await client.post(`/${stateHelper.blacksmithBuildTaskId}/complete`, {
-        builder_launch_time: builderLaunchTime,
-        repo_name: process.env.GITHUB_REPOSITORY
-      });
-      return;
-    } catch (error) {
-      if (error.response && error.response.status < 500) {
-        core.warning('Error completing Blacksmith build:', error);
-        throw error;
-      }
-      if (retries === maxRetries - 1) {
-        core.warning('Error completing Blacksmith build:', error);
-        throw error;
-      }
-      retries++;
-      core.warning(`Error completing Blacksmith build, retrying (${retries}/${maxRetries})...`);
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-  }
-}
+  try {
+    const client = await getBlacksmithHttpClient();
+    const formData = new FormData();
+    formData.append('shouldCommit', 'true');
+    const retryCondition = (error: AxiosError) => {
+      return error.response?.status ? error.response.status >= 500 : false;
+    };
 
-async function reportBuildAbandoned(taskId: string) {
-  let retries = 0;
-  const maxRetries = 3;
-  while (retries < maxRetries) {
-    try {
-      const client = await getBlacksmithHttpClient();
-      const abandonURL = `/${taskId}/abandon`;
-      await client.post(abandonURL, {
-        repo_name: process.env.GITHUB_REPOSITORY
-      });
-      core.info(`Docker build abandoned, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}`);
-      return;
-    } catch (error) {
-      if (error.response && error.response.status < 500) {
-        core.warning('Error abandoning Blacksmith build:', error);
-        throw error;
-      }
-      if (retries === maxRetries - 1) {
-        core.warning('Error abandoning Blacksmith build:', error);
-        throw error;
-      }
-      retries++;
-      core.warning(`Error abandoning Blacksmith build, retrying (${retries}/${maxRetries})...`);
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
+    await postWithRetry(client, '/stickydisks', formData, retryCondition);
+    return;
+  } catch (error) {
+    core.warning('Error completing Blacksmith build:', error);
+    throw error;
   }
 }
 
 async function reportBuildFailed() {
   try {
     const client = await getBlacksmithHttpClient();
-    await client.post(`/${stateHelper.blacksmithBuildTaskId}/fail`, {
-      repo_name: process.env.GITHUB_REPOSITORY
-    });
-    core.info(`Docker build failed, tearing down Blacksmith builder for ${stateHelper.blacksmithBuildTaskId}`);
+    const formData = new FormData();
+    formData.append('shouldCommit', 'false');
+    const retryCondition = (error: AxiosError) => {
+      return error.response?.status ? error.response.status >= 500 : false;
+    };
+
+    await postWithRetry(client, '/stickydisks', formData, retryCondition);
+    return;
   } catch (error) {
-    core.warning('Error failing Blacksmith build:', error);
+    core.warning('Error completing Blacksmith build:', error);
     throw error;
   }
 }
 
-async function postWithRetry(client: AxiosInstance, url: string, payload: unknown, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+async function postWithRetry(client: AxiosInstance, url: string, formData: FormData, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
   const maxRetries = 5;
   const retryDelay = 100;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await client.post(url, payload);
+      return await client.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
     } catch (error) {
       if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
         throw error;
@@ -123,13 +100,22 @@ async function postWithRetry(client: AxiosInstance, url: string, payload: unknow
   throw new Error('Max retries reached');
 }
 
-async function getWithRetry(client: AxiosInstance, url: string, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+async function getWithRetry(client: AxiosInstance, url: string, formData: FormData | null, retryCondition: (error: AxiosError) => boolean, options?: { signal?: AbortSignal }): Promise<AxiosResponse> {
   const maxRetries = 5;
   const retryDelay = 100;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await client.get(url);
+      if (formData) {
+        return await client.get(url, {
+          data: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          signal: options?.signal
+        });
+      }
+      return await client.get(url, { signal: options?.signal });
     } catch (error) {
       if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
         throw error;
@@ -140,70 +126,172 @@ async function getWithRetry(client: AxiosInstance, url: string, retryCondition: 
   }
   throw new Error('Max retries reached');
 }
+
+async function getStickyDisk(dockerfilePath: string, retryCondition: (error: AxiosError) => boolean, options?: { signal?: AbortSignal }): Promise<any> {
+  const client = await getBlacksmithHttpClient();
+  const formData = new FormData();
+  formData.append('stickyDiskKey', dockerfilePath);
+  formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
+  formData.append('installationModelID', process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '');
+  core.info(`Getting sticky disk for ${dockerfilePath}`);
+  core.info(`Form data: ${JSON.stringify(formData)}`);
+  const response = await getWithRetry(client, '/stickydisks', formData, retryCondition, options);
+  return response.data;
+}
+
+async function getDiskSize(device: string): Promise<number> {
+  try {
+    const { stdout } = await execAsync(`sudo lsblk -b -n -o SIZE ${device}`);
+    const sizeInBytes = parseInt(stdout.trim(), 10);
+    if (isNaN(sizeInBytes)) {
+      throw new Error('Failed to parse disk size');
+    }
+    return sizeInBytes;
+  } catch (error) {
+    console.error(`Error getting disk size: ${error.message}`);
+    throw error;
+  }
+}
+
+async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
+  const diskSize = await getDiskSize(device);
+  core.info(`disk size is ${diskSize}`);
+  const jsonConfig: TOML.JsonMap = {
+    "root": "/var/lib/buildkit",
+    "grpc": {
+      "address": ["unix:///run/buildkit/buildkitd.sock"]
+    },
+    "worker": {
+      "oci": {
+        "enabled": true,
+        "gc": true,
+        "gckeepstorage": diskSize.toString(),
+        "max-parallelism": parallelism,
+        "snapshotter": "overlayfs",
+        "gcpolicy": [
+          {
+            "all": true,
+            "keepDuration": 1209600
+          },
+          {
+            "all": true,
+            "keepBytes": diskSize.toString()
+          }
+        ]
+      },
+      "containerd": {
+        "enabled": false
+      }
+    }
+  };
+
+  const tomlString = TOML.stringify(jsonConfig);
+
+  try {
+    await fs.promises.writeFile('buildkitd.toml', tomlString);
+    core.debug(`TOML configuration is ${tomlString}`);
+  } catch (err) {
+    core.warning('error writing TOML configuration:', err);
+    throw err;
+  }
+}
+
+
+async function startBuildkitd(parallelism: number): Promise<string> {
+  try {
+    await writeBuildkitdTomlFile(parallelism);
+    await execAsync('sudo mkdir -p /run/buildkit');
+    await execAsync('sudo chmod 755 /run/buildkit');
+    const addr = "unix:///run/buildkit/buildkitd.sock";
+    const { stdout: startStdout, stderr: startStderr } = await execAsync(
+      `sudo nohup buildkitd --addr ${addr} --allow-insecure-entitlement security.insecure --config=buildkitd.toml --allow-insecure-entitlement network.host > buildkitd.log 2>&1 &`,
+    );
+
+    if (startStderr) {
+      throw new Error(`error starting buildkitd service: ${startStderr}`);
+    }
+    core.debug(`buildkitd daemon started successfully ${startStdout}`);
+
+    const { stdout, stderr } = await execAsync(`pgrep -f buildkitd`);
+    if (stderr) {
+      throw new Error(`error finding buildkitd PID: ${stderr}`);
+    }
+    return addr;
+  } catch (error) {
+    core.error('failed to start buildkitd daemon:', error);
+    throw error;
+  }
+}
+
+// Function to gracefully shut down the buildkitd process
+async function shutdownBuildkitd(): Promise<void> {
+  try {
+    await execAsync(`sudo pkill -TERM buildkitd`);
+  } catch (error) {
+    core.error('error shutting down buildkitd process:', error);
+    throw error;
+  }
+}
+
+// Function to get the number of available CPUs
+async function getNumCPUs(): Promise<number> {
+  try {
+    const { stdout } = await execAsync('sudo nproc');
+    return parseInt(stdout.trim());
+  } catch (error) {
+    core.warning('Failed to get CPU count, defaulting to 1:', error);
+    return 1;
+  }
+}
+
 
 // getRemoteBuilderAddr resolves the address to a remote Docker builder.
 // If it is unable to do so because of a timeout or an error it returns null.
 async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
-    const client = await getBlacksmithHttpClient();
     const dockerfilePath = context.getDockerfilePath(inputs);
-    const payload: {dockerfile_path?: string; repo_name?: string} = {
-      repo_name: process.env.GITHUB_REPOSITORY
-    };
     if (dockerfilePath && dockerfilePath.length > 0) {
-      payload.dockerfile_path = dockerfilePath;
       core.info(`Using dockerfile path: ${dockerfilePath}`);
     }
 
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await postWithRetry(client, '', payload, retryCondition);
-
-    const data = response.data;
-    const taskId = data['id'] as string;
-    core.info(`Submitted build task: ${taskId}`);
-    stateHelper.setBlacksmithBuildTaskId(taskId);
-
-    const startTime = Date.now();
-    while (Date.now() - startTime < 60000) {
-      const response = await getWithRetry(client, `/${taskId}`, retryCondition);
-      const data = response.data;
-      const ec2Instance = data['ec2_instance'] ?? null;
-      if (ec2Instance) {
-        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
-        core.info(`Blacksmith builder agent ready after ${elapsedTime} seconds`);
-        stateHelper.setBlacksmithBuilderLaunchTime(elapsedTime);
-
-        const clientKey = ec2Instance['client_key'] as string;
-        if (clientKey) {
-          stateHelper.setBlacksmithClientKey(clientKey);
-          await fs.promises.writeFile(context.tlsClientKeyPath, clientKey, 'utf8');
-          core.info(`Client key written to ${context.tlsClientKeyPath}`);
-        }
-
-        const clientCaCertificate = ec2Instance['client_cert'] as string;
-        if (clientCaCertificate) {
-          stateHelper.setBlacksmithClientCaCertificate(clientCaCertificate);
-          await fs.promises.writeFile(context.tlsClientCaCertificatePath, clientCaCertificate, 'utf8');
-          core.info(`Client CA certificate written to ${context.tlsClientCaCertificatePath}`);
-        }
-
-        const rootCaCertificate = ec2Instance['root_cert'] as string;
-        if (rootCaCertificate) {
-          stateHelper.setBlacksmithRootCaCertificate(rootCaCertificate);
-          await fs.promises.writeFile(context.tlsRootCaCertificatePath, rootCaCertificate, 'utf8');
-          core.info(`Root CA certificate written to ${context.tlsRootCaCertificatePath}`);
-        }
-
-        return `tcp://${ec2Instance['instance_ip']}:4242` as string;
+    try {
+      await getStickyDisk(dockerfilePath, retryCondition, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      await execAsync(`sudo mkdir -p ${mountPoint}`);
+      await execAsync(`sudo mount ${device} ${mountPoint}`);
+      core.debug(`${device} has been mounted to ${mountPoint}`);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return null;
       }
-      await new Promise(resolve => setTimeout(resolve, 200));
+      throw error;
     }
 
-    await reportBuildAbandoned(taskId);
-    return null;
+    // Start buildkitd.
+    const parallelism = await getNumCPUs();
+    var buildkitdAddr = await startBuildkitd(parallelism);
+    core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
+    // Change permissions on the buildkitd socket to allow non-root access
+    const startTime = Date.now();
+    const timeout = 3000; // 3 seconds in milliseconds
+
+    while (Date.now() - startTime < timeout) {
+      if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
+        // Change permissions on the buildkitd socket to allow non-root access
+        await execAsync(`sudo chmod 666 /run/buildkit/buildkitd.sock`);
+        break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
+    }
+
+    if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
+      throw new Error('buildkitd socket not found after 3s timeout');
+    }
+    return buildkitdAddr;
   } catch (error) {
     if ((error as AxiosError).response && (error as AxiosError).response!.status === 404) {
       if (!inputs.nofallback) {
@@ -213,8 +301,6 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       core.warning(`Error in getBuildkitdAddr: ${(error as Error).message}`);
     }
     return null;
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 
@@ -495,6 +581,9 @@ actionsToolkit.run(
       });
     }
     if (stateHelper.remoteDockerBuildStatus != '') {
+      await shutdownBuildkitd();
+      await execAsync(`sudo umount ${mountPoint}`);
+      core.debug(`${device} has been unmounted`);
       if (stateHelper.remoteDockerBuildStatus == 'success') {
         await reportBuildCompleted();
       } else {
@@ -503,7 +592,7 @@ actionsToolkit.run(
     }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
-        fs.rmSync(stateHelper.tmpDir, {recursive: true});
+        fs.rmSync(stateHelper.tmpDir, { recursive: true });
       });
     }
   }
