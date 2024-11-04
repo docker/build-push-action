@@ -135,6 +135,7 @@ async function getStickyDisk(dockerfilePath: string, retryCondition: (error: Axi
   formData.append('stickyDiskKey', dockerfilePath);
   formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
   formData.append('installationModelID', process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '');
+  formData.append('vmID', process.env.VM_ID || '');
   core.info(`Getting sticky disk for ${dockerfilePath}`);
   core.info(`Form data: ${JSON.stringify(formData)}`);
   const response = await getWithRetry(client, '/stickydisks', formData, retryCondition, options);
