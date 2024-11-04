@@ -49,8 +49,9 @@ async function reportBuildCompleted() {
     const client = await getBlacksmithHttpClient();
     const formData = new FormData();
     formData.append('shouldCommit', 'true');
+    formData.append('vmID', process.env.VM_ID || '');
     const retryCondition = (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
+      return error.response?.status ? error.response.status > 500 : false;
     };
 
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
@@ -66,8 +67,9 @@ async function reportBuildFailed() {
     const client = await getBlacksmithHttpClient();
     const formData = new FormData();
     formData.append('shouldCommit', 'false');
+    formData.append('vmID', process.env.VM_ID || '');
     const retryCondition = (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
+      return error.response?.status ? error.response.status > 500 : false;
     };
 
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
