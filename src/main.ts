@@ -57,7 +57,7 @@ async function reportBuildCompleted() {
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
     return;
   } catch (error) {
-    core.warning('Error completing Blacksmith build:', error);
+    core.warning('Error reporting build completed:', error);
     throw error;
   }
 }
@@ -75,7 +75,7 @@ async function reportBuildFailed() {
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
     return;
   } catch (error) {
-    core.warning('Error completing Blacksmith build:', error);
+    core.warning('Error reporting build failed:', error);
     throw error;
   }
 }
@@ -584,13 +584,17 @@ actionsToolkit.run(
       });
     }
     if (stateHelper.remoteDockerBuildStatus != '') {
-      await shutdownBuildkitd();
-      await execAsync(`sudo umount ${mountPoint}`);
-      core.debug(`${device} has been unmounted`);
-      if (stateHelper.remoteDockerBuildStatus == 'success') {
-        await reportBuildCompleted();
-      } else {
-        await reportBuildFailed();
+      try {
+        await shutdownBuildkitd();
+        await execAsync(`sudo umount ${mountPoint}`);
+        core.debug(`${device} has been unmounted`);
+        if (stateHelper.remoteDockerBuildStatus == 'success') {
+          await reportBuildCompleted();
+        } else {
+          await reportBuildFailed();
+        }
+      } catch (error) {
+        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
       }
     }
     if (stateHelper.tmpDir.length > 0) {
