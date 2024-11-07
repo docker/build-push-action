@@ -271,8 +271,11 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       if (error.name === 'AbortError') {
         return null;
       }
+      core.warning(`Error in getRemoteBuilderAddr: ${(error as Error).message}`);
       throw error;
     }
+
+    core.info('Successfully obtained sticky disk, proceeding to start buildkitd');
 
     // Start buildkitd.
     const parallelism = await getNumCPUs();
