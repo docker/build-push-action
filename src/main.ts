@@ -587,8 +587,19 @@ actionsToolkit.run(
     if (stateHelper.remoteDockerBuildStatus != '') {
       try {
         await shutdownBuildkitd();
-        await execAsync(`sudo umount ${mountPoint}`);
-        core.debug(`${device} has been unmounted`);
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await execAsync(`sudo umount ${mountPoint}`);
+            core.debug(`${device} has been unmounted`);
+            break;
+          } catch (error) {
+            if (attempt === 3) {
+              throw error;
+            }
+            core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
         if (stateHelper.remoteDockerBuildStatus == 'success') {
           await reportBuildCompleted();
         } else {
