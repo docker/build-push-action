@@ -31,10 +31,6 @@ const execAsync = promisify(exec);
 
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   let stickyDiskMgrUrl = 'http://192.168.127.1:5556';
-
-  core.info(`Using Blacksmith base URL: ${stickyDiskMgrUrl}`);
-  core.info(`Using Blacksmith token: ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`);
-  core.info(`Using Github repo name: ${process.env.GITHUB_REPO_NAME}`);
   return axios.create({
     baseURL: stickyDiskMgrUrl,
     headers: {
@@ -136,10 +132,10 @@ async function getStickyDisk(dockerfilePath: string, retryCondition: (error: Axi
   formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
   formData.append('installationModelID', process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '');
   formData.append('vmID', process.env.VM_ID || '');
-  core.info(`Getting sticky disk for ${dockerfilePath}`);
-  core.info('FormData contents:');
+  core.debug(`Getting sticky disk for ${dockerfilePath}`);
+  core.debug('FormData contents:');
   for (const pair of formData.entries()) {
-    core.info(`${pair[0]}: ${pair[1]}`);
+    core.debug(`${pair[0]}: ${pair[1]}`);
   }
   const response = await getWithRetry(client, '/stickydisks', formData, retryCondition, options);
   return response.data;
@@ -161,7 +157,6 @@ async function getDiskSize(device: string): Promise<number> {
 
 async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
   const diskSize = await getDiskSize(device);
-  core.info(`disk size is ${diskSize}`);
   const jsonConfig: TOML.JsonMap = {
     "root": "/var/lib/buildkit",
     "grpc": {
@@ -257,7 +252,7 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
   try {
     const dockerfilePath = context.getDockerfilePath(inputs);
     if (dockerfilePath && dockerfilePath.length > 0) {
-      core.info(`Using dockerfile path: ${dockerfilePath}`);
+      core.debug(`Using dockerfile path: ${dockerfilePath}`);
     }
 
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
@@ -278,7 +273,7 @@ async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | nu
       throw error;
     }
 
-    core.info('Successfully obtained sticky disk, proceeding to start buildkitd');
+    core.debug('Successfully obtained sticky disk, proceeding to start buildkitd');
 
     // Start buildkitd.
     const parallelism = await getNumCPUs();
