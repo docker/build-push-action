@@ -52,6 +52,7 @@ export async function getInputs(): Promise<Inputs> {
     attests: Util.getInputList('attests', { ignoreComma: true }),
     'build-args': Util.getInputList('build-args', { ignoreComma: true }),
     'build-contexts': Util.getInputList('build-contexts', { ignoreComma: true }),
+    // We accept the builder input from the user, but we don't respect it.
     builder: core.getInput('builder'),
     'cache-from': Util.getInputList('cache-from', { ignoreComma: true }),
     'cache-to': Util.getInputList('cache-to', { ignoreComma: true }),
@@ -231,9 +232,6 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
 
 async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<string>> {
   const args: Array<string> = [];
-  if (inputs.builder) {
-    args.push('--builder', inputs.builder);
-  }
   if (inputs.load) {
     args.push('--load');
   }
@@ -257,6 +255,7 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
 
 async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<string>> {
   const args: Array<string> = [];
+  const builder = await toolkit.builder.inspect();
 
   // check if provenance attestation is set in attests input
   let hasAttestProvenance = false;
@@ -271,7 +270,7 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   if (inputs.provenance) {
     args.push('--attest', Build.resolveAttestationAttrs(`type=provenance,${inputs.provenance}`));
     provenanceSet = true;
-  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !Build.hasDockerExporter(inputs.outputs, inputs.load)) {
+  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(builder.name!, '>=0.11.0')) && !Build.hasDockerExporter(inputs.outputs, inputs.load)) {
     // if provenance not specified in provenance or attests inputs and BuildKit
     // version compatible for attestation, set default provenance. Also needs
     // to make sure user doesn't want to explicitly load the image to docker.

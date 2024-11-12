@@ -445,7 +445,7 @@ actionsToolkit.run(
 
     let builder: BuilderInfo;
     await core.group(`Builder info`, async () => {
-      builder = await toolkit.builder.inspect(inputs.builder);
+      builder = await toolkit.builder.inspect();
       core.info(JSON.stringify(builder, null, 2));
     });
 
@@ -497,7 +497,7 @@ actionsToolkit.run(
 
     let ref: string | undefined;
     await core.group(`Reference`, async () => {
-      ref = await buildRef(toolkit, startedTime, inputs.builder);
+      ref = await buildRef(toolkit, startedTime, builder.name);
       if (ref) {
         core.info(ref);
         stateHelper.setBuildRef(ref);
