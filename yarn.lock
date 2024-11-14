@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/artifact@npm:^2.1.9":
-  version: 2.1.9
-  resolution: "@actions/artifact@npm:2.1.9"
+"@actions/artifact@npm:^2.1.11":
+  version: 2.1.11
+  resolution: "@actions/artifact@npm:2.1.11"
   dependencies:
     "@actions/core": ^1.10.0
     "@actions/github": ^5.1.1
@@ -26,19 +26,18 @@ __metadata:
     "@octokit/request-error": ^5.0.0
     "@protobuf-ts/plugin": ^2.2.3-alpha.1
     archiver: ^7.0.1
-    crypto: ^1.0.1
     jwt-decode: ^3.1.2
     twirp-ts: ^2.5.0
     unzip-stream: ^0.3.1
-  checksum: b01404aa6b4d47186e04a64c0002100ff68a8473eafb811a3d49275a7e1135d1981ccaf527b81c4856f6da764beabe7489fd296bb287906fd7c1964dfaeef3df
+  checksum: dbdafaad11cc573768a00f6b8a7f5109f587eb9461564ae8f15ea8fd1d6a719041df45a92ec204a43a8a1e7ce2c21d8e4229543579b89a3ca8ea30dedddf2fc9
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^3.2.4":
-  version: 3.2.4
-  resolution: "@actions/cache@npm:3.2.4"
+"@actions/cache@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "@actions/cache@npm:3.3.0"
   dependencies:
-    "@actions/core": ^1.10.0
+    "@actions/core": ^1.11.1
     "@actions/exec": ^1.0.1
     "@actions/glob": ^0.1.0
     "@actions/http-client": ^2.1.1
@@ -47,8 +46,7 @@ __metadata:
     "@azure/ms-rest-js": ^2.6.0
     "@azure/storage-blob": ^12.13.0
     semver: ^6.3.1
-    uuid: ^3.3.3
-  checksum: 5bf5f7541bea4906b553440a9ffee5699e11dfb729365c6cb0bbd37e147a1a0993369fdad16bfa3e2b01ec7fa57dac66276278bfd4a389009246a75ea953e61d
+  checksum: f0761b1491b7706a80b44d68ed52eb48c04653fc939525a7c7b606e9d9251c40c7e4ac20846ab92ac32db6869e1a6f0f574bd6b7fec1ab9378c8e199c5acc9c9
   languageName: node
   linkType: hard
 
@@ -59,6 +57,16 @@ __metadata:
     "@actions/http-client": ^2.0.1
     uuid: ^8.3.2
   checksum: 96524c2725e70e3c3176b4e4d93a1358a86f3c5ca777db9a2f65eadfa672f00877db359bf60fffc416c33838ffb4743db93bcc5bf53e76199dd28bf7f7ff8e80
+  languageName: node
+  linkType: hard
+
+"@actions/core@npm:^1.11.1":
+  version: 1.11.1
+  resolution: "@actions/core@npm:1.11.1"
+  dependencies:
+    "@actions/exec": ^1.1.1
+    "@actions/http-client": ^2.0.1
+  checksum: 9ac7a3e0b478bfefd862dcb4ddaa1d8c3f9076bb1931d3d280918d1749e7783480c6a009c1b009c8bf5093e2d77d9f4e023d70416145bf246f0071736d4ef839
   languageName: node
   linkType: hard
 
@@ -1065,13 +1073,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.39.0":
-  version: 0.39.0
-  resolution: "@docker/actions-toolkit@npm:0.39.0"
+"@docker/actions-toolkit@npm:0.44.0":
+  version: 0.44.0
+  resolution: "@docker/actions-toolkit@npm:0.44.0"
   dependencies:
-    "@actions/artifact": ^2.1.9
-    "@actions/cache": ^3.2.4
-    "@actions/core": ^1.10.1
+    "@actions/artifact": ^2.1.11
+    "@actions/cache": ^3.3.0
+    "@actions/core": ^1.11.1
     "@actions/exec": ^1.1.1
     "@actions/github": ^6.0.0
     "@actions/http-client": ^2.2.3
@@ -1090,7 +1098,7 @@ __metadata:
     semver: ^7.6.3
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 9dafe3c3e02f6f78c8da4cfb8bc726ae5eef9b6a2fedfca5d75ee6d6c559745c12aa16587dd595360f76be91803235dc66e0852e595ef7a582506fa0d4402983
+  checksum: 2accc7a46825121ff8359520958f92f7b5f1d7bc08517aa0ce7c953b44492db8ff29c062511f3488c51b9e414cf9d46047d83e352aebf80636e306344773668f
   languageName: node
   linkType: hard
 
@@ -3035,13 +3043,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"crypto@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "crypto@npm:1.0.1"
-  checksum: 087fe3165bd94c333a49e6ed66a0193911f63eac38a24f379b3001a5fe260a59c413646e53a0f67875ba13902b2686d81dc703cb2c147a4ec727dcdc04e5645e
-  languageName: node
-  linkType: hard
-
 "csv-parse@npm:^5.5.6":
   version: 5.5.6
   resolution: "csv-parse@npm:5.5.6"
@@ -3160,7 +3161,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.10.1
-    "@docker/actions-toolkit": 0.39.0
+    "@docker/actions-toolkit": 0.44.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
@@ -6623,7 +6624,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^3.3.2, uuid@npm:^3.3.3":
+"uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
   bin:
