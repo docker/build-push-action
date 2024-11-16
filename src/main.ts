@@ -32,8 +32,8 @@ const execAsync = promisify(exec);
 
 async function getBlacksmithAPIUrl(): Promise<AxiosInstance> {
   let apiUrl = process.env.PETNAME?.includes('staging')
-    ? 'https://stagingapi.blacksmith.sh/cache'
-    : 'https://api.blacksmith.sh/cache'
+    ? 'https://stagingapi.blacksmith.sh'
+    : 'https://api.blacksmith.sh'
   return axios.create({
     baseURL: apiUrl,
     headers: {
