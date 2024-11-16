@@ -34,9 +34,6 @@ async function getBlacksmithAPIUrl(): Promise<AxiosInstance> {
   let apiUrl = process.env.PETNAME?.includes('staging')
     ? 'https://stagingapi.blacksmith.sh'
     : 'https://api.blacksmith.sh'
-  core.info(`Using API URL: ${apiUrl}`);
-  core.info(`Using token: ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`);
-  core.info(`Using repo name: ${process.env.GITHUB_REPO_NAME}`);
   return axios.create({
     baseURL: apiUrl,
     headers: {
@@ -97,7 +94,6 @@ async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, 
   const maxRetries = 5;
   const retryDelay = 100;
 
-  core.info(`Request options: ${JSON.stringify(requestOptions)}`);
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await client.post(url, JSON.stringify(requestOptions), {
