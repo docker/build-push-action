@@ -291,9 +291,9 @@ async function getNumCPUs(): Promise<number> {
 async function reportBlacksmithBuilderFailed(stickydiskKey: string) {
   const client = await getBlacksmithAPIUrl();
   const requestOptions = {
+    stickydisk_key: stickydiskKey,
+    repo_name: process.env.GITHUB_REPO_NAME || '',
     region: process.env.BLACKSMITH_REGION || 'eu-central',
-    stickyDiskKey: stickydiskKey,
-    repoName: process.env.GITHUB_REPO_NAME || '',
     arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64'
   };
   const retryCondition = (error: AxiosError) => {
