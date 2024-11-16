@@ -34,6 +34,9 @@ async function getBlacksmithAPIUrl(): Promise<AxiosInstance> {
   let apiUrl = process.env.PETNAME?.includes('staging')
     ? 'https://stagingapi.blacksmith.sh'
     : 'https://api.blacksmith.sh'
+  core.info(`Using API URL: ${apiUrl}`);
+  core.info(`Using token: ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`);
+  core.info(`Using repo name: ${process.env.GITHUB_REPO_NAME}`);
   return axios.create({
     baseURL: apiUrl,
     headers: {
@@ -88,6 +91,32 @@ async function reportBuildFailed() {
     core.warning('Error reporting build failed:', error);
     throw error;
   }
+}
+
+async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, requestOptions: any, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+  const maxRetries = 5;
+  const retryDelay = 100;
+
+  core.info(`Request options: ${JSON.stringify(requestOptions)}`);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await client.post(url, JSON.stringify(requestOptions), {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
+          'Authorization': `Bearer ${process.env.BLACKSMITH_CACHE_TOKEN}`
+        }
+      });
+    } catch (error) {
+      if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
+        throw error;
+      }
+      core.warning(`Request failed, retrying (${attempt}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw new Error('Max retries reached');
 }
 
 async function postWithRetry(client: AxiosInstance, url: string, formData: FormData, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
@@ -261,16 +290,16 @@ async function getNumCPUs(): Promise<number> {
 
 async function reportBlacksmithBuilderFailed(stickydiskKey: string) {
   const client = await getBlacksmithAPIUrl();
-  const formData = new FormData();
-  const arch = process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64';
-  formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
-  formData.append('stickyDiskKey', stickydiskKey);
-  formData.append('repoName', process.env.GITHUB_REPO_NAME || '');
-  formData.append('arch', arch);
+  const requestOptions = {
+    region: process.env.BLACKSMITH_REGION || 'eu-central',
+    stickyDiskKey: stickydiskKey,
+    repoName: process.env.GITHUB_REPO_NAME || '',
+    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64'
+  };
   const retryCondition = (error: AxiosError) => {
     return error.response?.status ? error.response.status > 500 : false;
   };
-  const response = await postWithRetry(client, '/stickydisks/report-failed', formData, retryCondition);
+  const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/report-failed', requestOptions, retryCondition);
   return response.data;
 }
 
