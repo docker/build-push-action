@@ -102,10 +102,9 @@ async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, 
     try {
       return await client.post(url, JSON.stringify(requestOptions), {
         headers: {
+          ...client.defaults.headers.common,
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
-          'Authorization': `Bearer ${process.env.BLACKSMITH_CACHE_TOKEN}`
         }
       });
     } catch (error) {
