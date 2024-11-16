@@ -85,18 +85,23 @@ export async function getInputs(): Promise<Inputs> {
 
 // getDockerfilePath resolves the path to the build entity. This is basically
 // {context}/{file} or {context}/{dockerfile} depending on the inputs.
-export function getDockerfilePath(inputs: Inputs): string {
-  const context = inputs.context || Context.gitContext();
-  const normalizedContext = path.normalize(context);
+export function getDockerfilePath(inputs: Inputs): string | null {
+  try {
+    const context = inputs.context || Context.gitContext();
+    const normalizedContext = path.normalize(context);
 
-  if (inputs.file) {
-    const normalizedFile = path.normalize(inputs.file);
-    return normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
-  } else if (inputs['dockerfile']) {
-    const normalizedDockerfile = path.normalize(inputs['dockerfile']);
-    return normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
-  } else {
-    return normalizedContext;
+    if (inputs.file) {
+      const normalizedFile = path.normalize(inputs.file);
+      return normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
+    } else if (inputs['dockerfile']) {
+      const normalizedDockerfile = path.normalize(inputs['dockerfile']);
+      return normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
+    } else {
+      return normalizedContext;
+    }
+  } catch (error) {
+    core.warning(`Error getting dockerfile path: ${(error as Error).message}`);
+    return null;
   }
 }
 

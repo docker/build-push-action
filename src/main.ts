@@ -29,6 +29,20 @@ const mountPoint = '/var/lib/buildkit';
 const device = '/dev/vdb';
 const execAsync = promisify(exec);
 
+
+async function getBlacksmithAPIUrl(): Promise<AxiosInstance> {
+  let apiUrl = process.env.PETNAME?.includes('staging')
+    ? 'https://stagingapi.blacksmith.sh'
+    : 'https://api.blacksmith.sh'
+  return axios.create({
+    baseURL: apiUrl,
+    headers: {
+      'Authorization': `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
+    }
+  });
+}
+
 async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   let stickyDiskMgrUrl = 'http://192.168.127.1:5556';
   return axios.create({
@@ -74,6 +88,30 @@ async function reportBuildFailed() {
     core.warning('Error reporting build failed:', error);
     throw error;
   }
+}
+
+async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, requestOptions: any, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+  const maxRetries = 5;
+  const retryDelay = 100;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await client.post(url, JSON.stringify(requestOptions), {
+        headers: {
+          ...client.defaults.headers.common,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+    } catch (error) {
+      if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
+        throw error;
+      }
+      core.warning(`Request failed, retrying (${attempt}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw new Error('Max retries reached');
 }
 
 async function postWithRetry(client: AxiosInstance, url: string, formData: FormData, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
@@ -245,16 +283,26 @@ async function getNumCPUs(): Promise<number> {
   }
 }
 
+async function reportBlacksmithBuilderFailed(stickydiskKey: string) {
+  const client = await getBlacksmithAPIUrl();
+  const requestOptions = {
+    stickydisk_key: stickydiskKey,
+    repo_name: process.env.GITHUB_REPO_NAME || '',
+    region: process.env.BLACKSMITH_REGION || 'eu-central',
+    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64'
+  };
+  const retryCondition = (error: AxiosError) => {
+    return error.response?.status ? error.response.status > 500 : false;
+  };
+  const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/report-failed', requestOptions, retryCondition);
+  return response.data;
+}
+
 
 // getRemoteBuilderAddr resolves the address to a remote Docker builder.
 // If it is unable to do so because of a timeout or an error it returns null.
-async function getRemoteBuilderAddr(inputs: context.Inputs): Promise<string | null> {
+async function getRemoteBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<string | null> {
   try {
-    const dockerfilePath = context.getDockerfilePath(inputs);
-    if (dockerfilePath && dockerfilePath.length > 0) {
-      core.debug(`Using dockerfile path: ${dockerfilePath}`);
-    }
-
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -370,8 +418,22 @@ actionsToolkit.run(
 
     let remoteBuilderAddr: string | null = null;
     await core.group(`Starting Blacksmith remote builder`, async () => {
-      remoteBuilderAddr = await getRemoteBuilderAddr(inputs);
+      const dockerfilePath = context.getDockerfilePath(inputs);
+      if (!dockerfilePath) {
+        if (inputs.nofallback) {
+          await reportBlacksmithBuilderFailed("");
+          throw Error('Failed to resolve dockerfile path, and fallback is disabled');
+        } else {
+          core.warning('Failed to resolve dockerfile path, and fallback is enabled. Falling back to a local build.');
+        }
+        return;
+      }
+      if (dockerfilePath && dockerfilePath.length > 0) {
+        core.debug(`Using dockerfile path: ${dockerfilePath}`);
+      }
+      remoteBuilderAddr = await getRemoteBuilderAddr(inputs, dockerfilePath);
       if (!remoteBuilderAddr) {
+        await reportBlacksmithBuilderFailed(dockerfilePath);
         if (inputs.nofallback) {
           throw Error('Failed to obtain Blacksmith builder. Failing the build');
         } else {
