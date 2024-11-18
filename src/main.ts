@@ -312,7 +312,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
       if (error.name === 'AbortError') {
         return null;
       }
-      core.warning(`Error in getRemoteBuilderAddr: ${(error as Error).message}`);
+      core.warning(`Error in getBuilderAddr: ${(error as Error).message}`);
       throw error;
     }
 
