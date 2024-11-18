@@ -293,9 +293,10 @@ async function reportBlacksmithBuilderFailed(stickydiskKey: string) {
   return response.data;
 }
 
-// getRemoteBuilderAddr resolves the address to a remote Docker builder.
+// getBuilderAddr mounts a sticky disk for the entity, sets up buildkitd on top of it
+// and returns the address to the builder.
 // If it is unable to do so because of a timeout or an error it returns null.
-async function getRemoteBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<string | null> {
+async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<string | null> {
   try {
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
@@ -425,7 +426,7 @@ actionsToolkit.run(
       if (dockerfilePath && dockerfilePath.length > 0) {
         core.debug(`Using dockerfile path: ${dockerfilePath}`);
       }
-      remoteBuilderAddr = await getRemoteBuilderAddr(inputs, dockerfilePath);
+      remoteBuilderAddr = await getBuilderAddr(inputs, dockerfilePath);
       if (!remoteBuilderAddr) {
         await reportBlacksmithBuilderFailed(dockerfilePath);
         if (inputs.nofallback) {
