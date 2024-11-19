@@ -28,18 +28,6 @@ const mountPoint = '/var/lib/buildkit';
 const device = '/dev/vdb';
 const execAsync = promisify(exec);
 
-// Returns a client for the Blacksmith API
-async function getBlacksmithAPIClient(): Promise<AxiosInstance> {
-  const apiUrl = process.env.PETNAME?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
-  return axios.create({
-    baseURL: apiUrl,
-    headers: {
-      Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
-      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
-    }
-  });
-}
-
 // Returns a client for the sticky disk manager on the agent on this host
 async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
   const stickyDiskMgrUrl = 'http://192.168.127.1:5556';
@@ -71,13 +59,12 @@ async function reportBuildCompleted() {
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
 
     // Report success to Blacksmith API
-    const apiClient = await getBlacksmithAPIClient();
     const requestOptions = {
       docker_build_id: stateHelper.blacksmithDockerBuildId,
       conclusion: 'successful'
     };
 
-    await postWithRetryToBlacksmithAPI(apiClient, `/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
+    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build completed:', error);
@@ -104,13 +91,12 @@ async function reportBuildFailed() {
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
 
     // Report failure to Blacksmith API
-    const apiClient = await getBlacksmithAPIClient();
     const requestOptions = {
       docker_build_id: stateHelper.blacksmithDockerBuildId,
       conclusion: 'failed'
     };
 
-    await postWithRetryToBlacksmithAPI(apiClient, `/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
+    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build failed:', error);
@@ -118,16 +104,22 @@ async function reportBuildFailed() {
   }
 }
 
-async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, requestOptions: unknown, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
+async function postWithRetryToBlacksmithAPI(url: string, requestBody: unknown, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
   const maxRetries = 5;
   const retryDelay = 100;
+  const apiUrl = process.env.PETNAME?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       core.debug(`Making POST request to ${url}`);
-      core.debug(`Request headers: ${JSON.stringify(client.defaults.headers, null, 2)}`);
+      core.debug(`Request headers: Authorization: Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}, X-Github-Repo-Name: ${process.env.GITHUB_REPO_NAME || ''}`);
 
-      return await client.post(url, requestOptions);
+      return await axios.post(`${apiUrl}${url}`, requestBody, {
+        headers: {
+          Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
+        }
+      });
     } catch (error) {
       if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
         throw error;
@@ -310,8 +302,7 @@ async function getNumCPUs(): Promise<number> {
 // reportBuild reports the build to the Blacksmith API and returns the build ID
 async function reportBuild(dockerfilePath: string) {
   try {
-    const client = await getBlacksmithAPIClient();
-    const requestOptions = {
+    const requestBody = {
       dockerfile_path: dockerfilePath,
       repo_name: process.env.GITHUB_REPO_NAME || '',
       region: process.env.BLACKSMITH_REGION || 'eu-central',
@@ -320,11 +311,11 @@ async function reportBuild(dockerfilePath: string) {
       vm_id: process.env.VM_ID || '',
       git_branch: process.env.GITHUB_REF_NAME || ''
     };
-    core.debug(`Reporting build with options: ${JSON.stringify(requestOptions, null, 2)}`);
+    core.debug(`Reporting build with options: ${JSON.stringify(requestBody, null, 2)}`);
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
-    const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/dockerbuilds', requestOptions, retryCondition);
+    const response = await postWithRetryToBlacksmithAPI('/stickydisks/dockerbuilds', requestBody, retryCondition);
     stateHelper.setBlacksmithDockerBuildId(response.data.docker_build_id);
     return response.data;
   } catch (error) {
@@ -334,7 +325,6 @@ async function reportBuild(dockerfilePath: string) {
 }
 
 async function reportBuilderCreationFailed(stickydiskKey: string) {
-  const client = await getBlacksmithAPIClient();
   const requestOptions = {
     stickydisk_key: stickydiskKey,
     repo_name: process.env.GITHUB_REPO_NAME || '',
@@ -344,7 +334,7 @@ async function reportBuilderCreationFailed(stickydiskKey: string) {
   const retryCondition = (error: AxiosError) => {
     return error.response?.status ? error.response.status > 500 : false;
   };
-  const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/report-failed', requestOptions, retryCondition);
+  const response = await postWithRetryToBlacksmithAPI('/stickydisks/report-failed', requestOptions, retryCondition);
   return response.data;
 }
 
