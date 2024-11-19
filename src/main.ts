@@ -319,7 +319,9 @@ async function reportBuild(dockerfilePath: string) {
     stateHelper.setBlacksmithDockerBuildId(response.data.docker_build_id);
     return response.data;
   } catch (error) {
-    core.warning('Error reporting build to Blacksmith API:', error);
+    const statusCode = (error as AxiosError)?.response?.status;
+    core.warning(`Error reporting build to Blacksmith API (status: ${statusCode || 'unknown'}):`);
+    core.warning(error);
     return null;
   }
 }
