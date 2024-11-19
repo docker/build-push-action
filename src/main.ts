@@ -61,7 +61,8 @@ async function reportBuildCompleted() {
     // Report success to Blacksmith API
     const requestOptions = {
       docker_build_id: stateHelper.blacksmithDockerBuildId,
-      conclusion: 'successful'
+      conclusion: 'successful',
+      runtime_seconds: stateHelper.dockerBuildDurationSeconds
     };
 
     await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
@@ -93,7 +94,8 @@ async function reportBuildFailed() {
     // Report failure to Blacksmith API
     const requestOptions = {
       docker_build_id: stateHelper.blacksmithDockerBuildId,
-      conclusion: 'failed'
+      conclusion: 'failed',
+      runtime_seconds: stateHelper.dockerBuildDurationSeconds
     };
 
     await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
@@ -566,6 +568,7 @@ actionsToolkit.run(
     core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
 
     let err: Error | undefined;
+    const buildStartTime = Date.now();
     await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
       ignoreReturnCode: true,
       env: Object.assign({}, process.env, {
@@ -577,6 +580,8 @@ actionsToolkit.run(
       if (res.stderr.length > 0 && res.exitCode != 0) {
         err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
       }
+      const buildDurationSeconds = Math.round((Date.now() - buildStartTime) / 1000).toString();
+      stateHelper.setDockerBuildDurationSeconds(buildDurationSeconds);
     });
 
     const imageID = toolkit.buildxBuild.resolveImageID();

@@ -12,6 +12,7 @@ export const blacksmithClientCaCertificate = process.env['STATE_blacksmithClient
 export const blacksmithRootCaCertificate = process.env['STATE_blacksmithRootCaCertificate'] || '';
 export const dockerBuildStatus = process.env['STATE_dockerBuildStatus'] || '';
 export const blacksmithBuilderLaunchTime = process.env['STATE_blacksmithBuilderLaunchTime'] || '';
+export const dockerBuildDurationSeconds = process.env['STATE_dockerBuildDurationSeconds'] || '';
 
 export function setTmpDir(tmpDir: string) {
   core.saveState('tmpDir', tmpDir);
@@ -52,4 +53,8 @@ export function setBlacksmithRootCaCertificate(blacksmithRootCaCertificate: stri
 
 export function setDockerBuildStatus(dockerBuildStatus: string) {
   core.saveState('dockerBuildStatus', dockerBuildStatus);
+}
+
+export function setDockerBuildDurationSeconds(dockerBuildDurationSeconds: string) {
+  core.saveState('dockerBuildDurationSeconds', dockerBuildDurationSeconds);
 }
