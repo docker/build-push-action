@@ -28,6 +28,7 @@ const mountPoint = '/var/lib/buildkit';
 const device = '/dev/vdb';
 const execAsync = promisify(exec);
 
+// Returns a client for the Blacksmith API
 async function getBlacksmithAPIClient(): Promise<AxiosInstance> {
   const apiUrl = process.env.PETNAME?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
   return axios.create({
@@ -39,7 +40,8 @@ async function getBlacksmithAPIClient(): Promise<AxiosInstance> {
   });
 }
 
-async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
+// Returns a client for the sticky disk manager on the agent on this host
+async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
   const stickyDiskMgrUrl = 'http://192.168.127.1:5556';
   return axios.create({
     baseURL: stickyDiskMgrUrl,
@@ -58,7 +60,7 @@ async function reportBuildCompleted() {
   }
 
   try {
-    const client = await getBlacksmithHttpClient();
+    const client = await getBlacksmithAgentClient();
     const formData = new FormData();
     formData.append('shouldCommit', 'true');
     formData.append('vmID', process.env.VM_ID || '');
@@ -91,7 +93,7 @@ async function reportBuildFailed() {
   }
 
   try {
-    const client = await getBlacksmithHttpClient();
+    const client = await getBlacksmithAgentClient();
     const formData = new FormData();
     formData.append('shouldCommit', 'false');
     formData.append('vmID', process.env.VM_ID || '');
@@ -122,12 +124,17 @@ async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, 
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      const headers = {
+        ...client.defaults.headers.common,
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      };
+
+      core.debug(`Making POST request to ${url}`);
+      core.debug(`Request headers: ${JSON.stringify(headers, null, 2)}`);
+
       return await client.post(url, JSON.stringify(requestOptions), {
-        headers: {
-          ...client.defaults.headers.common,
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        }
+        headers
       });
     } catch (error) {
       if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
@@ -190,7 +197,7 @@ async function getWithRetry(client: AxiosInstance, url: string, formData: FormDa
 }
 
 async function getStickyDisk(dockerfilePath: string, retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<unknown> {
-  const client = await getBlacksmithHttpClient();
+  const client = await getBlacksmithAgentClient();
   const formData = new FormData();
   formData.append('stickyDiskKey', dockerfilePath);
   formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
@@ -321,6 +328,7 @@ async function reportBuild(dockerfilePath: string) {
       vm_id: process.env.VM_ID || '',
       git_branch: process.env.GITHUB_REF_NAME || ''
     };
+    core.debug(`Reporting build with options: ${JSON.stringify(requestOptions, null, 2)}`);
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
