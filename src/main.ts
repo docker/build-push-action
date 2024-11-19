@@ -124,18 +124,10 @@ async function postWithRetryToBlacksmithAPI(client: AxiosInstance, url: string, 
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const headers = {
-        ...client.defaults.headers.common,
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      };
-
       core.debug(`Making POST request to ${url}`);
-      core.debug(`Request headers: ${JSON.stringify(headers, null, 2)}`);
+      core.debug(`Request headers: ${JSON.stringify(client.defaults.headers, null, 2)}`);
 
-      return await client.post(url, JSON.stringify(requestOptions), {
-        headers
-      });
+      return await client.post(url, requestOptions);
     } catch (error) {
       if (attempt === maxRetries || !retryCondition(error as AxiosError)) {
         throw error;
