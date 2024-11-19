@@ -52,6 +52,11 @@ async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
 
 // Reports a successful build to the local sticky disk manager
 async function reportBuildCompleted() {
+  if (!stateHelper.blacksmithDockerBuildId) {
+    core.warning('No docker build ID found, skipping build completion report');
+    return;
+  }
+
   try {
     const client = await getBlacksmithHttpClient();
     const formData = new FormData();
@@ -80,6 +85,11 @@ async function reportBuildCompleted() {
 
 // Reports a failed build to both the local sticky disk manager and the Blacksmith API
 async function reportBuildFailed() {
+  if (!stateHelper.blacksmithDockerBuildId) {
+    core.warning('No docker build ID found, skipping build completion report');
+    return;
+  }
+
   try {
     const client = await getBlacksmithHttpClient();
     const formData = new FormData();
@@ -300,22 +310,27 @@ async function getNumCPUs(): Promise<number> {
 
 // reportBuild reports the build to the Blacksmith API and returns the build ID
 async function reportBuild(dockerfilePath: string) {
-  const client = await getBlacksmithAPIClient();
-  const requestOptions = {
-    dockerfile_path: dockerfilePath,
-    repo_name: process.env.GITHUB_REPO_NAME || '',
-    region: process.env.BLACKSMITH_REGION || 'eu-central',
-    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
-    git_sha: process.env.GITHUB_SHA || '',
-    vm_id: process.env.VM_ID || '',
-    git_branch: process.env.GITHUB_REF_NAME || ''
-  };
-  const retryCondition = (error: AxiosError) => {
-    return error.response?.status ? error.response.status > 500 : false;
-  };
-  const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/dockerbuilds', requestOptions, retryCondition);
-  stateHelper.setBlacksmithDockerBuildId(response.data.docker_build_id);
-  return response.data;
+  try {
+    const client = await getBlacksmithAPIClient();
+    const requestOptions = {
+      dockerfile_path: dockerfilePath,
+      repo_name: process.env.GITHUB_REPO_NAME || '',
+      region: process.env.BLACKSMITH_REGION || 'eu-central',
+      arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
+      git_sha: process.env.GITHUB_SHA || '',
+      vm_id: process.env.VM_ID || '',
+      git_branch: process.env.GITHUB_REF_NAME || ''
+    };
+    const retryCondition = (error: AxiosError) => {
+      return error.response?.status ? error.response.status > 500 : false;
+    };
+    const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/dockerbuilds', requestOptions, retryCondition);
+    stateHelper.setBlacksmithDockerBuildId(response.data.docker_build_id);
+    return response.data;
+  } catch (error) {
+    core.warning('Error reporting build to Blacksmith API:', error);
+    return null;
+  }
 }
 
 async function reportBuilderCreationFailed(stickydiskKey: string) {
