@@ -28,7 +28,7 @@ const mountPoint = '/var/lib/buildkit';
 const device = '/dev/vdb';
 const execAsync = promisify(exec);
 
-async function getBlacksmithAPIUrl(): Promise<AxiosInstance> {
+async function getBlacksmithAPIClient(): Promise<AxiosInstance> {
   const apiUrl = process.env.PETNAME?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
   return axios.create({
     baseURL: apiUrl,
@@ -50,6 +50,7 @@ async function getBlacksmithHttpClient(): Promise<AxiosInstance> {
   });
 }
 
+// Reports a successful build to the local sticky disk manager
 async function reportBuildCompleted() {
   try {
     const client = await getBlacksmithHttpClient();
@@ -61,13 +62,23 @@ async function reportBuildCompleted() {
     };
 
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
+
+    // Report success to Blacksmith API
+    const apiClient = await getBlacksmithAPIClient();
+    const requestOptions = {
+      docker_build_id: stateHelper.blacksmithDockerBuildId,
+      conclusion: 'successful'
+    };
+
+    await postWithRetryToBlacksmithAPI(apiClient, `/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build completed:', error);
-    throw error;
+    // We don't want to fail the build if this fails so we swallow the error
   }
 }
 
+// Reports a failed build to both the local sticky disk manager and the Blacksmith API
 async function reportBuildFailed() {
   try {
     const client = await getBlacksmithHttpClient();
@@ -79,10 +90,19 @@ async function reportBuildFailed() {
     };
 
     await postWithRetry(client, '/stickydisks', formData, retryCondition);
+
+    // Report failure to Blacksmith API
+    const apiClient = await getBlacksmithAPIClient();
+    const requestOptions = {
+      docker_build_id: stateHelper.blacksmithDockerBuildId,
+      conclusion: 'failed'
+    };
+
+    await postWithRetryToBlacksmithAPI(apiClient, `/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build failed:', error);
-    throw error;
+    // We don't want to fail the build if this fails so we swallow the error
   }
 }
 
@@ -278,8 +298,28 @@ async function getNumCPUs(): Promise<number> {
   }
 }
 
-async function reportBlacksmithBuilderFailed(stickydiskKey: string) {
-  const client = await getBlacksmithAPIUrl();
+// reportBuild reports the build to the Blacksmith API and returns the build ID
+async function reportBuild(dockerfilePath: string) {
+  const client = await getBlacksmithAPIClient();
+  const requestOptions = {
+    dockerfile_path: dockerfilePath,
+    repo_name: process.env.GITHUB_REPO_NAME || '',
+    region: process.env.BLACKSMITH_REGION || 'eu-central',
+    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
+    git_sha: process.env.GITHUB_SHA || '',
+    vm_id: process.env.VM_ID || '',
+    git_branch: process.env.GITHUB_REF_NAME || ''
+  };
+  const retryCondition = (error: AxiosError) => {
+    return error.response?.status ? error.response.status > 500 : false;
+  };
+  const response = await postWithRetryToBlacksmithAPI(client, '/stickydisks/dockerbuilds', requestOptions, retryCondition);
+  stateHelper.setBlacksmithDockerBuildId(response.data.docker_build_id);
+  return response.data;
+}
+
+async function reportBuilderCreationFailed(stickydiskKey: string) {
+  const client = await getBlacksmithAPIClient();
   const requestOptions = {
     stickydisk_key: stickydiskKey,
     repo_name: process.env.GITHUB_REPO_NAME || '',
@@ -305,6 +345,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     try {
       await getStickyDisk(dockerfilePath, retryCondition, {signal: controller.signal});
       clearTimeout(timeoutId);
+      await reportBuild(dockerfilePath);
       await execAsync(`sudo mkdir -p ${mountPoint}`);
       await execAsync(`sudo mount ${device} ${mountPoint}`);
       core.debug(`${device} has been mounted to ${mountPoint}`);
@@ -312,7 +353,6 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
       if (error.name === 'AbortError') {
         return null;
       }
-      core.warning(`Error in getBuilderAddr: ${(error as Error).message}`);
       throw error;
     }
 
@@ -411,12 +451,12 @@ actionsToolkit.run(
       }
     });
 
-    let remoteBuilderAddr: string | null = null;
-    await core.group(`Starting Blacksmith remote builder`, async () => {
+    let localBuilderAddr: string | null = null;
+    await core.group(`Starting Blacksmith builder`, async () => {
       const dockerfilePath = context.getDockerfilePath(inputs);
       if (!dockerfilePath) {
         if (inputs.nofallback) {
-          await reportBlacksmithBuilderFailed('');
+          await reportBuilderCreationFailed('');
           throw Error('Failed to resolve dockerfile path, and fallback is disabled');
         } else {
           core.warning('Failed to resolve dockerfile path, and fallback is enabled. Falling back to a local build.');
@@ -426,21 +466,21 @@ actionsToolkit.run(
       if (dockerfilePath && dockerfilePath.length > 0) {
         core.debug(`Using dockerfile path: ${dockerfilePath}`);
       }
-      remoteBuilderAddr = await getBuilderAddr(inputs, dockerfilePath);
-      if (!remoteBuilderAddr) {
-        await reportBlacksmithBuilderFailed(dockerfilePath);
+      localBuilderAddr = await getBuilderAddr(inputs, dockerfilePath);
+      if (!localBuilderAddr) {
+        await reportBuilderCreationFailed(dockerfilePath);
         if (inputs.nofallback) {
           throw Error('Failed to obtain Blacksmith builder. Failing the build');
         } else {
-          core.warning('Failed to obtain Blacksmith remote builder address. Falling back to a local build.');
+          core.warning('Failed to obtain Blacksmith builder address. Falling back to a local build.');
         }
       }
     });
 
-    if (remoteBuilderAddr) {
-      await core.group(`Creating a remote builder instance`, async () => {
+    if (localBuilderAddr) {
+      await core.group(`Creating a builder instance`, async () => {
         const name = `blacksmith`;
-        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, remoteBuilderAddr!));
+        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, localBuilderAddr!));
         core.info(`Creating builder with command: ${createCmd.command}`);
         await Exec.getExecOutput(createCmd.command, createCmd.args, {
           ignoreReturnCode: true
@@ -596,13 +636,13 @@ actionsToolkit.run(
     });
 
     if (err) {
-      if (remoteBuilderAddr) {
-        stateHelper.setRemoteDockerBuildStatus('failure');
+      if (localBuilderAddr) {
+        stateHelper.setDockerBuildStatus('failure');
       }
       throw err;
     }
-    if (remoteBuilderAddr) {
-      stateHelper.setRemoteDockerBuildStatus('success');
+    if (localBuilderAddr) {
+      stateHelper.setDockerBuildStatus('success');
     }
   },
   // post
@@ -641,7 +681,7 @@ actionsToolkit.run(
         }
       });
     }
-    if (stateHelper.remoteDockerBuildStatus != '') {
+    if (stateHelper.dockerBuildStatus != '') {
       try {
         await shutdownBuildkitd();
         for (let attempt = 1; attempt <= 3; attempt++) {
@@ -657,7 +697,7 @@ actionsToolkit.run(
             await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
-        if (stateHelper.remoteDockerBuildStatus == 'success') {
+        if (stateHelper.dockerBuildStatus == 'success') {
           await reportBuildCompleted();
         } else {
           await reportBuildFailed();
