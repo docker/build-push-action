@@ -111,13 +111,16 @@ async function postWithRetryToBlacksmithAPI(url: string, requestBody: unknown, r
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      core.debug(`Making POST request to ${url}`);
       core.debug(`Request headers: Authorization: Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}, X-Github-Repo-Name: ${process.env.GITHUB_REPO_NAME || ''}`);
 
-      return await axios.post(`${apiUrl}${url}`, requestBody, {
+      const fullUrl = `${apiUrl}${url}`;
+      core.debug(`Making request to full URL: ${fullUrl}`);
+
+      return await axios.post(fullUrl, requestBody, {
         headers: {
           Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
-          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
+          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
+          'Content-Type': 'application/json'
         }
       });
     } catch (error) {
