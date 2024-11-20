@@ -32,11 +32,7 @@ const execAsync = promisify(exec);
 async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
   const stickyDiskMgrUrl = 'http://192.168.127.1:5556';
   return axios.create({
-    baseURL: stickyDiskMgrUrl,
-    headers: {
-      Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
-      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || ''
-    }
+    baseURL: stickyDiskMgrUrl
   });
 }
 
@@ -144,6 +140,8 @@ async function postWithRetry(client: AxiosInstance, url: string, formData: FormD
     try {
       return await client.post(url, formData, {
         headers: {
+          Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+          'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -168,6 +166,8 @@ async function getWithRetry(client: AxiosInstance, url: string, formData: FormDa
         return await client.get(url, {
           data: formData,
           headers: {
+            Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+            'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
             'Content-Type': 'multipart/form-data'
           },
           signal: options?.signal
