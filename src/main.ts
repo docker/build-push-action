@@ -303,14 +303,18 @@ async function getNumCPUs(): Promise<number> {
     return 1;
   }
 }
-
 async function maybeFormatBlockDevice(device: string): Promise<string> {
   try {
     // Check if device is formatted with ext4
-    const {stdout} = await execAsync(`sudo blkid -o value -s TYPE ${device}`);
-    if (stdout.trim() === 'ext4') {
-      core.debug(`Device ${device} is already formatted with ext4`);
-      return device;
+    try {
+      const {stdout} = await execAsync(`sudo blkid -o value -s TYPE ${device}`);
+      if (stdout.trim() === 'ext4') {
+        core.debug(`Device ${device} is already formatted with ext4`);
+        return device;
+      }
+    } catch (error) {
+      // blkid returns non-zero if no filesystem found, which is fine
+      core.debug(`No filesystem found on ${device}, will format it`);
     }
 
     // Format device with ext4
