@@ -304,6 +304,26 @@ async function getNumCPUs(): Promise<number> {
   }
 }
 
+async function maybeFormatBlockDevice(device: string): Promise<string> {
+  try {
+    // Check if device is formatted with ext4
+    const {stdout} = await execAsync(`sudo blkid -o value -s TYPE ${device}`);
+    if (stdout.trim() === 'ext4') {
+      core.debug(`Device ${device} is already formatted with ext4`);
+      return device;
+    }
+
+    // Format device with ext4
+    core.debug(`Formatting device ${device} with ext4`);
+    await execAsync(`sudo mkfs.ext4 -m0 -Enodiscard,lazy_itable_init=1,lazy_journal_init=1 -F ${device}`);
+    core.debug(`Successfully formatted ${device} with ext4`);
+    return device;
+  } catch (error) {
+    core.error(`Failed to format device ${device}:`, error);
+    throw error;
+  }
+}
+
 // reportBuild reports the build to the Blacksmith API and returns the build ID
 async function reportBuild(dockerfilePath: string) {
   try {
@@ -357,6 +377,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     try {
       await getStickyDisk(dockerfilePath, retryCondition, {signal: controller.signal});
       clearTimeout(timeoutId);
+      await maybeFormatBlockDevice(device);
       await reportBuild(dockerfilePath);
       await execAsync(`sudo mkdir -p ${mountPoint}`);
       await execAsync(`sudo mount ${device} ${mountPoint}`);
