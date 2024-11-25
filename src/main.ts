@@ -44,8 +44,6 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
     return;
   }
 
-  core.warning(`reportBuildCompleted: exportRes: ${JSON.stringify(exportRes, null, 2)}`);
-
   try {
     const client = await getBlacksmithAgentClient();
     const formData = new FormData();
@@ -64,15 +62,25 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
       runtime_seconds: stateHelper.dockerBuildDurationSeconds
     };
 
-    core.debug(`exportRes: ${JSON.stringify(exportRes, null, 2)}`);
-    core.debug(`stateHelper.buildRef: ${stateHelper.buildRef}`);
+    if (exportRes) {
+      let buildRefSummary;
+      // Extract just the ref ID from the full buildRef path
+      const refId = stateHelper.buildRef?.split('/').pop();
+      core.info(`Using buildRef ID: ${refId}`);
+      if (refId && exportRes.summaries[refId]) {
+        buildRefSummary = exportRes.summaries[refId];
+      } else {
+        // Take first summary if buildRef not found
+        const summaryKeys = Object.keys(exportRes.summaries);
+        if (summaryKeys.length > 0) {
+          buildRefSummary = exportRes.summaries[summaryKeys[0]];
+        }
+      }
 
-    if (exportRes && stateHelper.buildRef) {
-      const buildRefSummary = exportRes.summaries[stateHelper.buildRef];
-      const cachedRatio = buildRefSummary.numCachedSteps / buildRefSummary.numTotalSteps;
-
-      requestOptions['docker_build_size'] = exportRes.dockerbuildSize;
-      requestOptions['cached_steps_ratio'] = cachedRatio;
+      if (buildRefSummary) {
+        const cachedRatio = buildRefSummary.numCachedSteps / buildRefSummary.numTotalSteps;
+        requestOptions['cached_steps_ratio'] = cachedRatio;
+      }
     }
 
     await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
@@ -752,8 +760,6 @@ actionsToolkit.run(
             await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
-        core.warning(`stateHelper.dockerBuildStatus: ${stateHelper.dockerBuildStatus}`);
-        core.warning(`exportRes: ${JSON.stringify(exportRes, null, 2)}`);
         if (stateHelper.dockerBuildStatus == 'success') {
           await reportBuildCompleted(exportRes);
         } else {
