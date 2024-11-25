@@ -104,8 +104,14 @@ actionsToolkit.run(
         [key: string]: string;
       }
     }).then(res => {
-      if (res.stderr.length > 0 && res.exitCode != 0) {
-        err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+      if (res.exitCode != 0) {
+        if (inputs.call && inputs.call === 'check' && res.stdout.length > 0) {
+          // checks warnings are printed to stdout: https://github.com/docker/buildx/pull/2647
+          // take the first line with the message summaryzing the warnings
+          err = Error(res.stdout.split('\n')[0]?.trim());
+        } else if (res.stderr.length > 0) {
+          err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+        }
       }
     });
 
@@ -161,6 +167,8 @@ actionsToolkit.run(
     await core.group(`Check build summary support`, async () => {
       if (!buildSummaryEnabled()) {
         core.info('Build summary disabled');
+      } else if (inputs.call && inputs.call !== 'build') {
+        core.info(`Build summary skipped for ${inputs.call} subrequest`);
       } else if (GitHub.isGHES) {
         core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {

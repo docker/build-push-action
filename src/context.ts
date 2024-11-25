@@ -17,6 +17,7 @@ export interface Inputs {
   builder: string;
   'cache-from': string[];
   'cache-to': string[];
+  call: string;
   'cgroup-parent': string;
   context: string;
   file: string;
@@ -53,6 +54,7 @@ export async function getInputs(): Promise<Inputs> {
     builder: core.getInput('builder'),
     'cache-from': Util.getInputList('cache-from', {ignoreComma: true}),
     'cache-to': Util.getInputList('cache-to', {ignoreComma: true}),
+    call: core.getInput('call'),
     'cgroup-parent': core.getInput('cgroup-parent'),
     context: core.getInput('context') || Context.gitContext(),
     file: core.getInput('file'),
@@ -141,6 +143,12 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   await Util.asyncForEach(inputs['cache-to'], async cacheTo => {
     args.push('--cache-to', cacheTo);
   });
+  if (inputs.call) {
+    if (!(await toolkit.buildx.versionSatisfies('>=0.15.0'))) {
+      throw new Error(`Buildx >= 0.15.0 is required to use the call flag.`);
+    }
+    args.push('--call', inputs.call);
+  }
   if (inputs['cgroup-parent']) {
     args.push('--cgroup-parent', inputs['cgroup-parent']);
   }
