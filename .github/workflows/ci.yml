@@ -288,7 +288,6 @@ jobs:
       -
         name: Check
         run: |
-          echo "${{ toJson(steps.docker_build) }}"
           if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
             echo "::error::Should have failed"
             exit 1
@@ -324,7 +323,6 @@ jobs:
       -
         name: Check
         run: |
-          echo "${{ toJson(steps.docker_build) }}"
           if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
             echo "::error::Should have failed"
             exit 1
@@ -1511,3 +1509,33 @@ jobs:
           file: ./test/lint.Dockerfile
         env:
           DOCKER_BUILD_CHECKS_ANNOTATIONS: false
+
+  call-check:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version || env.BUILDX_VERSION }}
+          driver-opts: |
+            image=${{ inputs.buildkit-image || env.BUILDKIT_IMAGE }}
+      -
+        name: Build
+        id: docker_build
+        continue-on-error: true
+        uses: ./
+        with:
+          context: ./test
+          file: ./test/lint.Dockerfile
+          call: check
+      -
+        name: Check
+        run: |
+          if [ "${{ steps.docker_build.outcome }}" != "failure" ] || [ "${{ steps.docker_build.conclusion }}" != "success" ]; then
+            echo "::error::Should have failed"
+            exit 1
+          fi

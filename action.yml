@@ -34,6 +34,9 @@ inputs:
   cache-to:
     description: "List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)"
     required: false
+  call:
+    description: "Set method for evaluating build (e.g., check)"
+    required: false
   cgroup-parent:
     description: "Optional parent cgroup for the container used in the build"
     required: false
