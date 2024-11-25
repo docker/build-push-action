@@ -6,6 +6,7 @@ import * as actionsToolkit from '@docker/actions-toolkit';
 
 import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
 import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history';
+import {ExportRecordResponse} from '@docker/actions-toolkit/lib/types/buildx/history';
 import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Exec} from '@docker/actions-toolkit/lib/exec';
@@ -37,11 +38,13 @@ async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
 }
 
 // Reports a successful build to the local sticky disk manager
-async function reportBuildCompleted() {
+async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
   if (!stateHelper.blacksmithDockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
   }
+
+  core.warning(`reportBuildCompleted: exportRes: ${JSON.stringify(exportRes, null, 2)}`);
 
   try {
     const client = await getBlacksmithAgentClient();
@@ -60,6 +63,17 @@ async function reportBuildCompleted() {
       conclusion: 'successful',
       runtime_seconds: stateHelper.dockerBuildDurationSeconds
     };
+
+    core.debug(`exportRes: ${JSON.stringify(exportRes, null, 2)}`);
+    core.debug(`stateHelper.buildRef: ${stateHelper.buildRef}`);
+
+    if (exportRes && stateHelper.buildRef) {
+      const buildRefSummary = exportRes.summaries[stateHelper.buildRef];
+      const cachedRatio = buildRefSummary.numCachedSteps / buildRefSummary.numTotalSteps;
+
+      requestOptions['docker_build_size'] = exportRes.dockerbuildSize;
+      requestOptions['cached_steps_ratio'] = cachedRatio;
+    }
 
     await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
@@ -687,6 +701,7 @@ actionsToolkit.run(
   },
   // post
   async () => {
+    let exportRes;
     if (stateHelper.isSummarySupported) {
       await core.group(`Generating build summary`, async () => {
         try {
@@ -697,7 +712,7 @@ actionsToolkit.run(
           }
 
           const buildxHistory = new BuildxHistory();
-          const exportRes = await buildxHistory.export({
+          exportRes = await buildxHistory.export({
             refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
           });
           core.info(`Build record written to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
@@ -737,8 +752,10 @@ actionsToolkit.run(
             await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
+        core.warning(`stateHelper.dockerBuildStatus: ${stateHelper.dockerBuildStatus}`);
+        core.warning(`exportRes: ${JSON.stringify(exportRes, null, 2)}`);
         if (stateHelper.dockerBuildStatus == 'success') {
-          await reportBuildCompleted();
+          await reportBuildCompleted(exportRes);
         } else {
           await reportBuildFailed();
         }
