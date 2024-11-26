@@ -117,9 +117,9 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   await Util.asyncForEach(inputs['add-hosts'], async addHost => {
     args.push('--add-host', addHost);
   });
-  if (inputs.allow.length > 0) {
-    args.push('--allow', inputs.allow.join(','));
-  }
+  await Util.asyncForEach(inputs.allow, async allow => {
+    args.push('--allow', allow);
+  });
   if (await toolkit.buildx.versionSatisfies('>=0.12.0')) {
     await Util.asyncForEach(inputs.annotations, async annotation => {
       args.push('--annotation', annotation);
