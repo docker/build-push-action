@@ -16,7 +16,6 @@ import {Util} from '@docker/actions-toolkit/lib/util';
 
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
-import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 
 import * as context from './context';
@@ -38,8 +37,8 @@ async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
 }
 
 // Reports a successful build to the local sticky disk manager
-async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
-  if (!stateHelper.blacksmithDockerBuildId) {
+async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmithDockerBuildId?: string | null, buildRef?: string, dockerBuildDurationSeconds?: string) {
+  if (!blacksmithDockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
   }
@@ -57,15 +56,15 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
 
     // Report success to Blacksmith API
     const requestOptions = {
-      docker_build_id: stateHelper.blacksmithDockerBuildId,
+      docker_build_id: blacksmithDockerBuildId,
       conclusion: 'successful',
-      runtime_seconds: stateHelper.dockerBuildDurationSeconds
+      runtime_seconds: dockerBuildDurationSeconds
     };
 
     if (exportRes) {
       let buildRefSummary;
       // Extract just the ref ID from the full buildRef path
-      const refId = stateHelper.buildRef?.split('/').pop();
+      const refId = buildRef?.split('/').pop();
       core.info(`Using buildRef ID: ${refId}`);
       if (refId && exportRes.summaries[refId]) {
         buildRefSummary = exportRes.summaries[refId];
@@ -83,7 +82,7 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
       }
     }
 
-    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
+    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${blacksmithDockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build completed:', error);
@@ -92,8 +91,8 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse) {
 }
 
 // Reports a failed build to both the local sticky disk manager and the Blacksmith API
-async function reportBuildFailed() {
-  if (!stateHelper.blacksmithDockerBuildId) {
+async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurationSeconds?: string) {
+  if (!dockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
   }
@@ -111,12 +110,12 @@ async function reportBuildFailed() {
 
     // Report failure to Blacksmith API
     const requestOptions = {
-      docker_build_id: stateHelper.blacksmithDockerBuildId,
+      docker_build_id: dockerBuildId,
       conclusion: 'failed',
-      runtime_seconds: stateHelper.dockerBuildDurationSeconds
+      runtime_seconds: dockerBuildDurationSeconds
     };
 
-    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${stateHelper.blacksmithDockerBuildId}`, requestOptions, retryCondition);
+    await postWithRetryToBlacksmithAPI(`/stickydisks/dockerbuilds/${dockerBuildId}`, requestOptions, retryCondition);
     return;
   } catch (error) {
     core.warning('Error reporting build failed:', error);
@@ -332,9 +331,13 @@ async function maybeFormatBlockDevice(device: string): Promise<string> {
       const {stdout} = await execAsync(`sudo blkid -o value -s TYPE ${device}`);
       if (stdout.trim() === 'ext4') {
         core.debug(`Device ${device} is already formatted with ext4`);
-        // Run resize2fs to ensure filesystem uses full block device
-        await execAsync(`sudo resize2fs ${device}`);
-        core.debug(`Resized ext4 filesystem on ${device}`);
+        try {
+          // Run resize2fs to ensure filesystem uses full block device
+          await execAsync(`sudo resize2fs -f ${device}`);
+          core.debug(`Resized ext4 filesystem on ${device}`);
+        } catch (error) {
+          core.warning(`Error resizing ext4 filesystem on ${device}: ${error}`);
+        }
         return device;
       }
     } catch (error) {
@@ -399,23 +402,24 @@ async function reportBuilderCreationFailed(stickydiskKey: string) {
 // getBuilderAddr mounts a sticky disk for the entity, sets up buildkitd on top of it
 // and returns the address to the builder.
 // If it is unable to do so because of a timeout or an error it returns null.
-async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<string | null> {
+async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<{addr: string | null; buildId?: string | null}> {
   try {
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+    let buildResponse: {docker_build_id: string} | null = null;
     try {
       await getStickyDisk(dockerfilePath, retryCondition, {signal: controller.signal});
       clearTimeout(timeoutId);
       await maybeFormatBlockDevice(device);
-      await reportBuild(dockerfilePath);
+      buildResponse = await reportBuild(dockerfilePath);
       await execAsync(`sudo mkdir -p ${mountPoint}`);
       await execAsync(`sudo mount ${device} ${mountPoint}`);
       core.debug(`${device} has been mounted to ${mountPoint}`);
     } catch (error) {
       if (error.name === 'AbortError') {
-        return null;
+        return {addr: null};
       }
       throw error;
     }
@@ -442,7 +446,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
       throw new Error('buildkitd socket not found after 3s timeout');
     }
-    return buildkitdAddr;
+    return {addr: buildkitdAddr, buildId: buildResponse?.docker_build_id};
   } catch (error) {
     if ((error as AxiosError).response && (error as AxiosError).response!.status === 404) {
       if (!inputs.nofallback) {
@@ -451,7 +455,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     } else {
       core.warning(`Error in getBuildkitdAddr: ${(error as Error).message}`);
     }
-    return null;
+    return {addr: null};
   }
 }
 
@@ -515,7 +519,10 @@ actionsToolkit.run(
       }
     });
 
-    let localBuilderAddr: string | null = null;
+    let builderInfo = {
+      addr: null as string | null,
+      buildId: null as string | null
+    };
     await core.group(`Starting Blacksmith builder`, async () => {
       const dockerfilePath = context.getDockerfilePath(inputs);
       if (!dockerfilePath) {
@@ -530,8 +537,12 @@ actionsToolkit.run(
       if (dockerfilePath && dockerfilePath.length > 0) {
         core.debug(`Using dockerfile path: ${dockerfilePath}`);
       }
-      localBuilderAddr = await getBuilderAddr(inputs, dockerfilePath);
-      if (!localBuilderAddr) {
+      const {addr, buildId} = await getBuilderAddr(inputs, dockerfilePath);
+      builderInfo = {
+        addr: addr || null,
+        buildId: buildId || null
+      };
+      if (!builderInfo.addr) {
         await reportBuilderCreationFailed(dockerfilePath);
         if (inputs.nofallback) {
           throw Error('Failed to obtain Blacksmith builder. Failing the build');
@@ -541,10 +552,10 @@ actionsToolkit.run(
       }
     });
 
-    if (localBuilderAddr) {
+    if (builderInfo.addr) {
       await core.group(`Creating a builder instance`, async () => {
         const name = `blacksmith`;
-        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, localBuilderAddr!));
+        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!));
         core.info(`Creating builder with command: ${createCmd.command}`);
         await Exec.getExecOutput(createCmd.command, createCmd.args, {
           ignoreReturnCode: true
@@ -621,6 +632,7 @@ actionsToolkit.run(
 
     let err: Error | undefined;
     const buildStartTime = Date.now();
+    let buildDurationSeconds: string | undefined;
     await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
       ignoreReturnCode: true,
       env: Object.assign({}, process.env, {
@@ -632,7 +644,7 @@ actionsToolkit.run(
       if (res.stderr.length > 0 && res.exitCode != 0) {
         err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
       }
-      const buildDurationSeconds = Math.round((Date.now() - buildStartTime) / 1000).toString();
+      buildDurationSeconds = Math.round((Date.now() - buildStartTime) / 1000).toString();
       stateHelper.setDockerBuildDurationSeconds(buildDurationSeconds);
     });
 
@@ -702,15 +714,22 @@ actionsToolkit.run(
       }
     });
 
-    if (localBuilderAddr) {
+    if (builderInfo.addr) {
       if (err) {
+        core.info(`Build failed: ${err.message}`);
         stateHelper.setDockerBuildStatus('failure');
       } else {
+        core.info('Build completed successfully');
         stateHelper.setDockerBuildStatus('success');
       }
 
       try {
+        const buildxHistory = new BuildxHistory();
+        const exportRes = await buildxHistory.export({
+          refs: ref ? [ref] : []
+        });
         await shutdownBuildkitd();
+        core.info('Shutdown buildkitd');
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
             await execAsync(`sudo umount ${mountPoint}`);
@@ -724,12 +743,9 @@ actionsToolkit.run(
             await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
-        if (stateHelper.dockerBuildStatus == 'success') {
-          const buildxHistory = new BuildxHistory();
-          const exportRes = await buildxHistory.export({
-            refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
-          });
-          await reportBuildCompleted(exportRes);
+        core.info('Unmounted device');
+        if (!err) {
+          await reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds);
         } else {
           try {
             const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
@@ -738,7 +754,7 @@ actionsToolkit.run(
           } catch (error) {
             core.warning(`Failed to read buildkitd.log: ${error.message}`);
           }
-          await reportBuildFailed();
+          await reportBuildFailed(builderInfo.buildId, buildDurationSeconds);
         }
       } catch (error) {
         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
@@ -751,40 +767,6 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.isSummarySupported) {
-      await core.group(`Generating build summary`, async () => {
-        try {
-          const recordUploadEnabled = buildRecordUploadEnabled();
-          let recordRetentionDays: number | undefined;
-          if (recordUploadEnabled) {
-            recordRetentionDays = buildRecordRetentionDays();
-          }
-
-          const buildxHistory = new BuildxHistory();
-          const exportRes = await buildxHistory.export({
-            refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
-          });
-          core.info(`Build record written to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
-
-          let uploadRes: UploadArtifactResponse | undefined;
-          if (recordUploadEnabled) {
-            uploadRes = await GitHub.uploadArtifact({
-              filename: exportRes.dockerbuildFilename,
-              mimeType: 'application/gzip',
-              retentionDays: recordRetentionDays
-            });
-          }
-
-          await GitHub.writeBuildSummary({
-            exportRes: exportRes,
-            uploadRes: uploadRes,
-            inputs: stateHelper.inputs
-          });
-        } catch (e) {
-          core.warning(e.message);
-        }
-      });
-    }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
         fs.rmSync(stateHelper.tmpDir, {recursive: true});
