@@ -382,7 +382,9 @@ async function reportBuilderCreationFailed(stickydiskKey: string) {
     stickydisk_key: stickydiskKey,
     repo_name: process.env.GITHUB_REPO_NAME || '',
     region: process.env.BLACKSMITH_REGION || 'eu-central',
-    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64'
+    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
+    vm_id: process.env.VM_ID || '',
+    petname: process.env.PETNAME || ''
   };
   const retryCondition = (error: AxiosError) => {
     return error.response?.status ? error.response.status > 500 : false;
