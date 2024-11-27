@@ -243,6 +243,17 @@ async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
     grpc: {
       address: ['unix:///run/buildkit/buildkitd.sock']
     },
+    registry: {
+      'docker.io': {
+        mirrors: ['http://192.168.127.1:5000'],
+        http: true,
+        insecure: true
+      },
+      '192.168.127.1:5000': {
+        http: true,
+        insecure: true
+      }
+    },
     worker: {
       oci: {
         enabled: true,
