@@ -332,6 +332,9 @@ async function maybeFormatBlockDevice(device: string): Promise<string> {
       const {stdout} = await execAsync(`sudo blkid -o value -s TYPE ${device}`);
       if (stdout.trim() === 'ext4') {
         core.debug(`Device ${device} is already formatted with ext4`);
+        // Run resize2fs to ensure filesystem uses full block device
+        await execAsync(`sudo resize2fs ${device}`);
+        core.debug(`Resized ext4 filesystem on ${device}`);
         return device;
       }
     } catch (error) {
