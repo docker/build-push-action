@@ -697,19 +697,55 @@ actionsToolkit.run(
       }
     });
 
-    if (err) {
-      if (localBuilderAddr) {
-        stateHelper.setDockerBuildStatus('failure');
-      }
-      throw err;
-    }
     if (localBuilderAddr) {
-      stateHelper.setDockerBuildStatus('success');
+      if (err) {
+        stateHelper.setDockerBuildStatus('failure');
+      } else {
+        stateHelper.setDockerBuildStatus('success');
+      }
+
+      try {
+        await shutdownBuildkitd();
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await execAsync(`sudo umount ${mountPoint}`);
+            core.debug(`${device} has been unmounted`);
+            break;
+          } catch (error) {
+            if (attempt === 3) {
+              throw error;
+            }
+            core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+        if (stateHelper.dockerBuildStatus == 'success') {
+          const buildxHistory = new BuildxHistory();
+          const exportRes = await buildxHistory.export({
+            refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
+          });
+          await reportBuildCompleted(exportRes);
+        } else {
+          try {
+            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
+            core.info('buildkitd.log contents:');
+            core.info(buildkitdLog);
+          } catch (error) {
+            core.warning(`Failed to read buildkitd.log: ${error.message}`);
+          }
+          await reportBuildFailed();
+        }
+      } catch (error) {
+        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
+      }
+    }
+
+    if (err) {
+      throw err;
     }
   },
   // post
   async () => {
-    let exportRes;
     if (stateHelper.isSummarySupported) {
       await core.group(`Generating build summary`, async () => {
         try {
@@ -720,7 +756,7 @@ actionsToolkit.run(
           }
 
           const buildxHistory = new BuildxHistory();
-          exportRes = await buildxHistory.export({
+          const exportRes = await buildxHistory.export({
             refs: stateHelper.buildRef ? [stateHelper.buildRef] : []
           });
           core.info(`Build record written to ${exportRes.dockerbuildFilename} (${Util.formatFileSize(exportRes.dockerbuildSize)})`);
@@ -743,38 +779,6 @@ actionsToolkit.run(
           core.warning(e.message);
         }
       });
-    }
-    if (stateHelper.dockerBuildStatus != '') {
-      try {
-        await shutdownBuildkitd();
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await execAsync(`sudo umount ${mountPoint}`);
-            core.debug(`${device} has been unmounted`);
-            break;
-          } catch (error) {
-            if (attempt === 3) {
-              throw error;
-            }
-            core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-        if (stateHelper.dockerBuildStatus == 'success') {
-          await reportBuildCompleted(exportRes);
-        } else {
-          try {
-            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
-            core.info('buildkitd.log contents:');
-            core.info(buildkitdLog);
-          } catch (error) {
-            core.warning(`Failed to read buildkitd.log: ${error.message}`);
-          }
-          await reportBuildFailed();
-        }
-      } catch (error) {
-        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-      }
     }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
