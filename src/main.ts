@@ -286,7 +286,7 @@ async function startBuildkitd(parallelism: number): Promise<string> {
     await execAsync('sudo chmod 755 /run/buildkit');
     const addr = 'unix:///run/buildkit/buildkitd.sock';
     const {stdout: startStdout, stderr: startStderr} = await execAsync(
-      `sudo nohup buildkitd --addr ${addr} --allow-insecure-entitlement security.insecure --config=buildkitd.toml --allow-insecure-entitlement network.host > buildkitd.log 2>&1 &`
+      `sudo nohup buildkitd --debug --addr ${addr} --allow-insecure-entitlement security.insecure --config=buildkitd.toml --allow-insecure-entitlement network.host > buildkitd.log 2>&1 &`
     );
 
     if (startStderr) {
@@ -763,6 +763,13 @@ actionsToolkit.run(
         if (stateHelper.dockerBuildStatus == 'success') {
           await reportBuildCompleted(exportRes);
         } else {
+          try {
+            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
+            core.info('buildkitd.log contents:');
+            core.info(buildkitdLog);
+          } catch (error) {
+            core.warning(`Failed to read buildkitd.log: ${error.message}`);
+          }
           await reportBuildFailed();
         }
       } catch (error) {
