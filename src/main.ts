@@ -206,14 +206,20 @@ async function getWithRetry(client: AxiosInstance, url: string, formData: FormDa
   throw new Error('Max retries reached');
 }
 
-async function getStickyDisk(dockerfilePath: string, retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<unknown> {
+async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<unknown> {
   const client = await getBlacksmithAgentClient();
   const formData = new FormData();
-  formData.append('stickyDiskKey', dockerfilePath);
+  // TODO(adityamaru): Support a stickydisk-per-build flag that will namespace the stickydisks by Dockerfile.
+  // For now, we'll use the repo name as the stickydisk key.
+  const repoName = process.env.GITHUB_REPO_NAME || '';
+  if (repoName === '') {
+    throw new Error('GITHUB_REPO_NAME is not set');
+  }
+  formData.append('stickyDiskKey', repoName);
   formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
   formData.append('installationModelID', process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '');
   formData.append('vmID', process.env.VM_ID || '');
-  core.debug(`Getting sticky disk for ${dockerfilePath}`);
+  core.debug(`Getting sticky disk for ${repoName}`);
   core.debug('FormData contents:');
   for (const pair of formData.entries()) {
     core.debug(`${pair[0]}: ${pair[1]}`);
@@ -421,7 +427,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
 
     let buildResponse: {docker_build_id: string} | null = null;
     try {
-      await getStickyDisk(dockerfilePath, retryCondition, {signal: controller.signal});
+      await getStickyDisk(retryCondition, {signal: controller.signal});
       clearTimeout(timeoutId);
       await maybeFormatBlockDevice(device);
       buildResponse = await reportBuild(dockerfilePath);
@@ -565,7 +571,7 @@ actionsToolkit.run(
 
     if (builderInfo.addr) {
       await core.group(`Creating a builder instance`, async () => {
-        const name = `blacksmith`;
+        const name = `blacksmith-${Date.now().toString(36)}`;
         const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!));
         core.info(`Creating builder with command: ${createCmd.command}`);
         await Exec.getExecOutput(createCmd.command, createCmd.args, {
