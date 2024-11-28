@@ -571,7 +571,7 @@ actionsToolkit.run(
 
     if (builderInfo.addr) {
       await core.group(`Creating a builder instance`, async () => {
-        const name = `blacksmith`;
+        const name = `blacksmith-${Date.now().toString(36)}`;
         const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!));
         core.info(`Creating builder with command: ${createCmd.command}`);
         await Exec.getExecOutput(createCmd.command, createCmd.args, {
