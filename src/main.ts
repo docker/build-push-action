@@ -126,7 +126,7 @@ async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurati
 async function postWithRetryToBlacksmithAPI(url: string, requestBody: unknown, retryCondition: (error: AxiosError) => boolean): Promise<AxiosResponse> {
   const maxRetries = 5;
   const retryDelay = 100;
-  const apiUrl = process.env.PETNAME?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
+  const apiUrl = process.env.BLACKSMITH_ENV?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh';
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -380,7 +380,7 @@ async function reportBuild(dockerfilePath: string) {
       dockerfile_path: dockerfilePath,
       repo_name: process.env.GITHUB_REPO_NAME || '',
       region: process.env.BLACKSMITH_REGION || 'eu-central',
-      arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
+      arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
       git_sha: process.env.GITHUB_SHA || '',
       vm_id: process.env.VM_ID || '',
       git_branch: process.env.GITHUB_REF_NAME || ''
@@ -405,7 +405,7 @@ async function reportBuilderCreationFailed(stickydiskKey: string) {
     stickydisk_key: stickydiskKey,
     repo_name: process.env.GITHUB_REPO_NAME || '',
     region: process.env.BLACKSMITH_REGION || 'eu-central',
-    arch: process.env.PETNAME?.includes('arm') ? 'arm64' : 'amd64',
+    arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
     vm_id: process.env.VM_ID || '',
     petname: process.env.PETNAME || ''
   };
