@@ -569,217 +569,216 @@ actionsToolkit.run(
       }
     });
 
-    if (builderInfo.addr) {
-      await core.group(`Creating a builder instance`, async () => {
-        const name = `blacksmith-${Date.now().toString(36)}`;
-        const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!));
-        core.info(`Creating builder with command: ${createCmd.command}`);
-        await Exec.getExecOutput(createCmd.command, createCmd.args, {
-          ignoreReturnCode: true
-        }).then(res => {
-          if (res.stderr.length > 0 && res.exitCode != 0) {
-            throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
-          }
-        });
-      });
-    } else {
-      // If we failed to obtain the address, let's check if we have an already configured builder.
-      await core.group(`Checking for configured builder`, async () => {
-        try {
-          const builder = await toolkit.builder.inspect();
-          if (builder) {
-            core.info(`Found configured builder: ${builder.name}`);
-          } else {
-            // Create a local builder using the docker-container driver (which is the default driver in setup-buildx)
-            const createLocalBuilderCmd = 'docker buildx create --name local --driver docker-container --use';
-            try {
-              await Exec.exec(createLocalBuilderCmd);
-              core.info('Created and set a local builder for use');
-            } catch (error) {
-              core.setFailed(`Failed to create local builder: ${error.message}`);
-            }
-          }
-        } catch (error) {
-          core.setFailed(`Error configuring builder: ${error.message}`);
-        }
-      });
-    }
-
-    await core.group(`Proxy configuration`, async () => {
-      let dockerConfig: ConfigFile | undefined;
-      let dockerConfigMalformed = false;
-      try {
-        dockerConfig = await Docker.configFile();
-      } catch (e) {
-        dockerConfigMalformed = true;
-        core.warning(`Unable to parse config file ${path.join(Docker.configDir, 'config.json')}: ${e}`);
-      }
-      if (dockerConfig && dockerConfig.proxies) {
-        for (const host in dockerConfig.proxies) {
-          let prefix = '';
-          if (Object.keys(dockerConfig.proxies).length > 1) {
-            prefix = '  ';
-            core.info(host);
-          }
-          for (const key in dockerConfig.proxies[host]) {
-            core.info(`${prefix}${key}: ${dockerConfig.proxies[host][key]}`);
-          }
-        }
-      } else if (!dockerConfigMalformed) {
-        core.info('No proxy configuration found');
-      }
-    });
-
-    stateHelper.setTmpDir(Context.tmpDir());
-
-    let builder: BuilderInfo;
-    await core.group(`Builder info`, async () => {
-      builder = await toolkit.builder.inspect();
-      core.info(JSON.stringify(builder, null, 2));
-    });
-
-    const args: string[] = await context.getArgs(inputs, toolkit);
-    args.push('--debug');
-    core.debug(`context.getArgs: ${JSON.stringify(args)}`);
-
-    const buildCmd = await toolkit.buildx.getCommand(args);
-
-    core.debug(`buildCmd.command: ${buildCmd.command}`);
-    core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
-
-    let err: Error | undefined;
-    const buildStartTime = Date.now();
+    let buildError: Error | undefined;
     let buildDurationSeconds: string | undefined;
-    await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
-      ignoreReturnCode: true,
-      env: Object.assign({}, process.env, {
-        BUILDX_METADATA_WARNINGS: 'true'
-      }) as {
-        [key: string]: string;
-      }
-    }).then(res => {
-      if (res.stderr.length > 0 && res.exitCode != 0) {
-        err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
-      }
-      buildDurationSeconds = Math.round((Date.now() - buildStartTime) / 1000).toString();
-      stateHelper.setDockerBuildDurationSeconds(buildDurationSeconds);
-    });
-
-    const imageID = toolkit.buildxBuild.resolveImageID();
-    const metadata = toolkit.buildxBuild.resolveMetadata();
-    const digest = toolkit.buildxBuild.resolveDigest(metadata);
-    if (imageID) {
-      await core.group(`ImageID`, async () => {
-        core.info(imageID);
-        core.setOutput('imageid', imageID);
-      });
-    }
-    if (digest) {
-      await core.group(`Digest`, async () => {
-        core.info(digest);
-        core.setOutput('digest', digest);
-      });
-    }
-    if (metadata) {
-      await core.group(`Metadata`, async () => {
-        const metadatadt = JSON.stringify(metadata, null, 2);
-        core.info(metadatadt);
-        core.setOutput('metadata', metadatadt);
-      });
-    }
-
     let ref: string | undefined;
-    await core.group(`Reference`, async () => {
-      ref = await buildRef(toolkit, startedTime, builder.name);
-      if (ref) {
-        core.info(ref);
-        stateHelper.setBuildRef(ref);
-      } else {
-        core.info('No build reference found');
-      }
-    });
-
-    if (buildChecksAnnotationsEnabled()) {
-      const warnings = toolkit.buildxBuild.resolveWarnings(metadata);
-      if (ref && warnings && warnings.length > 0) {
-        const annotations = await Buildx.convertWarningsToGitHubAnnotations(warnings, [ref]);
-        core.debug(`annotations: ${JSON.stringify(annotations, null, 2)}`);
-        if (annotations && annotations.length > 0) {
-          await core.group(`Generating GitHub annotations (${annotations.length} build checks found)`, async () => {
-            for (const annotation of annotations) {
-              core.warning(annotation.message, annotation);
+    try {
+      if (builderInfo.addr) {
+        await core.group(`Creating a builder instance`, async () => {
+          const name = `blacksmith-${Date.now().toString(36)}`;
+          const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!));
+          core.info(`Creating builder with command: ${createCmd.command}`);
+          await Exec.getExecOutput(createCmd.command, createCmd.args, {
+            ignoreReturnCode: true
+          }).then(res => {
+            if (res.stderr.length > 0 && res.exitCode != 0) {
+              throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
             }
           });
+        });
+      } else {
+        await core.group(`Checking for configured builder`, async () => {
+          try {
+            const builder = await toolkit.builder.inspect();
+            if (builder) {
+              core.info(`Found configured builder: ${builder.name}`);
+            } else {
+              // Create a local builder using the docker-container driver (which is the default driver in setup-buildx)
+              const createLocalBuilderCmd = 'docker buildx create --name local --driver docker-container --use';
+              try {
+                await Exec.exec(createLocalBuilderCmd);
+                core.info('Created and set a local builder for use');
+              } catch (error) {
+                core.setFailed(`Failed to create local builder: ${error.message}`);
+              }
+            }
+          } catch (error) {
+            core.setFailed(`Error configuring builder: ${error.message}`);
+          }
+        });
+      }
+
+      await core.group(`Proxy configuration`, async () => {
+        let dockerConfig: ConfigFile | undefined;
+        let dockerConfigMalformed = false;
+        try {
+          dockerConfig = await Docker.configFile();
+        } catch (e) {
+          dockerConfigMalformed = true;
+          core.warning(`Unable to parse config file ${path.join(Docker.configDir, 'config.json')}: ${e}`);
+        }
+        if (dockerConfig && dockerConfig.proxies) {
+          for (const host in dockerConfig.proxies) {
+            let prefix = '';
+            if (Object.keys(dockerConfig.proxies).length > 1) {
+              prefix = '  ';
+              core.info(host);
+            }
+            for (const key in dockerConfig.proxies[host]) {
+              core.info(`${prefix}${key}: ${dockerConfig.proxies[host][key]}`);
+            }
+          }
+        } else if (!dockerConfigMalformed) {
+          core.info('No proxy configuration found');
+        }
+      });
+
+      stateHelper.setTmpDir(Context.tmpDir());
+
+      let builder: BuilderInfo;
+      await core.group(`Builder info`, async () => {
+        builder = await toolkit.builder.inspect();
+        core.info(JSON.stringify(builder, null, 2));
+      });
+
+      const args: string[] = await context.getArgs(inputs, toolkit);
+      args.push('--debug');
+      core.debug(`context.getArgs: ${JSON.stringify(args)}`);
+
+      const buildCmd = await toolkit.buildx.getCommand(args);
+
+      core.debug(`buildCmd.command: ${buildCmd.command}`);
+      core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
+
+      const buildStartTime = Date.now();
+      await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
+        ignoreReturnCode: true,
+        env: Object.assign({}, process.env, {
+          BUILDX_METADATA_WARNINGS: 'true'
+        }) as {
+          [key: string]: string;
+        }
+      }).then(res => {
+        buildDurationSeconds = Math.round((Date.now() - buildStartTime) / 1000).toString();
+        stateHelper.setDockerBuildDurationSeconds(buildDurationSeconds);
+        if (res.stderr.length > 0 && res.exitCode != 0) {
+          throw Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+        }
+      });
+
+      const imageID = toolkit.buildxBuild.resolveImageID();
+      const metadata = toolkit.buildxBuild.resolveMetadata();
+      const digest = toolkit.buildxBuild.resolveDigest(metadata);
+      if (imageID) {
+        await core.group(`ImageID`, async () => {
+          core.info(imageID);
+          core.setOutput('imageid', imageID);
+        });
+      }
+      if (digest) {
+        await core.group(`Digest`, async () => {
+          core.info(digest);
+          core.setOutput('digest', digest);
+        });
+      }
+      if (metadata) {
+        await core.group(`Metadata`, async () => {
+          const metadatadt = JSON.stringify(metadata, null, 2);
+          core.info(metadatadt);
+          core.setOutput('metadata', metadatadt);
+        });
+      }
+
+      let ref: string | undefined;
+      await core.group(`Reference`, async () => {
+        ref = await buildRef(toolkit, startedTime, builder.name);
+        if (ref) {
+          core.info(ref);
+          stateHelper.setBuildRef(ref);
+        } else {
+          core.info('No build reference found');
+        }
+      });
+
+      if (buildChecksAnnotationsEnabled()) {
+        const warnings = toolkit.buildxBuild.resolveWarnings(metadata);
+        if (ref && warnings && warnings.length > 0) {
+          const annotations = await Buildx.convertWarningsToGitHubAnnotations(warnings, [ref]);
+          core.debug(`annotations: ${JSON.stringify(annotations, null, 2)}`);
+          if (annotations && annotations.length > 0) {
+            await core.group(`Generating GitHub annotations (${annotations.length} build checks found)`, async () => {
+              for (const annotation of annotations) {
+                core.warning(annotation.message, annotation);
+              }
+            });
+          }
         }
       }
+
+      await core.group(`Check build summary support`, async () => {
+        if (!buildSummaryEnabled()) {
+          core.info('Build summary disabled');
+        } else if (GitHub.isGHES) {
+          core.info('Build summary is not yet supported on GHES');
+        } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
+          core.info('Build summary requires Buildx >= 0.13.0');
+        } else if (builder && builder.driver === 'cloud') {
+          core.info('Build summary is not yet supported with Docker Build Cloud');
+        } else if (!ref) {
+          core.info('Build summary requires a build reference');
+        } else {
+          core.info('Build summary supported!');
+          stateHelper.setSummarySupported();
+        }
+      });
+    } catch (error) {
+      buildError = error as Error;
     }
 
-    await core.group(`Check build summary support`, async () => {
-      if (!buildSummaryEnabled()) {
-        core.info('Build summary disabled');
-      } else if (GitHub.isGHES) {
-        core.info('Build summary is not yet supported on GHES');
-      } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
-        core.info('Build summary requires Buildx >= 0.13.0');
-      } else if (builder && builder.driver === 'cloud') {
-        core.info('Build summary is not yet supported with Docker Build Cloud');
-      } else if (!ref) {
-        core.info('Build summary requires a build reference');
-      } else {
-        core.info('Build summary supported!');
-        stateHelper.setSummarySupported();
+    await core.group('Cleaning up Blacksmith builder', async () => {
+      if (builderInfo.addr) {
+        try {
+          const buildxHistory = new BuildxHistory();
+          const exportRes = await buildxHistory.export({
+            refs: ref ? [ref] : []
+          });
+          await shutdownBuildkitd();
+          core.info('Shutdown buildkitd');
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              await execAsync(`sudo umount ${mountPoint}`);
+              core.debug(`${device} has been unmounted`);
+              break;
+            } catch (error) {
+              if (attempt === 3) {
+                throw error;
+              }
+              core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+          core.info('Unmounted device');
+          if (!buildError) {
+            await reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds);
+          } else {
+            try {
+              const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
+              core.info('buildkitd.log contents:');
+              core.info(buildkitdLog);
+            } catch (error) {
+              core.warning(`Failed to read buildkitd.log: ${error.message}`);
+            }
+            await reportBuildFailed(builderInfo.buildId, buildDurationSeconds);
+          }
+        } catch (error) {
+          core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
+        }
       }
     });
 
-    if (builderInfo.addr) {
-      if (err) {
-        core.info(`Build failed: ${err.message}`);
-        stateHelper.setDockerBuildStatus('failure');
-      } else {
-        core.info('Build completed successfully');
-        stateHelper.setDockerBuildStatus('success');
-      }
-
-      try {
-        const buildxHistory = new BuildxHistory();
-        const exportRes = await buildxHistory.export({
-          refs: ref ? [ref] : []
-        });
-        await shutdownBuildkitd();
-        core.info('Shutdown buildkitd');
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await execAsync(`sudo umount ${mountPoint}`);
-            core.debug(`${device} has been unmounted`);
-            break;
-          } catch (error) {
-            if (attempt === 3) {
-              throw error;
-            }
-            core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-        core.info('Unmounted device');
-        if (!err) {
-          await reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds);
-        } else {
-          try {
-            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
-            core.info('buildkitd.log contents:');
-            core.info(buildkitdLog);
-          } catch (error) {
-            core.warning(`Failed to read buildkitd.log: ${error.message}`);
-          }
-          await reportBuildFailed(builderInfo.buildId, buildDurationSeconds);
-        }
-      } catch (error) {
-        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-      }
-    }
-
-    if (err) {
-      throw err;
+    // Re-throw the error after cleanup
+    if (buildError) {
+      throw buildError;
     }
   },
   // post
@@ -826,28 +825,4 @@ function buildSummaryEnabled(): boolean {
     return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
   }
   return true;
-}
-
-function buildRecordUploadEnabled(): boolean {
-  if (process.env.DOCKER_BUILD_RECORD_UPLOAD) {
-    return Util.parseBool(process.env.DOCKER_BUILD_RECORD_UPLOAD);
-  }
-  return true;
-}
-
-function buildRecordRetentionDays(): number | undefined {
-  let val: string | undefined;
-  if (process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS) {
-    core.warning('DOCKER_BUILD_EXPORT_RETENTION_DAYS is deprecated. Use DOCKER_BUILD_RECORD_RETENTION_DAYS instead.');
-    val = process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS;
-  } else if (process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS) {
-    val = process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS;
-  }
-  if (val) {
-    const res = parseInt(val);
-    if (isNaN(res)) {
-      throw Error(`Invalid build record retention days: ${val}`);
-    }
-    return res;
-  }
 }
