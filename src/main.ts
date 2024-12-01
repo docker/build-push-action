@@ -689,7 +689,6 @@ actionsToolkit.run(
         });
       }
 
-      let ref: string | undefined;
       await core.group(`Reference`, async () => {
         ref = await buildRef(toolkit, startedTime, builder.name);
         if (ref) {
