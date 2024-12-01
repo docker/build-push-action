@@ -738,10 +738,13 @@ actionsToolkit.run(
     await core.group('Cleaning up Blacksmith builder', async () => {
       if (builderInfo.addr) {
         try {
-          const buildxHistory = new BuildxHistory();
-          const exportRes = await buildxHistory.export({
-            refs: ref ? [ref] : []
-          });
+          let exportRes;
+          if (!buildError) {
+            const buildxHistory = new BuildxHistory();
+            exportRes = await buildxHistory.export({
+              refs: ref ? [ref] : []
+            });
+          }
           await shutdownBuildkitd();
           core.info('Shutdown buildkitd');
           for (let attempt = 1; attempt <= 3; attempt++) {
