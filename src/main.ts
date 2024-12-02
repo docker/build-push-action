@@ -37,7 +37,7 @@ async function getBlacksmithAgentClient(): Promise<AxiosInstance> {
 }
 
 // Reports a successful build to the local sticky disk manager
-async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmithDockerBuildId?: string | null, buildRef?: string, dockerBuildDurationSeconds?: string) {
+async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmithDockerBuildId?: string | null, buildRef?: string, dockerBuildDurationSeconds?: string, exposeId?: string) {
   if (!blacksmithDockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
@@ -48,6 +48,7 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmith
     const formData = new FormData();
     formData.append('shouldCommit', 'true');
     formData.append('vmID', process.env.VM_ID || '');
+    formData.append('exposeID', exposeId || '');
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
@@ -91,7 +92,7 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmith
 }
 
 // Reports a failed build to both the local sticky disk manager and the Blacksmith API
-async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurationSeconds?: string) {
+async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurationSeconds?: string, exposeId?: string | null) {
   if (!dockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
@@ -102,6 +103,7 @@ async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurati
     const formData = new FormData();
     formData.append('shouldCommit', 'false');
     formData.append('vmID', process.env.VM_ID || '');
+    formData.append('exposeID', exposeId || '');
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
@@ -206,7 +208,7 @@ async function getWithRetry(client: AxiosInstance, url: string, formData: FormDa
   throw new Error('Max retries reached');
 }
 
-async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<unknown> {
+async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<{expose_id: string}> {
   const client = await getBlacksmithAgentClient();
   const formData = new FormData();
   // TODO(adityamaru): Support a stickydisk-per-build flag that will namespace the stickydisks by Dockerfile.
@@ -225,7 +227,11 @@ async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, opt
     core.debug(`${pair[0]}: ${pair[1]}`);
   }
   const response = await getWithRetry(client, '/stickydisks', formData, retryCondition, options);
-  return response.data;
+  // For backward compatibility, if expose_id is set, return it
+  if (response.data?.expose_id) {
+    return {expose_id: response.data.expose_id};
+  }
+  return {expose_id: ''};
 }
 
 async function getDiskSize(device: string): Promise<number> {
@@ -419,15 +425,17 @@ async function reportBuilderCreationFailed(stickydiskKey: string) {
 // getBuilderAddr mounts a sticky disk for the entity, sets up buildkitd on top of it
 // and returns the address to the builder.
 // If it is unable to do so because of a timeout or an error it returns null.
-async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<{addr: string | null; buildId?: string | null}> {
+async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): Promise<{addr: string | null; buildId?: string | null; exposeId: string}> {
   try {
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     let buildResponse: {docker_build_id: string} | null = null;
+    let exposeId: string = '';
     try {
-      await getStickyDisk(retryCondition, {signal: controller.signal});
+      const stickyDiskResponse = await getStickyDisk(retryCondition, {signal: controller.signal});
+      exposeId = stickyDiskResponse.expose_id;
       clearTimeout(timeoutId);
       await maybeFormatBlockDevice(device);
       buildResponse = await reportBuild(dockerfilePath);
@@ -436,7 +444,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
       core.debug(`${device} has been mounted to ${mountPoint}`);
     } catch (error) {
       if (error.name === 'AbortError') {
-        return {addr: null};
+        return {addr: null, exposeId: ''};
       }
       throw error;
     }
@@ -463,7 +471,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
       throw new Error('buildkitd socket not found after 3s timeout');
     }
-    return {addr: buildkitdAddr, buildId: buildResponse?.docker_build_id};
+    return {addr: buildkitdAddr, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
   } catch (error) {
     if ((error as AxiosError).response && (error as AxiosError).response!.status === 404) {
       if (!inputs.nofallback) {
@@ -472,7 +480,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     } else {
       core.warning(`Error in getBuildkitdAddr: ${(error as Error).message}`);
     }
-    return {addr: null};
+    return {addr: null, exposeId: ''};
   }
 }
 
@@ -538,7 +546,8 @@ actionsToolkit.run(
 
     let builderInfo = {
       addr: null as string | null,
-      buildId: null as string | null
+      buildId: null as string | null,
+      exposeId: '' as string
     };
     await core.group(`Starting Blacksmith builder`, async () => {
       const dockerfilePath = context.getDockerfilePath(inputs);
@@ -554,10 +563,11 @@ actionsToolkit.run(
       if (dockerfilePath && dockerfilePath.length > 0) {
         core.debug(`Using dockerfile path: ${dockerfilePath}`);
       }
-      const {addr, buildId} = await getBuilderAddr(inputs, dockerfilePath);
+      const {addr, buildId, exposeId} = await getBuilderAddr(inputs, dockerfilePath);
       builderInfo = {
         addr: addr || null,
-        buildId: buildId || null
+        buildId: buildId || null,
+        exposeId: exposeId
       };
       if (!builderInfo.addr) {
         await reportBuilderCreationFailed(dockerfilePath);
@@ -761,7 +771,7 @@ actionsToolkit.run(
           }
           core.info('Unmounted device');
           if (!buildError) {
-            await reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds);
+            await reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
           } else {
             try {
               const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
@@ -770,7 +780,7 @@ actionsToolkit.run(
             } catch (error) {
               core.warning(`Failed to read buildkitd.log: ${error.message}`);
             }
-            await reportBuildFailed(builderInfo.buildId, buildDurationSeconds);
+            await reportBuildFailed(builderInfo.buildId, buildDurationSeconds, builderInfo.exposeId);
           }
         } catch (error) {
           core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
