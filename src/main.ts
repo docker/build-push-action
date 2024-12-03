@@ -406,9 +406,9 @@ async function reportBuild(dockerfilePath: string) {
   }
 }
 
-async function reportBuilderCreationFailed(stickydiskKey: string) {
+async function reportBuilderCreationFailed() {
   const requestOptions = {
-    stickydisk_key: stickydiskKey,
+    stickydisk_key: process.env.GITHUB_REPO_NAME || '',
     repo_name: process.env.GITHUB_REPO_NAME || '',
     region: process.env.BLACKSMITH_REGION || 'eu-central',
     arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
@@ -553,7 +553,7 @@ actionsToolkit.run(
       const dockerfilePath = context.getDockerfilePath(inputs);
       if (!dockerfilePath) {
         if (inputs.nofallback) {
-          await reportBuilderCreationFailed('');
+          await reportBuilderCreationFailed();
           throw Error('Failed to resolve dockerfile path, and fallback is disabled');
         } else {
           core.warning('Failed to resolve dockerfile path, and fallback is enabled. Falling back to a local build.');
@@ -570,7 +570,7 @@ actionsToolkit.run(
         exposeId: exposeId
       };
       if (!builderInfo.addr) {
-        await reportBuilderCreationFailed(dockerfilePath);
+        await reportBuilderCreationFailed();
         if (inputs.nofallback) {
           throw Error('Failed to obtain Blacksmith builder. Failing the build');
         } else {
