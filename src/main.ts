@@ -49,6 +49,7 @@ async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmith
     formData.append('shouldCommit', 'true');
     formData.append('vmID', process.env.VM_ID || '');
     formData.append('exposeID', exposeId || '');
+    formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
@@ -104,6 +105,7 @@ async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurati
     formData.append('shouldCommit', 'false');
     formData.append('vmID', process.env.VM_ID || '');
     formData.append('exposeID', exposeId || '');
+    formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
     };
