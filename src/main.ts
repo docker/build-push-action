@@ -457,7 +457,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
     // Change permissions on the buildkitd socket to allow non-root access
     const startTime = Date.now();
-    const timeout = 3000; // 3 seconds in milliseconds
+    const timeout = 5000; // 5 seconds in milliseconds
 
     while (Date.now() - startTime < timeout) {
       if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
@@ -469,7 +469,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
     }
 
     if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-      throw new Error('buildkitd socket not found after 3s timeout');
+      throw new Error('buildkitd socket not found after 5s timeout');
     }
     return {addr: buildkitdAddr, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
   } catch (error) {
