@@ -440,7 +440,8 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
       exposeId = stickyDiskResponse.expose_id;
       device = stickyDiskResponse.device;
       if (device === '') {
-        throw new Error('No device returned from ExportVolume request');
+        // TODO(adityamaru): Remove this once all of our VM agents are returning the device in the stickydisk response.
+        device = '/dev/vdb';
       }
       clearTimeout(timeoutId);
       await maybeFormatBlockDevice(device);
