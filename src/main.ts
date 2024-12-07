@@ -25,7 +25,6 @@ import * as TOML from '@iarna/toml';
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
-const device = '/dev/vdb';
 const execAsync = promisify(exec);
 
 // Returns a client for the sticky disk manager on the agent on this host
@@ -210,7 +209,7 @@ async function getWithRetry(client: AxiosInstance, url: string, formData: FormDa
   throw new Error('Max retries reached');
 }
 
-async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<{expose_id: string}> {
+async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
   const client = await getBlacksmithAgentClient();
   const formData = new FormData();
   // TODO(adityamaru): Support a stickydisk-per-build flag that will namespace the stickydisks by Dockerfile.
@@ -230,10 +229,10 @@ async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, opt
   }
   const response = await getWithRetry(client, '/stickydisks', formData, retryCondition, options);
   // For backward compatibility, if expose_id is set, return it
-  if (response.data?.expose_id) {
-    return {expose_id: response.data.expose_id};
+  if (response.data?.expose_id && response.data?.disk_identifier) {
+    return {expose_id: response.data.expose_id, device: response.data.disk_identifier};
   }
-  return {expose_id: ''};
+  return {expose_id: '', device: ''};
 }
 
 async function getDiskSize(device: string): Promise<number> {
@@ -250,7 +249,7 @@ async function getDiskSize(device: string): Promise<number> {
   }
 }
 
-async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
+async function writeBuildkitdTomlFile(parallelism: number, device: string): Promise<void> {
   const diskSize = await getDiskSize(device);
   const jsonConfig: TOML.JsonMap = {
     root: '/var/lib/buildkit',
@@ -303,9 +302,9 @@ async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
   }
 }
 
-async function startBuildkitd(parallelism: number): Promise<string> {
+async function startBuildkitd(parallelism: number, device: string): Promise<string> {
   try {
-    await writeBuildkitdTomlFile(parallelism);
+    await writeBuildkitdTomlFile(parallelism, device);
     await execAsync('sudo mkdir -p /run/buildkit');
     await execAsync('sudo chmod 755 /run/buildkit');
     const addr = 'unix:///run/buildkit/buildkitd.sock';
@@ -435,9 +434,14 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
 
     let buildResponse: {docker_build_id: string} | null = null;
     let exposeId: string = '';
+    let device: string = '';
     try {
       const stickyDiskResponse = await getStickyDisk(retryCondition, {signal: controller.signal});
       exposeId = stickyDiskResponse.expose_id;
+      device = stickyDiskResponse.device;
+      if (device === '') {
+        throw new Error('No device returned from ExportVolume request');
+      }
       clearTimeout(timeoutId);
       await maybeFormatBlockDevice(device);
       buildResponse = await reportBuild(dockerfilePath);
@@ -455,7 +459,7 @@ async function getBuilderAddr(inputs: context.Inputs, dockerfilePath: string): P
 
     // Start buildkitd.
     const parallelism = await getNumCPUs();
-    const buildkitdAddr = await startBuildkitd(parallelism);
+    const buildkitdAddr = await startBuildkitd(parallelism, device);
     core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
     // Change permissions on the buildkitd socket to allow non-root access
     const startTime = Date.now();
@@ -761,7 +765,7 @@ actionsToolkit.run(
           for (let attempt = 1; attempt <= 3; attempt++) {
             try {
               await execAsync(`sudo umount ${mountPoint}`);
-              core.debug(`${device} has been unmounted`);
+              core.debug(`${mountPoint} has been unmounted`);
               break;
             } catch (error) {
               if (attempt === 3) {
