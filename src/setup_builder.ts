@@ -165,11 +165,9 @@ async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, opt
     core.debug(`${pair[0]}: ${pair[1]}`);
   }
   const response = await reporter.getWithRetry(client, '/stickydisks', formData, retryCondition, options);
-  // For backward compatibility, if expose_id is set, return it
-  if (response.data?.expose_id && response.data?.disk_identifier) {
-    return {expose_id: response.data.expose_id, device: response.data.disk_identifier};
-  }
-  return {expose_id: '', device: ''};
+  const exposeId = response.data?.expose_id || '';
+  const device = response.data?.disk_identifier || '';
+  return {expose_id: exposeId, device: device};
 }
 
 export async function startAndConfigureBuildkitd(parallelism: number, device: string): Promise<string> {
