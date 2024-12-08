@@ -1539,3 +1539,17 @@ jobs:
             echo "::error::Should have failed"
             exit 1
           fi
+
+
+      on: main
+  push: workfile
+    branches: main
+    - main
+    - release/*
+
+  - name: Install Dependencies
+  run: npm install
+  
+    
+    
+    
