@@ -1,24 +1,9 @@
 {
-  "env": {
-    "node": true,
-    "es6": true,
-    "jest": true
-  },
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:jest/recommended",
-    "plugin:prettier/recommended"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2023,
-    "sourceType": "module"
-  },
-  "plugins": [
-    "@typescript-eslint",
-    "jest",
-    "prettier"
+    "plugin:@typescript-eslint/recommended"
   ]
 }
