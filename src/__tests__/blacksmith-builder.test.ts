@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as main from '../main';
 import * as reporter from '../reporter';
 import {getDockerfilePath} from '../context';
-import { getBuilderAddr } from '../setup_builder';
+import * as setupBuilder from '../setup_builder';
 
 jest.mock('@actions/core', () => ({
   debug: jest.fn(),
@@ -25,7 +25,10 @@ jest.mock('../reporter', () => ({
 }));
 
 jest.mock('../setup_builder', () => ({
-  getBuilderAddr: jest.fn()
+  ...jest.requireActual('../setup_builder'),
+  startAndConfigureBuildkitd: jest.fn(),
+  setupStickyDisk: jest.fn(),
+  getNumCPUs: jest.fn().mockResolvedValue(4)
 }));
 
 describe('startBlacksmithBuilder', () => {
@@ -51,13 +54,13 @@ describe('startBlacksmithBuilder', () => {
     mockInputs.nofallback = true;
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow('Failed to resolve dockerfile path');
-    expect(core.warning).not.toHaveBeenCalled();
+    expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to resolve dockerfile path. Failing the build because nofallback is set.');
     expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
   });
 
-  test('should handle error in getBuilderAddr with nofallback=false', async () => {
+  test('should handle error in setupStickyDisk with nofallback=false', async () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
-    (getBuilderAddr as jest.Mock).mockRejectedValue(new Error('Failed to obtain Blacksmith builder'));
+    (setupBuilder.setupStickyDisk as jest.Mock).mockRejectedValue(new Error('Failed to obtain Blacksmith builder'));
 
     mockInputs.nofallback = false;
     const result = await main.startBlacksmithBuilder(mockInputs);
@@ -67,14 +70,80 @@ describe('startBlacksmithBuilder', () => {
     expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(new Error('Failed to obtain Blacksmith builder'));
   });
 
-  test('should handle error in getBuilderAddr with nofallback=true', async () => {
+  test('should handle error in setupStickyDisk with nofallback=true', async () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
     const error = new Error('Failed to obtain Blacksmith builder');
-    (getBuilderAddr as jest.Mock).mockRejectedValue(error);
+    (setupBuilder.setupStickyDisk as jest.Mock).mockRejectedValue(error);
     mockInputs.nofallback = true;
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow(error);
-    expect(core.warning).not.toHaveBeenCalled();
+    expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to obtain Blacksmith builder. Failing the build because nofallback is set.');
     expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(error);
+  });
+
+  test('should successfully start buildkitd when setup succeeds', async () => {
+    const mockBuildkitdAddr = 'unix:///run/buildkit/buildkitd.sock';
+    const mockExposeId = 'test-expose-id';
+    const mockBuildId = 'test-build-id';
+    const mockDevice = '/dev/vdb';
+    const mockParallelism = 4;
+
+    (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
+    (setupBuilder.setupStickyDisk as jest.Mock).mockResolvedValue({
+      device: mockDevice,
+      buildId: mockBuildId,
+      exposeId: mockExposeId
+    });
+    (setupBuilder.getNumCPUs as jest.Mock).mockResolvedValue(mockParallelism);
+    (setupBuilder.startAndConfigureBuildkitd as jest.Mock).mockResolvedValue(mockBuildkitdAddr);
+
+    const result = await main.startBlacksmithBuilder(mockInputs);
+
+    expect(result).toEqual({
+      addr: mockBuildkitdAddr,
+      buildId: mockBuildId,
+      exposeId: mockExposeId
+    });
+    expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism, mockDevice);
+    expect(core.warning).not.toHaveBeenCalled();
+    expect(reporter.reportBuilderCreationFailed).not.toHaveBeenCalled();
+  });
+
+  test('should handle buildkitd startup failure with nofallback=false', async () => {
+    const mockDevice = '/dev/vdb';
+    const mockParallelism = 4;
+    (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
+    (setupBuilder.setupStickyDisk as jest.Mock).mockResolvedValue({
+      device: mockDevice,
+      buildId: 'test-build-id',
+      exposeId: 'test-expose-id'
+    });
+    (setupBuilder.getNumCPUs as jest.Mock).mockResolvedValue(mockParallelism);
+    (setupBuilder.startAndConfigureBuildkitd as jest.Mock).mockRejectedValue(new Error('Failed to start buildkitd'));
+
+    mockInputs.nofallback = false;
+    const result = await main.startBlacksmithBuilder(mockInputs);
+
+    expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
+    expect(core.warning).toHaveBeenCalledWith('Error during buildkitd setup: Failed to start buildkitd. Falling back to a local build.');
+    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalled();
+  });
+
+  test('should throw error when buildkitd fails and nofallback is true', async () => {
+    const mockDevice = '/dev/vdb';
+    const mockParallelism = 4;
+    (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
+    (setupBuilder.setupStickyDisk as jest.Mock).mockResolvedValue({
+      device: mockDevice,
+      buildId: 'test-build-id',
+      exposeId: 'test-expose-id'
+    });
+    (setupBuilder.getNumCPUs as jest.Mock).mockResolvedValue(mockParallelism);
+    (setupBuilder.startAndConfigureBuildkitd as jest.Mock).mockRejectedValue(new Error('Failed to start buildkitd'));
+
+    mockInputs.nofallback = true;
+    await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow('Failed to start buildkitd');
+    expect(core.warning).toHaveBeenCalledWith('Error during buildkitd setup: Failed to start buildkitd. Failing the build because nofallback is set.');
+    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalled();
   });
 });

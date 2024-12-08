@@ -43,7 +43,7 @@ async function maybeFormatBlockDevice(device: string): Promise<string> {
   }
 }
 
-async function getNumCPUs(): Promise<number> {
+export async function getNumCPUs(): Promise<number> {
   try {
     const {stdout} = await execAsync('sudo nproc');
     return parseInt(stdout.trim());
@@ -172,11 +172,32 @@ async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, opt
   return {expose_id: '', device: ''};
 }
 
+export async function startAndConfigureBuildkitd(parallelism: number, device: string): Promise<string> {
+  const buildkitdAddr = await startBuildkitd(parallelism, device);
+  core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
 
-// getBuilderAddr mounts a sticky disk for the entity, sets up buildkitd on top of it
-// and returns the address to the builder.
-// If it is unable to do so because of a timeout or an error it returns null.
-export async function getBuilderAddr(inputs: Inputs, dockerfilePath: string): Promise<{addr: string | null; buildId?: string | null; exposeId: string}> {
+  // Change permissions on the buildkitd socket to allow non-root access
+  const startTime = Date.now();
+  const timeout = 5000; // 5 seconds in milliseconds
+
+  while (Date.now() - startTime < timeout) {
+    if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
+      // Change permissions on the buildkitd socket to allow non-root access
+      await execAsync(`sudo chmod 666 /run/buildkit/buildkitd.sock`);
+      break;
+    }
+    await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
+  }
+
+  if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
+    throw new Error('buildkitd socket not found after 5s timeout');
+  }
+  return buildkitdAddr;
+}
+
+// setupStickyDisk mounts a sticky disk for the entity and returns the device information.
+// throws an error if it is unable to do so because of a timeout or an error
+export async function setupStickyDisk(dockerfilePath: string): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
     const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
@@ -185,58 +206,23 @@ export async function getBuilderAddr(inputs: Inputs, dockerfilePath: string): Pr
     let buildResponse: {docker_build_id: string} | null = null;
     let exposeId: string = '';
     let device: string = '';
-    try {
-      const stickyDiskResponse = await getStickyDisk(retryCondition, {signal: controller.signal});
-      exposeId = stickyDiskResponse.expose_id;
-      device = stickyDiskResponse.device;
-      if (device === '') {
-        // TODO(adityamaru): Remove this once all of our VM agents are returning the device in the stickydisk response.
-        device = '/dev/vdb';
-      }
-      clearTimeout(timeoutId);
-      await maybeFormatBlockDevice(device);
-      buildResponse = await reporter.reportBuild(dockerfilePath);
-      await execAsync(`sudo mkdir -p ${mountPoint}`);
-      await execAsync(`sudo mount ${device} ${mountPoint}`);
-      core.debug(`${device} has been mounted to ${mountPoint}`);
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        return {addr: null, exposeId: ''};
-      }
-      throw error;
+    const stickyDiskResponse = await getStickyDisk(retryCondition, {signal: controller.signal});
+    exposeId = stickyDiskResponse.expose_id;
+    device = stickyDiskResponse.device;
+    if (device === '') {
+      // TODO(adityamaru): Remove this once all of our VM agents are returning the device in the stickydisk response.
+      device = '/dev/vdb';
     }
-
-    core.debug('Successfully obtained sticky disk, proceeding to start buildkitd');
-
-    // Start buildkitd.
-    const parallelism = await getNumCPUs();
-    const buildkitdAddr = await startBuildkitd(parallelism, device);
-    core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
-    // Change permissions on the buildkitd socket to allow non-root access
-    const startTime = Date.now();
-    const timeout = 5000; // 5 seconds in milliseconds
-
-    while (Date.now() - startTime < timeout) {
-      if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
-        // Change permissions on the buildkitd socket to allow non-root access
-        await execAsync(`sudo chmod 666 /run/buildkit/buildkitd.sock`);
-        break;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
-    }
-
-    if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-      throw new Error('buildkitd socket not found after 5s timeout');
-    }
-    return {addr: buildkitdAddr, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
+    clearTimeout(timeoutId);
+    await maybeFormatBlockDevice(device);
+    buildResponse = await reporter.reportBuild(dockerfilePath);
+    await execAsync(`sudo mkdir -p ${mountPoint}`);
+    await execAsync(`sudo mount ${device} ${mountPoint}`);
+    core.debug(`${device} has been mounted to ${mountPoint}`);
+    core.info('Successfully obtained sticky disk');
+    return {device, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
   } catch (error) {
-    if ((error as AxiosError).response && (error as AxiosError).response!.status === 404) {
-      if (!inputs.nofallback) {
-        core.warning('No builder instances were available, falling back to a local build');
-      }
-    } else {
-      core.warning(`Error in getBuildkitdAddr: ${(error as Error).message}`);
-    }
-    return {addr: null, exposeId: ''};
+    core.warning(`Error in setupStickyDisk: ${(error as Error).message}`);
+    throw error;
   }
 }

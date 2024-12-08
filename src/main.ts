@@ -20,7 +20,7 @@ import * as context from './context';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {getBuilderAddr} from './setup_builder';
+import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs} from './setup_builder';
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
@@ -51,33 +51,49 @@ async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
   });
 }
 
-// Core logic for starting a Blacksmith builder
+/**
+ * Attempts to set up a Blacksmith builder for Docker builds.
+ *
+ * @param inputs - Configuration inputs including the nofallback flag
+ * @returns {Object} Builder configuration
+ * @returns {string|null} addr - The buildkit socket address if setup succeeded, null if using local build
+ * @returns {string|null} buildId - ID used to track build progress and report metrics
+ * @returns {string} exposeId - ID used to track and cleanup sticky disk resources
+ *
+ * The addr is used to configure the Docker buildx builder instance.
+ * The buildId is used for build progress tracking and metrics reporting.
+ * The exposeId is used during cleanup to ensure proper resource cleanup of sticky disks.
+ *
+ * Throws an error if setup fails and nofallback is false.
+ * Returns null values if setup fails and nofallback is true.
+ */
 export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{addr: string | null; buildId: string | null; exposeId: string}> {
   try {
     const dockerfilePath = context.getDockerfilePath(inputs);
     if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
     }
+    const stickyDiskSetup = await setupStickyDisk(dockerfilePath);
+    const parallelism = await getNumCPUs();
+    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, stickyDiskSetup.device);
 
-    if (dockerfilePath && dockerfilePath.length > 0) {
-      core.debug(`Using dockerfile path: ${dockerfilePath}`);
-    }
-
-    const {addr, buildId, exposeId} = await getBuilderAddr(inputs, dockerfilePath);
-    if (!addr) {
-      throw Error('Failed to obtain Blacksmith builder. Failing the build');
-    }
-
-    return {addr: addr || null, buildId: buildId || null, exposeId};
+    return {addr: buildkitdAddr, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
   } catch (error) {
+    // If the builder setup fails for any reason, we check if we should fallback to a local build.
+    // If we should not fallback, we rethrow the error and fail the build.
     await reporter.reportBuilderCreationFailed(error);
-    if (inputs.nofallback) {
-      throw error;
-    } else {
-      console.log('coming to no fallback false');
-      core.warning(`Error during Blacksmith builder setup: ${error.message}. Falling back to a local build.`);
-      return {addr: null, buildId: null, exposeId: ''};
+
+    let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
+    if (error.message.includes('buildkitd')) {
+      errorMessage = `Error during buildkitd setup: ${error.message}`;
     }
+    if (inputs.nofallback) {
+      core.warning(`${errorMessage}. Failing the build because nofallback is set.`);
+      throw error;
+    }
+
+    core.warning(`${errorMessage}. Falling back to a local build.`);
+    return {addr: null, buildId: null, exposeId: ''};
   }
 }
 
