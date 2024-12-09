@@ -1,12 +1,9 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import {AxiosError} from 'axios';
 import {exec} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
-import {Inputs} from './context';
 import * as reporter from './reporter';
-import * as utils from './utils';
 
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
@@ -146,8 +143,8 @@ async function getDiskSize(device: string): Promise<number> {
   }
 }
 
-async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
-  const client = await utils.getBlacksmithAgentClient();
+async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
+  const client = await reporter.createBlacksmithAgentClient();
   const formData = new FormData();
   // TODO(adityamaru): Support a stickydisk-per-build flag that will namespace the stickydisks by Dockerfile.
   // For now, we'll use the repo name as the stickydisk key.
@@ -164,7 +161,7 @@ async function getStickyDisk(retryCondition: (error: AxiosError) => boolean, opt
   for (const pair of formData.entries()) {
     core.debug(`${pair[0]}: ${pair[1]}`);
   }
-  const response = await reporter.getWithRetry(client, '/stickydisks', formData, retryCondition, options);
+  const response = await reporter.get(client, '/stickydisks', formData, options);
   const exposeId = response.data?.expose_id || '';
   const device = response.data?.disk_identifier || '';
   return {expose_id: exposeId, device: device};
@@ -197,14 +194,13 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
 // throws an error if it is unable to do so because of a timeout or an error
 export async function setupStickyDisk(dockerfilePath: string): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
-    const retryCondition = (error: AxiosError) => (error.response?.status ? error.response.status >= 500 : error.code === 'ECONNRESET');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     let buildResponse: {docker_build_id: string} | null = null;
     let exposeId: string = '';
     let device: string = '';
-    const stickyDiskResponse = await getStickyDisk(retryCondition, {signal: controller.signal});
+    const stickyDiskResponse = await getStickyDisk({signal: controller.signal});
     exposeId = stickyDiskResponse.expose_id;
     device = stickyDiskResponse.device;
     if (device === '') {
