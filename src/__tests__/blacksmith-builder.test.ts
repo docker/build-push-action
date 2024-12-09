@@ -21,7 +21,7 @@ jest.mock('../context', () => ({
 }));
 
 jest.mock('../reporter', () => ({
-  reportBuilderCreationFailed: jest.fn().mockResolvedValue(undefined)
+  reportBuildPushActionFailure: jest.fn().mockResolvedValue(undefined)
 }));
 
 jest.mock('../setup_builder', () => ({
@@ -46,7 +46,7 @@ describe('startBlacksmithBuilder', () => {
 
     expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to resolve dockerfile path. Falling back to a local build.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
   });
 
   test('should handle missing dockerfile path with nofallback=true', async () => {
@@ -55,7 +55,7 @@ describe('startBlacksmithBuilder', () => {
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow('Failed to resolve dockerfile path');
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to resolve dockerfile path. Failing the build because nofallback is set.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
   });
 
   test('should handle error in setupStickyDisk with nofallback=false', async () => {
@@ -67,7 +67,7 @@ describe('startBlacksmithBuilder', () => {
 
     expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to obtain Blacksmith builder. Falling back to a local build.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(new Error('Failed to obtain Blacksmith builder'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to obtain Blacksmith builder'));
   });
 
   test('should handle error in setupStickyDisk with nofallback=true', async () => {
@@ -78,7 +78,7 @@ describe('startBlacksmithBuilder', () => {
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow(error);
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to obtain Blacksmith builder. Failing the build because nofallback is set.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalledWith(error);
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(error);
   });
 
   test('should successfully start buildkitd when setup succeeds', async () => {
@@ -106,7 +106,7 @@ describe('startBlacksmithBuilder', () => {
     });
     expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism, mockDevice);
     expect(core.warning).not.toHaveBeenCalled();
-    expect(reporter.reportBuilderCreationFailed).not.toHaveBeenCalled();
+    expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 
   test('should handle buildkitd startup failure with nofallback=false', async () => {
@@ -126,7 +126,7 @@ describe('startBlacksmithBuilder', () => {
 
     expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
     expect(core.warning).toHaveBeenCalledWith('Error during buildkitd setup: Failed to start buildkitd. Falling back to a local build.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalled();
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalled();
   });
 
   test('should throw error when buildkitd fails and nofallback is true', async () => {
@@ -144,6 +144,6 @@ describe('startBlacksmithBuilder', () => {
     mockInputs.nofallback = true;
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow('Failed to start buildkitd');
     expect(core.warning).toHaveBeenCalledWith('Error during buildkitd setup: Failed to start buildkitd. Failing the build because nofallback is set.');
-    expect(reporter.reportBuilderCreationFailed).toHaveBeenCalled();
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalled();
   });
 });

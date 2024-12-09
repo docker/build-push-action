@@ -81,7 +81,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
     // If we should not fallback, we rethrow the error and fail the build.
-    await reporter.reportBuilderCreationFailed(error);
+    await reporter.reportBuildPushActionFailure(error);
 
     let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
     if (error.message.includes('buildkitd')) {
@@ -346,6 +346,7 @@ actionsToolkit.run(
           }
         } catch (error) {
           core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
+          await reporter.reportBuildPushActionFailure(error);
         }
       }
     });

@@ -3,14 +3,15 @@ import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 import {ExportRecordResponse} from '@docker/actions-toolkit/lib/types/buildx/history';
 import * as utils from './utils';
 
-export async function reportBuilderCreationFailed(error?: Error) {
+export async function reportBuildPushActionFailure(error?: Error) {
     const requestOptions = {
       stickydisk_key: process.env.GITHUB_REPO_NAME || '',
       repo_name: process.env.GITHUB_REPO_NAME || '',
       region: process.env.BLACKSMITH_REGION || 'eu-central',
       arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
       vm_id: process.env.VM_ID || '',
-      petname: process.env.PETNAME || ''
+      petname: process.env.PETNAME || '',
+      message: error?.message || ''
     };
     const retryCondition = (error: AxiosError) => {
       return error.response?.status ? error.response.status > 500 : false;
