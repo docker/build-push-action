@@ -30,8 +30,6 @@ jobs:
 
       - name: Check for changes
         run: |
-          # Ignore yarn.lock changes since we're using npm
-          git update-index --assume-unchanged yarn.lock || true
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "::error::Build generated new changes. Please commit the generated files."
             git status

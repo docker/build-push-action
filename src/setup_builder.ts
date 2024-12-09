@@ -4,6 +4,7 @@ import {exec} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
+import FormData from 'form-data';
 
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
@@ -143,25 +144,38 @@ async function getDiskSize(device: string): Promise<number> {
   }
 }
 
-async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
+export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
   const client = await reporter.createBlacksmithAgentClient();
-  const formData = new FormData();
-  // TODO(adityamaru): Support a stickydisk-per-build flag that will namespace the stickydisks by Dockerfile.
-  // For now, we'll use the repo name as the stickydisk key.
-  const repoName = process.env.GITHUB_REPO_NAME || '';
-  if (repoName === '') {
+  
+  // Prepare data for both FormData and query params
+  const stickyDiskKey = process.env.GITHUB_REPO_NAME || '';
+  if (stickyDiskKey === '') {
     throw new Error('GITHUB_REPO_NAME is not set');
   }
-  formData.append('stickyDiskKey', repoName);
-  formData.append('region', process.env.BLACKSMITH_REGION || 'eu-central');
-  formData.append('installationModelID', process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '');
-  formData.append('vmID', process.env.VM_ID || '');
-  core.debug(`Getting sticky disk for ${repoName}`);
-  core.debug('FormData contents:');
-  for (const pair of formData.entries()) {
-    core.debug(`${pair[0]}: ${pair[1]}`);
-  }
-  const response = await reporter.get(client, '/stickydisks', formData, options);
+  const region = process.env.BLACKSMITH_REGION || 'eu-central';
+  const installationModelID = process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '';
+  const vmID = process.env.VM_ID || '';
+
+  // Create FormData (for backwards compatibility).
+  // TODO(adityamaru): Remove this once all of our VM agents are reading query params.
+  const formData = new FormData();
+  formData.append('stickyDiskKey', stickyDiskKey);
+  formData.append('region', region);
+  formData.append('installationModelID', installationModelID);
+  formData.append('vmID', vmID);
+
+  // Create query params string.
+  const queryParams = new URLSearchParams({
+    stickyDiskKey,
+    region,
+    installationModelID,
+    vmID
+  }).toString();
+
+  core.debug(`Getting sticky disk for ${stickyDiskKey}`);
+
+  // Send request with both FormData and query params
+  const response = await reporter.get(client, `/stickydisks?${queryParams}`, formData, options);
   const exposeId = response.data?.expose_id || '';
   const device = response.data?.disk_identifier || '';
   return {expose_id: exposeId, device: device};

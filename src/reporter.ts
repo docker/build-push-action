@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import axios, {AxiosError, AxiosInstance, AxiosResponse, AxiosStatic } from 'axios';
 import axiosRetry from 'axios-retry';
 import {ExportRecordResponse} from '@docker/actions-toolkit/lib/types/buildx/history';
+import FormData from 'form-data';
 
 // Configure base axios instance for Blacksmith API.
 const createBlacksmithAPIClient = () => {
@@ -33,7 +34,11 @@ const createBlacksmithAPIClient = () => {
 export async function createBlacksmithAgentClient(): Promise<AxiosInstance> {
   const stickyDiskMgrUrl = 'http://192.168.127.1:5556';
   const client = axios.create({
-    baseURL: stickyDiskMgrUrl
+    baseURL: stickyDiskMgrUrl,
+    headers: {
+      Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
+      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
+    }
   });
 
   axiosRetry(client, {
@@ -78,11 +83,7 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
     formData.append('exposeID', exposeId || '');
     formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
 
-    await agentClient.post('/stickydisks', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    await post(agentClient, '/stickydisks', formData);
 
     // Report success to Blacksmith API
     const requestOptions = {
@@ -131,11 +132,7 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
     formData.append('exposeID', exposeId || '');
     formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
 
-    await blacksmithAgentClient.post('/stickydisks', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    await post(blacksmithAgentClient, '/stickydisks', formData);
 
     // Report failure to Blacksmith API
     const requestOptions = {
@@ -180,9 +177,18 @@ export async function get(client: AxiosInstance, url: string, formData: FormData
   return await client.get(url, {
     ...(formData && {data: formData}),
     headers: {
-      Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
-      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
-      'Content-Type': 'multipart/form-data'
+      ...client.defaults.headers.common,
+      ...(formData && {'Content-Type': 'multipart/form-data'})
+    },
+    signal: options?.signal
+  });
+}
+
+export async function post(client: AxiosInstance, url: string, formData: FormData | null, options?: {signal?: AbortSignal}): Promise<AxiosResponse> {
+  return await client.post(url, formData, {
+    headers: {
+      ...client.defaults.headers.common,
+      ...(formData && { 'Content-Type': 'multipart/form-data' }),
     },
     signal: options?.signal
   });

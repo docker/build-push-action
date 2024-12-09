@@ -30,6 +30,7 @@
     "@docker/actions-toolkit": "0.37.1",
     "@iarna/toml": "^2.2.5",
     "axios-retry": "^4.5.0",
+    "form-data": "^4.0.1",
     "handlebars": "^4.7.7",
     "portfinder": "^1.0.32"
   },
