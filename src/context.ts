@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as handlebars from 'handlebars';
+import * as fs from 'fs';
 
 import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
@@ -89,15 +90,30 @@ export function getDockerfilePath(inputs: Inputs): string | null {
   try {
     const context = inputs.context || Context.gitContext();
     const normalizedContext = path.normalize(context);
+    let dockerfilePath: string;
 
     if (inputs.file) {
       const normalizedFile = path.normalize(inputs.file);
-      return normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
+      dockerfilePath = normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
     } else if (inputs['dockerfile']) {
       const normalizedDockerfile = path.normalize(inputs['dockerfile']);
-      return normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
+      dockerfilePath = normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
     } else {
-      return normalizedContext;
+      // Default to Dockerfile in the context directory
+      dockerfilePath = path.join(normalizedContext, 'Dockerfile');
+    }
+
+    // Verify the file exists
+    try {
+      const stats = fs.statSync(dockerfilePath);
+      if (!stats.isFile()) {
+        core.warning(`Path exists but is not a file: ${dockerfilePath}`);
+        return null;
+      }
+      return dockerfilePath;
+    } catch (statError) {
+      core.warning(`Dockerfile not found at path: ${dockerfilePath}`);
+      return null;
     }
   } catch (error) {
     core.warning(`Error getting dockerfile path: ${(error as Error).message}`);
