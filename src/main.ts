@@ -318,17 +318,17 @@ actionsToolkit.run(
           }
           await shutdownBuildkitd();
           core.info('Shutdown buildkitd');
-          for (let attempt = 1; attempt <= 3; attempt++) {
+          for (let attempt = 1; attempt <= 10; attempt++) {
             try {
               await execAsync(`sudo umount ${mountPoint}`);
               core.debug(`${mountPoint} has been unmounted`);
               break;
             } catch (error) {
-              if (attempt === 3) {
+              if (attempt === 10) {
                 throw error;
               }
-              core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-              await new Promise(resolve => setTimeout(resolve, 100));
+              core.warning(`Unmount failed, retrying (${attempt}/10)...`);
+              await new Promise(resolve => setTimeout(resolve, 300));
             }
           }
           core.info('Unmounted device');
@@ -363,42 +363,44 @@ actionsToolkit.run(
         fs.rmSync(stateHelper.tmpDir, {recursive: true});
       });
     }
-    // Check for any lingering buildkitd processes as a safeguard.
-    // TODO(adityamaru): Let's add an endpoint to sentry alert on this cause this
-    // means we've not handled some error throws in the main action.
+    // Check for any lingering buildkitd processes and try to clean up mounts
     try {
-      const {stdout} = await execAsync('pgrep buildkitd');
-      if (stdout) {
-        core.info('Found lingering buildkitd processes, cleaning up...');
-        await shutdownBuildkitd();
-        core.info('Shutdown buildkitd');
-
-        // Try to unmount if mounted
-        try {
-          const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
-          if (mountOutput) {
-            for (let attempt = 1; attempt <= 3; attempt++) {
-              try {
-                await execAsync(`sudo umount ${mountPoint}`);
-                core.debug(`${mountPoint} has been unmounted`);
-                break;
-              } catch (error) {
-                if (attempt === 3) {
-                  throw error;
-                }
-                core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }
-            core.info('Unmounted device');
-          }
-        } catch (error) {
-          core.warning(`Error during cleanup: ${error.message}`);
+      // Check for buildkitd processes first
+      try {
+        const {stdout} = await execAsync('pgrep buildkitd');
+        if (stdout) {
+          core.info('Found lingering buildkitd processes, cleaning up...');
+          await shutdownBuildkitd();
+          core.info('Shutdown buildkitd');
         }
+      } catch (error) {
+        // pgrep returns non-zero if no processes found, which is fine
+        core.debug('No lingering buildkitd processes found');
+      }
+
+      try {
+        const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+        if (mountOutput) {
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              await execAsync(`sudo umount ${mountPoint}`);
+              core.debug(`${mountPoint} has been unmounted`);
+              break;
+            } catch (error) {
+              if (attempt === 3) {
+                throw error;
+              }
+              core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+          core.info('Unmounted device');
+        }
+      } catch (error) {
+        core.warning(`Error during cleanup: ${error.message}`);
       }
     } catch (error) {
-      // pgrep returns non-zero if no processes found, which is fine.
-      core.debug('No lingering buildkitd processes found');
+      core.warning(`Error during final cleanup: ${error.message}`);
     }
   }
 );
