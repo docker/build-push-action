@@ -397,7 +397,10 @@ actionsToolkit.run(
           core.info('Unmounted device');
         }
       } catch (error) {
-        core.warning(`Error during cleanup: ${error.message}`);
+        // Only log warning if error is not from grep finding no mounts
+        if (!error.message.includes('exit code 1')) {
+          core.warning(`Error during cleanup: ${error.message}`);
+        }
       }
     } catch (error) {
       core.warning(`Error during final cleanup: ${error.message}`);
