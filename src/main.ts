@@ -397,8 +397,11 @@ actionsToolkit.run(
           core.info('Unmounted device');
         }
       } catch (error) {
-        // Only log warning if error is not from grep finding no mounts
-        if (!error.message.includes('exit code 1')) {
+        // grep returns exit code 1 when no matches are found.
+        if (error.code === 1) {
+          core.debug('No dangling mounts found to clean up');
+        } else {
+          // Only warn for actual errors, not for the expected case where grep finds nothing.
           core.warning(`Error during cleanup: ${error.message}`);
         }
       }
