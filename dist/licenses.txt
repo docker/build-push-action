@@ -394,6 +394,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+@buf/blacksmith_vm-agent.bufbuild_es
+
+@buf/blacksmith_vm-agent.connectrpc_es
+
+@bufbuild/protobuf
+(Apache-2.0 AND BSD-3-Clause)
+
+@connectrpc/connect
+Apache-2.0
+
+@connectrpc/connect-node
+Apache-2.0
+
 @docker/actions-toolkit
 Apache-2.0
 
