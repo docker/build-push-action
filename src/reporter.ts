@@ -1,8 +1,11 @@
 import * as core from '@actions/core';
-import axios, {AxiosError, AxiosInstance, AxiosResponse, AxiosStatic } from 'axios';
+import axios, {AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
 import {ExportRecordResponse} from '@docker/actions-toolkit/lib/types/buildx/history';
 import FormData from 'form-data';
+import { createClient } from "@connectrpc/connect";
+import { createGrpcTransport } from "@connectrpc/connect-node";
+import { StickyDiskService } from "@buf/blacksmith_vm-agent.connectrpc_es/stickydisk/v1/stickydisk_connect";
 
 // Configure base axios instance for Blacksmith API.
 const createBlacksmithAPIClient = () => {
@@ -31,26 +34,13 @@ const createBlacksmithAPIClient = () => {
   return client;
 };
 
-export async function createBlacksmithAgentClient(): Promise<AxiosInstance> {
-  const stickyDiskMgrUrl = 'http://192.168.127.1:5556';
-  const client = axios.create({
-    baseURL: stickyDiskMgrUrl,
-    headers: {
-      Authorization: `Bearer ${process.env.BLACKSMITH_STICKYDISK_TOKEN}`,
-      'X-Github-Repo-Name': process.env.GITHUB_REPO_NAME || '',
-    }
+export function createBlacksmithAgentClient() {
+  const transport = createGrpcTransport({
+    baseUrl: 'http://192.168.127.1:5557',
+    httpVersion: '2',
   });
 
-  axiosRetry(client, {
-    retries: 5,
-    retryDelay: axiosRetry.exponentialDelay,
-    retryCondition: (error) => {
-      return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
-             (error.response?.status ? error.response.status >= 500 : false);
-    }
-  });
-
-  return client;
+  return createClient(StickyDiskService, transport);
 }
 
 export async function reportBuildPushActionFailure(error?: Error) {
@@ -77,13 +67,15 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
 
   try {
     const agentClient = await createBlacksmithAgentClient();
-    const formData = new FormData();
-    formData.append('shouldCommit', 'true');
-    formData.append('vmID', process.env.VM_ID || '');
-    formData.append('exposeID', exposeId || '');
-    formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
-
-    await post(agentClient, '/stickydisks', formData);
+    
+    await agentClient.commitStickyDisk({
+      exposeId: exposeId || '',
+      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
+      vmId: process.env.VM_ID || '',
+      shouldCommit: true,
+      repoName: process.env.GITHUB_REPO_NAME || '',
+      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+    });
 
     // Report success to Blacksmith API
     const requestOptions = {
@@ -126,13 +118,14 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
 
   try {
     const blacksmithAgentClient = await createBlacksmithAgentClient();
-    const formData = new FormData();
-    formData.append('shouldCommit', 'false');
-    formData.append('vmID', process.env.VM_ID || '');
-    formData.append('exposeID', exposeId || '');
-    formData.append('stickyDiskKey', process.env.GITHUB_REPO_NAME || '');
-
-    await post(blacksmithAgentClient, '/stickydisks', formData);
+    await blacksmithAgentClient.commitStickyDisk({
+      exposeId: exposeId || '',
+      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
+      vmId: process.env.VM_ID || '',
+      shouldCommit: false,
+      repoName: process.env.GITHUB_REPO_NAME || '',
+      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+    });
 
     // Report failure to Blacksmith API
     const requestOptions = {

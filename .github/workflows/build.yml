@@ -8,6 +8,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - name: Configure npm for buf registry
+        env:
+          BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+        run: |
+          npm config set @buf:registry https://buf.build/gen/npm/v1/
+          npm config set //buf.build/gen/npm/v1/:_authToken $BUF_TOKEN
       - run: npm ci
+      - run: npm install @buf/blacksmith_vm-agent.connectrpc_es@latest
       - run: npm run build
-      - run: npm test 
+      - run: npm test

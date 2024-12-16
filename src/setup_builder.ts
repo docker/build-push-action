@@ -147,38 +147,28 @@ async function getDiskSize(device: string): Promise<number> {
 export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
   const client = await reporter.createBlacksmithAgentClient();
   
-  // Prepare data for both FormData and query params
   const stickyDiskKey = process.env.GITHUB_REPO_NAME || '';
   if (stickyDiskKey === '') {
     throw new Error('GITHUB_REPO_NAME is not set');
   }
-  const region = process.env.BLACKSMITH_REGION || 'eu-central';
-  const installationModelID = process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '';
-  const vmID = process.env.VM_ID || '';
-
-  // Create FormData (for backwards compatibility).
-  // TODO(adityamaru): Remove this once all of our VM agents are reading query params.
-  const formData = new FormData();
-  formData.append('stickyDiskKey', stickyDiskKey);
-  formData.append('region', region);
-  formData.append('installationModelID', installationModelID);
-  formData.append('vmID', vmID);
-
-  // Create query params string.
-  const queryParams = new URLSearchParams({
-    stickyDiskKey,
-    region,
-    installationModelID,
-    vmID
-  }).toString();
-
   core.debug(`Getting sticky disk for ${stickyDiskKey}`);
 
-  // Send request with both FormData and query params
-  const response = await reporter.get(client, `/stickydisks?${queryParams}`, formData, options);
-  const exposeId = response.data?.expose_id || '';
-  const device = response.data?.disk_identifier || '';
-  return {expose_id: exposeId, device: device};
+
+  const response = await client.getStickyDisk({
+    stickyDiskKey: stickyDiskKey,
+    region: process.env.BLACKSMITH_REGION || 'eu-central',
+    installationModelId: process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '',
+    vmId: process.env.VM_ID || '',
+    stickyDiskType: 'dockerfile',
+    repoName: process.env.GITHUB_REPO_NAME || '',
+    stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+  }, {
+    signal: options?.signal
+  });
+  return {
+    expose_id: response.exposeId || '',
+    device: response.diskIdentifier || ''
+  };
 }
 
 export async function startAndConfigureBuildkitd(parallelism: number, device: string): Promise<string> {
