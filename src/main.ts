@@ -307,46 +307,50 @@ actionsToolkit.run(
     }
 
     await core.group('Cleaning up Blacksmith builder', async () => {
-      if (builderInfo.addr) {
-        try {
-          let exportRes;
-          if (!buildError) {
-            const buildxHistory = new BuildxHistory();
-            exportRes = await buildxHistory.export({
-              refs: ref ? [ref] : []
-            });
-          }
-          await shutdownBuildkitd();
-          core.info('Shutdown buildkitd');
-          for (let attempt = 1; attempt <= 10; attempt++) {
-            try {
-              await execAsync(`sudo umount ${mountPoint}`);
-              core.debug(`${mountPoint} has been unmounted`);
-              break;
-            } catch (error) {
-              if (attempt === 10) {
-                throw error;
-              }
-              core.warning(`Unmount failed, retrying (${attempt}/10)...`);
-              await new Promise(resolve => setTimeout(resolve, 300));
+      try {
+        let exportRes;
+        if (!buildError) {
+          const buildxHistory = new BuildxHistory();
+          exportRes = await buildxHistory.export({
+            refs: ref ? [ref] : []
+          });
+        }
+        await shutdownBuildkitd();
+        core.info('Shutdown buildkitd');
+        for (let attempt = 1; attempt <= 10; attempt++) {
+          try {
+            await execAsync(`sudo umount ${mountPoint}`);
+            core.debug(`${mountPoint} has been unmounted`);
+            break;
+          } catch (error) {
+            if (attempt === 10) {
+              throw error;
             }
+            core.warning(`Unmount failed, retrying (${attempt}/10)...`);
+            await new Promise(resolve => setTimeout(resolve, 300));
           }
-          core.info('Unmounted device');
+        }
+        core.info('Unmounted device');
+
+        if (builderInfo.addr) {
           if (!buildError) {
             await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
           } else {
-            try {
-              const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
-              core.info('buildkitd.log contents:');
-              core.info(buildkitdLog);
-            } catch (error) {
-              core.warning(`Failed to read buildkitd.log: ${error.message}`);
-            }
             await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, builderInfo.exposeId);
           }
-        } catch (error) {
-          core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-          await reporter.reportBuildPushActionFailure(error);
+        }
+      } catch (error) {
+        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
+        await reporter.reportBuildPushActionFailure(error);
+      } finally {
+        if (buildError) {
+          try {
+            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
+            core.info('buildkitd.log contents:');
+            core.info(buildkitdLog);
+          } catch (error) {
+            core.warning(`Failed to read buildkitd.log: ${error.message}`);
+          }
         }
       }
     });
