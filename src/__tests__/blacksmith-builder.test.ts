@@ -46,7 +46,7 @@ describe('startBlacksmithBuilder', () => {
 
     expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to resolve dockerfile path. Falling back to a local build.');
-    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'), 'starting blacksmith builder');
   });
 
   test('should handle missing dockerfile path with nofallback=true', async () => {
@@ -55,7 +55,7 @@ describe('startBlacksmithBuilder', () => {
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow('Failed to resolve dockerfile path');
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to resolve dockerfile path. Failing the build because nofallback is set.');
-    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to resolve dockerfile path'), 'starting blacksmith builder');
   });
 
   test('should handle error in setupStickyDisk with nofallback=false', async () => {
@@ -67,7 +67,7 @@ describe('startBlacksmithBuilder', () => {
 
     expect(result).toEqual({addr: null, buildId: null, exposeId: ''});
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to obtain Blacksmith builder. Falling back to a local build.');
-    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to obtain Blacksmith builder'));
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(new Error('Failed to obtain Blacksmith builder'), 'starting blacksmith builder');
   });
 
   test('should handle error in setupStickyDisk with nofallback=true', async () => {
@@ -78,7 +78,7 @@ describe('startBlacksmithBuilder', () => {
 
     await expect(main.startBlacksmithBuilder(mockInputs)).rejects.toThrow(error);
     expect(core.warning).toHaveBeenCalledWith('Error during Blacksmith builder setup: Failed to obtain Blacksmith builder. Failing the build because nofallback is set.');
-    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(error);
+    expect(reporter.reportBuildPushActionFailure).toHaveBeenCalledWith(error, 'starting blacksmith builder');
   });
 
   test('should successfully start buildkitd when setup succeeds', async () => {
