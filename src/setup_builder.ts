@@ -177,7 +177,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
 
   // Change permissions on the buildkitd socket to allow non-root access
   const startTime = Date.now();
-  const timeout = 5000; // 5 seconds in milliseconds
+  const timeout = 10000; // 10 seconds in milliseconds
 
   while (Date.now() - startTime < timeout) {
     if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
@@ -189,7 +189,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
   }
 
   if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-    throw new Error('buildkitd socket not found after 5s timeout');
+    throw new Error('buildkitd socket not found after 10s timeout');
   }
   return buildkitdAddr;
 }
