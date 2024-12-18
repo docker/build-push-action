@@ -43,7 +43,7 @@ export function createBlacksmithAgentClient() {
   return createClient(StickyDiskService, transport);
 }
 
-export async function reportBuildPushActionFailure(error?: Error) {
+export async function reportBuildPushActionFailure(error?: Error, event?: string) {
   const requestOptions = {
     stickydisk_key: process.env.GITHUB_REPO_NAME || '',
     repo_name: process.env.GITHUB_REPO_NAME || '',
@@ -51,7 +51,7 @@ export async function reportBuildPushActionFailure(error?: Error) {
     arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
     vm_id: process.env.VM_ID || '',
     petname: process.env.PETNAME || '',
-    message: error?.message || ''
+    message: event ? `${event}: ${error?.message || ''}` : error?.message || ''
   };
   
   const client = createBlacksmithAPIClient();
@@ -66,7 +66,7 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
   }
 
   try {
-    const agentClient = await createBlacksmithAgentClient();
+    const agentClient = createBlacksmithAgentClient();
     
     await agentClient.commitStickyDisk({
       exposeId: exposeId || '',
@@ -117,7 +117,7 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
   }
 
   try {
-    const blacksmithAgentClient = await createBlacksmithAgentClient();
+    const blacksmithAgentClient = createBlacksmithAgentClient();
     await blacksmithAgentClient.commitStickyDisk({
       exposeId: exposeId || '',
       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
@@ -164,17 +164,6 @@ export async function reportBuild(dockerfilePath: string) {
     core.warning(error);
     return null;
   }
-}
-
-export async function get(client: AxiosInstance, url: string, formData: FormData | null, options?: {signal?: AbortSignal}): Promise<AxiosResponse> {
-  return await client.get(url, {
-    ...(formData && {data: formData}),
-    headers: {
-      ...client.defaults.headers.common,
-      ...(formData && {'Content-Type': 'multipart/form-data'})
-    },
-    signal: options?.signal
-  });
 }
 
 export async function post(client: AxiosInstance, url: string, formData: FormData | null, options?: {signal?: AbortSignal}): Promise<AxiosResponse> {

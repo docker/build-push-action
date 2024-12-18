@@ -81,7 +81,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
     // If we should not fallback, we rethrow the error and fail the build.
-    await reporter.reportBuildPushActionFailure(error);
+    await reporter.reportBuildPushActionFailure(error, "starting blacksmith builder");
 
     let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
     if (error.message.includes('buildkitd')) {
@@ -137,14 +137,13 @@ actionsToolkit.run(
       buildId: null as string | null,
       exposeId: '' as string
     };
-    await core.group(`Starting Blacksmith builder`, async () => {
-      builderInfo = await startBlacksmithBuilder(inputs);
-    });
-
     let buildError: Error | undefined;
     let buildDurationSeconds: string | undefined;
     let ref: string | undefined;
     try {
+      await core.group(`Starting Blacksmith builder`, async () => {
+        builderInfo = await startBlacksmithBuilder(inputs);
+      });
       if (builderInfo.addr) {
         await core.group(`Creating a builder instance`, async () => {
           const name = `blacksmith-${Date.now().toString(36)}`;
@@ -315,22 +314,43 @@ actionsToolkit.run(
             refs: ref ? [ref] : []
           });
         }
-        await shutdownBuildkitd();
-        core.info('Shutdown buildkitd');
-        for (let attempt = 1; attempt <= 10; attempt++) {
-          try {
-            await execAsync(`sudo umount ${mountPoint}`);
-            core.debug(`${mountPoint} has been unmounted`);
-            break;
-          } catch (error) {
-            if (attempt === 10) {
-              throw error;
+        try {
+          const {stdout} = await execAsync('pgrep -f buildkitd');
+          if (stdout.trim()) {
+            await shutdownBuildkitd();
+            core.info('Shutdown buildkitd');
+          }
+        } catch (error) {
+          // No buildkitd process found, nothing to shutdown
+          core.debug('No buildkitd process found running');
+        }
+        try {
+          const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+          if (mountOutput) {
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                await execAsync(`sudo umount ${mountPoint}`);
+                core.debug(`${mountPoint} has been unmounted`);
+                break;
+              } catch (error) {
+                if (attempt === 3) {
+                  throw error;
+                }
+                core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
             }
-            core.warning(`Unmount failed, retrying (${attempt}/10)...`);
-            await new Promise(resolve => setTimeout(resolve, 300));
+            core.info('Unmounted device');
+          }
+        } catch (error) {
+          // grep returns exit code 1 when no matches are found.
+          if (error.code === 1) {
+            core.debug('No dangling mounts found to clean up');
+          } else {
+            // Only warn for actual errors, not for the expected case where grep finds nothing.
+            core.warning(`Error during cleanup: ${error.message}`);
           }
         }
-        core.info('Unmounted device');
 
         if (builderInfo.addr) {
           if (!buildError) {
@@ -341,7 +361,7 @@ actionsToolkit.run(
         }
       } catch (error) {
         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-        await reporter.reportBuildPushActionFailure(error);
+        await reporter.reportBuildPushActionFailure(error, "shutting down blacksmith builder");
       } finally {
         if (buildError) {
           try {

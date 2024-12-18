@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import {exec} from 'child_process';
+import {exec, execSync} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
@@ -177,7 +177,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
 
   // Change permissions on the buildkitd socket to allow non-root access
   const startTime = Date.now();
-  const timeout = 10000; // 10 seconds in milliseconds
+  const timeout = 30000; // 30 seconds in milliseconds
 
   while (Date.now() - startTime < timeout) {
     if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
@@ -185,11 +185,39 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
       await execAsync(`sudo chmod 666 /run/buildkit/buildkitd.sock`);
       break;
     }
-    await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Poll every 100ms
   }
 
   if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-    throw new Error('buildkitd socket not found after 10s timeout');
+    throw new Error('buildkitd socket not found after 30s timeout');
+  }
+  // Check that buildkit instance is ready by querying workers for up to 30s
+  const startTimeBuildkitReady = Date.now();
+  const timeoutBuildkitReady = 30000; // 30 seconds
+  
+  while (Date.now() - startTimeBuildkitReady < timeoutBuildkitReady) {
+    try {
+      const {stdout} = await execAsync('sudo buildctl debug workers');
+      const lines = stdout.trim().split('\n');
+      if (lines.length > 1) { // Check if we have output lines beyond the header
+        break;
+      }
+    } catch (error) {
+      core.debug(`Error checking buildkit workers: ${error.message}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  // Final check after timeout.
+  try {
+    const {stdout} = await execAsync('sudo buildctl debug workers');
+    const lines = stdout.trim().split('\n');
+    if (lines.length <= 1) {
+      throw new Error('buildkit workers not ready after 30s timeout');
+    }
+  } catch (error) {
+    core.warning(`Error checking buildkit workers: ${error.message}`);
+    throw error;
   }
   return buildkitdAddr;
 }
@@ -199,7 +227,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
 export async function setupStickyDisk(dockerfilePath: string): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     let buildResponse: {docker_build_id: string} | null = null;
     let exposeId: string = '';
