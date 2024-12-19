@@ -321,8 +321,12 @@ actionsToolkit.run(
             core.info('Shutdown buildkitd');
           }
         } catch (error) {
-          // No buildkitd process found, nothing to shutdown
-          core.debug('No buildkitd process found running');
+          if (error.code === 1) {
+            // pgrep returns non-zero if no processes found, which is fine
+            core.debug('No buildkitd process found running');
+          } else {
+            core.warning(`Error checking for buildkitd processes: ${error.message}`);
+          }
         }
         try {
           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
@@ -398,8 +402,12 @@ actionsToolkit.run(
           core.info('Shutdown buildkitd');
         }
       } catch (error) {
-        // pgrep returns non-zero if no processes found, which is fine
-        core.debug('No lingering buildkitd processes found');
+        if (error.code === 1) {
+          // pgrep returns non-zero if no processes found, which is fine
+          core.debug('No lingering buildkitd processes found');
+        } else {
+          core.warning(`Error checking for buildkitd processes: ${error.message}`);
+        }
       }
 
       try {
@@ -472,8 +480,29 @@ function buildSummaryEnabled(): boolean {
 }
 
 export async function shutdownBuildkitd(): Promise<void> {
+  const startTime = Date.now();
+  const timeout = 10000; // 10 seconds
+  const backoff = 300; // 300ms
+
   try {
     await execAsync(`sudo pkill -TERM buildkitd`);
+
+    // Wait for buildkitd to shutdown with backoff retry
+    while (Date.now() - startTime < timeout) {
+      try {
+        const {stdout} = await execAsync('pgrep -f buildkitd');
+        if (!stdout.trim()) {
+          // Process not found, shutdown successful
+          return;
+        }
+      } catch (error) {
+        // pgrep returns non-zero if process not found, which means shutdown successful
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, backoff));
+    }
+
+    throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
   } catch (error) {
     core.error('error shutting down buildkitd process:', error);
     throw error;
