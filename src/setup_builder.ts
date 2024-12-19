@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import {exec, execSync} from 'child_process';
+import {exec, execSync, spawn} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
@@ -110,20 +110,46 @@ async function startBuildkitd(parallelism: number, device: string): Promise<stri
     await execAsync('sudo mkdir -p /run/buildkit');
     await execAsync('sudo chmod 755 /run/buildkit');
     const addr = 'unix:///run/buildkit/buildkitd.sock';
-    const {stdout: startStdout, stderr: startStderr} = await execAsync(
-      `sudo nohup buildkitd --debug --addr ${addr} --allow-insecure-entitlement security.insecure --config=buildkitd.toml --allow-insecure-entitlement network.host > buildkitd.log 2>&1 &`
-    );
 
-    if (startStderr) {
-      throw new Error(`error starting buildkitd service: ${startStderr}`);
-    }
-    core.debug(`buildkitd daemon started successfully ${startStdout}`);
+    const logStream = fs.createWriteStream('buildkitd.log');
+    const buildkitd = spawn('sudo', [
+      'buildkitd',
+      '--debug',
+      '--addr', addr,
+      '--allow-insecure-entitlement', 'security.insecure',
+      '--config=buildkitd.toml',
+      '--allow-insecure-entitlement', 'network.host'
+    ], {
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
 
-    const {stderr} = await execAsync(`pgrep -f buildkitd`);
-    if (stderr) {
-      throw new Error(`error finding buildkitd PID: ${stderr}`);
+    // Pipe stdout and stderr to log file
+    buildkitd.stdout.pipe(logStream);
+    buildkitd.stderr.pipe(logStream);
+
+    buildkitd.on('error', (error) => {
+      throw new Error(`Failed to start buildkitd: ${error.message}`);
+    });
+
+    // Wait for buildkitd PID to appear with backoff retry
+    const startTime = Date.now();
+    const timeout = 10000; // 10 seconds
+    const backoff = 300; // 300ms
+
+    while (Date.now() - startTime < timeout) {
+      try {
+        const {stdout} = await execAsync('pgrep -f buildkitd');
+        if (stdout.trim()) {
+          core.debug('buildkitd daemon started successfully');
+          return addr;
+        }
+      } catch (error) {
+        // pgrep returns non-zero if process not found, which is expected while waiting
+        await new Promise(resolve => setTimeout(resolve, backoff));
+      }
     }
-    return addr;
+
+    throw new Error('Timed out waiting for buildkitd to start after 10 seconds');
   } catch (error) {
     core.error('failed to start buildkitd daemon:', error);
     throw error;
