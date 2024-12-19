@@ -490,16 +490,18 @@ export async function shutdownBuildkitd(): Promise<void> {
     // Wait for buildkitd to shutdown with backoff retry
     while (Date.now() - startTime < timeout) {
       try {
-        const {stdout} = await execAsync('pgrep -f buildkitd');
-        if (!stdout.trim()) {
-          // Process not found, shutdown successful
+        await execAsync('pgrep -f buildkitd');
+        // Process still exists, wait and retry
+        await new Promise(resolve => setTimeout(resolve, backoff));
+      } catch (error) {
+        if (error.code === 1) {
+          // pgrep returns exit code 1 when no process is found, which means shutdown successful
+          core.debug('buildkitd successfully shutdown');
           return;
         }
-      } catch (error) {
-        // pgrep returns non-zero if process not found, which means shutdown successful
-        return;
+        // Some other error occurred
+        throw error;
       }
-      await new Promise(resolve => setTimeout(resolve, backoff));
     }
 
     throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
