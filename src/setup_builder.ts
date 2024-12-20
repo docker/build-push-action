@@ -138,9 +138,9 @@ async function startBuildkitd(parallelism: number, device: string): Promise<stri
 
     while (Date.now() - startTime < timeout) {
       try {
-        const {stdout} = await execAsync('pgrep -f buildkitd');
+        const {stdout} = await execAsync('pgrep buildkitd');
         if (stdout.trim()) {
-          core.debug('buildkitd daemon started successfully');
+          core.info(`buildkitd daemon started successfully with PID ${stdout.trim()}`);
           return addr;
         }
       } catch (error) {
