@@ -3,6 +3,7 @@ import * as main from '../main';
 import * as reporter from '../reporter';
 import {getDockerfilePath} from '../context';
 import * as setupBuilder from '../setup_builder';
+import { Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
 
 jest.mock('@actions/core', () => ({
   debug: jest.fn(),
@@ -20,9 +21,14 @@ jest.mock('../context', () => ({
   Inputs: jest.fn()
 }));
 
-jest.mock('../reporter', () => ({
-  reportBuildPushActionFailure: jest.fn().mockResolvedValue(undefined)
-}));
+jest.mock('../reporter', () => {
+  const actual = jest.requireActual('../reporter');
+  return {
+    ...actual,
+    reportBuildPushActionFailure: jest.fn().mockResolvedValue(undefined),
+    reportMetric: jest.fn().mockImplementation((type: Metric_MetricType) => Promise.resolve())
+  };
+});
 
 jest.mock('../setup_builder', () => ({
   ...jest.requireActual('../setup_builder'),

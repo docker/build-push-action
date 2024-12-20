@@ -6,6 +6,7 @@ import FormData from 'form-data';
 import { createClient } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
 import { StickyDiskService } from "@buf/blacksmith_vm-agent.connectrpc_es/stickydisk/v1/stickydisk_connect";
+import { Metric, Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
 
 // Configure base axios instance for Blacksmith API.
 const createBlacksmithAPIClient = () => {
@@ -174,4 +175,26 @@ export async function post(client: AxiosInstance, url: string, formData: FormDat
     },
     signal: options?.signal
   });
+}
+
+export async function reportMetric(
+  metricType: Metric_MetricType,
+  value: number
+): Promise<void> {
+  try {
+    const agentClient = createBlacksmithAgentClient();
+    
+    const metric = new Metric({
+      type: metricType,
+      value: { case: "intValue", value: BigInt(value) }
+    });
+
+    await agentClient.reportMetric({
+      repoName: process.env.GITHUB_REPO_NAME || '',
+      region: process.env.BLACKSMITH_REGION || 'eu-central',
+      metric: metric
+    });
+  } catch (error) {
+    core.warning('Error reporting metric to BlacksmithAgent:', error);
+  }
 }
