@@ -47,7 +47,7 @@ export function createBlacksmithAgentClient() {
   return createClient(StickyDiskService, transport);
 }
 
-export async function reportBuildPushActionFailure(error?: Error, event?: string) {
+export async function reportBuildPushActionFailure(error?: Error, event?: string, isWarning?: boolean) {
   const requestOptions = {
     stickydisk_key: process.env.GITHUB_REPO_NAME || '',
     repo_name: process.env.GITHUB_REPO_NAME || '',
@@ -55,7 +55,8 @@ export async function reportBuildPushActionFailure(error?: Error, event?: string
     arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
     vm_id: process.env.VM_ID || '',
     petname: process.env.PETNAME || '',
-    message: event ? `${event}: ${error?.message || ''}` : error?.message || ''
+    message: event ? `${event}: ${error?.message || ''}` : error?.message || '',
+    warning: isWarning || false
   };
   
   const client = createBlacksmithAPIClient();

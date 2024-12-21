@@ -81,7 +81,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     const parallelism = await getNumCPUs();
 
     const buildkitdStartTime = Date.now();
-    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, stickyDiskSetup.device);
+    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism);
     const buildkitdDurationMs = Date.now() - buildkitdStartTime;
     await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_READY_DURATION_MS, buildkitdDurationMs);
 
