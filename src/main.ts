@@ -21,6 +21,7 @@ import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
 import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs} from './setup_builder';
+import { Metric, Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
@@ -73,9 +74,16 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
     }
+    const stickyDiskStartTime = Date.now();
     const stickyDiskSetup = await setupStickyDisk(dockerfilePath);
+    const stickyDiskDurationMs = Date.now() - stickyDiskStartTime;
+    await reporter.reportMetric(Metric_MetricType.BPA_HOTLOAD_DURATION_MS, stickyDiskDurationMs);
     const parallelism = await getNumCPUs();
+
+    const buildkitdStartTime = Date.now();
     const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, stickyDiskSetup.device);
+    const buildkitdDurationMs = Date.now() - buildkitdStartTime;
+    await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_READY_DURATION_MS, buildkitdDurationMs);
 
     return {addr: buildkitdAddr, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
   } catch (error) {
@@ -100,6 +108,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
 actionsToolkit.run(
   // main
   async () => {
+    await reporter.reportMetric(Metric_MetricType.BPA_FEATURE_USAGE, 1);
     const startedTime = new Date();
     const inputs: context.Inputs = await context.getInputs();
     stateHelper.setInputs(inputs);
@@ -317,7 +326,10 @@ actionsToolkit.run(
         try {
           const {stdout} = await execAsync('pgrep buildkitd');
           if (stdout.trim()) {
+            const buildkitdShutdownStartTime = Date.now();
             await shutdownBuildkitd();
+            const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
+            await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
             core.info('Shutdown buildkitd');
           }
         } catch (error) {

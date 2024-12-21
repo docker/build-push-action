@@ -6,8 +6,12 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.js$': 'babel-jest'
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@buf|@connectrpc)/)'
+  ],
   verbose: true,
   collectCoverage: true,
   collectCoverageFrom: [
