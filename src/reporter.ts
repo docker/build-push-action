@@ -10,9 +10,11 @@ import { Metric, Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/
 
 // Configure base axios instance for Blacksmith API.
 const createBlacksmithAPIClient = () => {
-  const apiUrl = process.env.BLACKSMITH_ENV?.includes('staging') 
-    ? 'https://stagingapi.blacksmith.sh' 
-    : 'https://api.blacksmith.sh';
+  const apiUrl = process.env.BLACKSMITH_BACKEND_URL || (
+    process.env.BLACKSMITH_ENV?.includes('staging') 
+      ? 'https://stagingapi.blacksmith.sh' 
+      : 'https://api.blacksmith.sh'
+  );
   
   const client = axios.create({
     baseURL: apiUrl,
