@@ -197,6 +197,7 @@ export async function reportMetric(
       metric: metric
     });
   } catch (error) {
-    core.warning('Error reporting metric to BlacksmithAgent:', error);
+    // We can enable this once all agents are updated to support metrics.
+    // core.warning('Error reporting metric to BlacksmithAgent:', error);
   }
 }
