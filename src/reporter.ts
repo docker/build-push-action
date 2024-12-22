@@ -15,6 +15,7 @@ const createBlacksmithAPIClient = () => {
       ? 'https://stagingapi.blacksmith.sh' 
       : 'https://api.blacksmith.sh'
   );
+  core.debug(`Using Blacksmith API URL: ${apiUrl}`);
   
   const client = axios.create({
     baseURL: apiUrl,
