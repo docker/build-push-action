@@ -1,10 +1,9 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import {exec, execSync, spawn} from 'child_process';
+import {exec, spawn} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
-import FormData from 'form-data';
 
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
@@ -51,8 +50,7 @@ export async function getNumCPUs(): Promise<number> {
   }
 }
 
-async function writeBuildkitdTomlFile(parallelism: number, device: string): Promise<void> {
-  const diskSize = await getDiskSize(device);
+async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
   const jsonConfig: TOML.JsonMap = {
     root: '/var/lib/buildkit',
     grpc: {
@@ -72,20 +70,11 @@ async function writeBuildkitdTomlFile(parallelism: number, device: string): Prom
     worker: {
       oci: {
         enabled: true,
-        gc: true,
-        gckeepstorage: diskSize.toString(),
+        // Disable automatic garbage collection, since we will prune manually. Automatic GC
+        // has been seen to negatively affect startup times of the daemon.
+        gc: false,
         'max-parallelism': parallelism,
         snapshotter: 'overlayfs',
-        gcpolicy: [
-          {
-            all: true,
-            keepDuration: 1209600
-          },
-          {
-            all: true,
-            keepBytes: diskSize.toString()
-          }
-        ]
       },
       containerd: {
         enabled: false
@@ -104,9 +93,9 @@ async function writeBuildkitdTomlFile(parallelism: number, device: string): Prom
   }
 }
 
-async function startBuildkitd(parallelism: number, device: string): Promise<string> {
+async function startBuildkitd(parallelism: number): Promise<string> {
   try {
-    await writeBuildkitdTomlFile(parallelism, device);
+    await writeBuildkitdTomlFile(parallelism);
     await execAsync('sudo mkdir -p /run/buildkit');
     await execAsync('sudo chmod 755 /run/buildkit');
     const addr = 'unix:///run/buildkit/buildkitd.sock';
@@ -197,8 +186,8 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
   };
 }
 
-export async function startAndConfigureBuildkitd(parallelism: number, device: string): Promise<string> {
-  const buildkitdAddr = await startBuildkitd(parallelism, device);
+export async function startAndConfigureBuildkitd(parallelism: number): Promise<string> {
+  const buildkitdAddr = await startBuildkitd(parallelism);
   core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
 
   // Change permissions on the buildkitd socket to allow non-root access
@@ -245,8 +234,33 @@ export async function startAndConfigureBuildkitd(parallelism: number, device: st
     core.warning(`Error checking buildkit workers: ${error.message}`);
     throw error;
   }
+
+  // Start cache pruning in the background without blocking.
+  pruneBuildkitCache().catch(error => {
+    core.warning(`Background cache pruning failed: ${error.message}`);
+  });
+
   return buildkitdAddr;
 }
+
+/**
+ * Prunes buildkit cache data older than 14 days.
+ * We don't specify any keep bytes here since we are
+ * handling the ceph volume size limits ourselves in
+ * the VM Agent.
+ * @throws Error if buildctl prune command fails
+ */
+export async function pruneBuildkitCache(): Promise<void> {
+  try {
+    const fourteenDaysInHours = 14 * 24;
+    await execAsync(`sudo buildctl prune --keep-duration ${fourteenDaysInHours}h --all`);
+    core.debug('Successfully pruned buildkit cache');
+  } catch (error) {
+    core.warning(`Error pruning buildkit cache: ${error.message}`);
+    throw error;
+  }
+}
+
 
 // setupStickyDisk mounts a sticky disk for the entity and returns the device information.
 // throws an error if it is unable to do so because of a timeout or an error
@@ -272,6 +286,18 @@ export async function setupStickyDisk(dockerfilePath: string): Promise<{device: 
     await execAsync(`sudo mount ${device} ${mountPoint}`);
     core.debug(`${device} has been mounted to ${mountPoint}`);
     core.info('Successfully obtained sticky disk');
+
+    // Check inode usage at mountpoint, and report if over 80%.
+    try {
+      const {stdout} = await execAsync(`df -i ${mountPoint} | tail -1 | awk '{print $5}' | sed 's/%//'`);
+      const inodePercentage = parseInt(stdout.trim());
+      if (!isNaN(inodePercentage) && inodePercentage > 80) { // Report if over 80%
+        await reporter.reportBuildPushActionFailure(new Error(`High inode usage (${inodePercentage}%) detected at ${mountPoint}`), 'setupStickyDisk', true /* isWarning */);
+        core.warning(`High inode usage (${inodePercentage}%) detected at ${mountPoint}`);
+      }
+    } catch (error) {
+      core.debug(`Error checking inode usage: ${error.message}`);
+    }
     return {device, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
   } catch (error) {
     core.warning(`Error in setupStickyDisk: ${(error as Error).message}`);
