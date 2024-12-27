@@ -1,54 +1,50 @@
+<p align="center">
+  <picture>
+    <!-- Dark mode -->
+    <source media="(prefers-color-scheme: dark)" srcset="./Blacksmith_Logo-White-Large.png" width="300">
+    <!-- Light mode -->
+    <source media="(prefers-color-scheme: light)" srcset="./Blacksmith_Logo-Black-Large.png" width="300">
+    <img alt="Blacksmith Logo" src="./Blacksmith_Logo-Black-Large.png" width="300">
+  </picture>
+</p>
+
 [![GitHub release](https://img.shields.io/github/release/docker/build-push-action.svg?style=flat-square)](https://github.com/docker/build-push-action/releases/latest)
 [![GitHub marketplace](https://img.shields.io/badge/marketplace-build--and--push--docker--images-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/build-and-push-docker-images)
 [![CI workflow](https://img.shields.io/github/actions/workflow/status/docker/build-push-action/ci.yml?branch=master&label=ci&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=ci)
 [![Test workflow](https://img.shields.io/github/actions/workflow/status/docker/build-push-action/test.yml?branch=master&label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
 [![Codecov](https://img.shields.io/codecov/c/github/docker/build-push-action?logo=codecov&style=flat-square)](https://codecov.io/gh/docker/build-push-action)
 
-## About
 
-GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx)
-with full support of the features provided by [Moby BuildKit](https://github.com/moby/buildkit)
-builder toolkit. This includes multi-platform build, secrets, remote cache, etc.
-and different builder deployment/namespacing options.
+GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx), designed exclusively for Blacksmith runners. This action leverages Blacksmith's stickydisk primitive to mount Docker layer caches directly into Blacksmith runners, providing out of the box incremental builds.
 
-![Screenshot](.github/build-push-action.png)
+> **Important:** This action only works with Blacksmith runners. When running, it will:
+> 1. Mount a repository-specific Sticky Disk volume containing Docker layer caches directly into the runner
+> 2. Automatically spin up a local buildkit instance on top of this mounted volume
+> 3. Override any remote builder configuration options to ensure optimal use of the local cache
+>
+> As a result, any configuration options related to remote builders or builder setup will be ignored.
 
 ___
 
-* [Usage](#usage)
-  * [Git context](#git-context)
-  * [Path context](#path-context)
-* [Examples](#examples)
-* [Summaries](#summaries)
-* [Customizing](#customizing)
-  * [inputs](#inputs)
-  * [outputs](#outputs)
-  * [environment variables](#environment-variables)
-* [Troubleshooting](#troubleshooting)
-* [Contributing](#contributing)
-
 ## Usage
 
-In the examples below we are also using 3 other actions:
+> **Note:** This action requires a Blacksmith runner. It will not work with standard GitHub runners or other CI environments.
 
-* [`setup-buildx`](https://github.com/docker/setup-buildx-action) action will
-  create and boot a builder using by default the [`docker-container` driver](https://docs.docker.com/build/building/drivers/docker-container/).
-  This is **not required but recommended** using it to be able to build
-  multi-platform images, export cache, etc.
+In the examples below we are using these additional actions:
+
 * [`setup-qemu`](https://github.com/docker/setup-qemu-action) action can be
   useful if you want to add emulation support with QEMU to be able to build
-  against more platforms. 
+  against more platforms.
 * [`login`](https://github.com/docker/login-action) action will take care to
   log in against a Docker registry.
+
+Note that unlike the original Docker build-push action, you do not need to set up Buildx separately as this is handled automatically by the Blacksmith runner.
 
 ### Git context
 
 By default, this action uses the [Git context](https://docs.docker.com/engine/reference/commandline/build/#git-repositories),
 so you don't need to use the [`actions/checkout`](https://github.com/actions/checkout/)
 action to check out the repository as this will be done directly by [BuildKit](https://github.com/moby/buildkit).
-
-The git reference will be based on the [event that triggered your workflow](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
-and will result in the following context: `https://github.com/<owner>/<repo>.git#<ref>`.
 
 ```yaml
 name: ci
@@ -58,14 +54,11 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith
     steps:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       -
         name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -74,47 +67,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: useblacksmith/build-push-action@v1
         with:
           push: true
           tags: user/app:latest
-```
-
-Be careful because **any file mutation in the steps that precede the build step
-will be ignored, including processing of the `.dockerignore` file** since
-the context is based on the Git reference. However, you can use the
-[Path context](#path-context) using the [`context` input](#inputs) alongside
-the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
-this restriction.
-
-Default Git context can also be provided using the [Handlebars template](https://handlebarsjs.com/guide/)
-expression `{{defaultContext}}`. Here we can use it to provide a subdirectory
-to the default Git context:
-
-```yaml
-      -
-        name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:mysubdir"
-          push: true
-          tags: user/app:latest
-```
-
-Building from the current repository automatically uses the [GitHub Token](https://docs.github.com/en/actions/security-guides/automatic-token-authentication),
-so it does not need to be passed. If you want to authenticate against another
-private repository, you have to use a [secret](https://docs.docker.com/build/ci/github-actions/secrets)
-named `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
-
-```yaml
-      -
-        name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: user/app:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.MYTOKEN }}
 ```
 
 ### Path context
@@ -127,7 +83,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith
     steps:
       -
         name: Checkout
@@ -136,9 +92,6 @@ jobs:
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
         name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -146,7 +99,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: useblacksmith/build-push-action@v1
         with:
           context: .
           push: true
