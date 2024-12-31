@@ -21,11 +21,35 @@ import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
 import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs} from './setup_builder';
-import { Metric, Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
+import { Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
+
+async function joinTailnet(): Promise<void> {
+  const token = process.env.BLACKSMITH_TAILSCALE_TOKEN;
+  if (!token) {
+    core.warning('BLACKSMITH_TAILSCALE_TOKEN environment variable not set, skipping tailnet join');
+    return;
+  }
+
+  try {
+    await execAsync(`sudo tailscale up --authkey=${token} --hostname=${process.env.VM_ID}`);
+
+    core.info('Successfully joined tailnet');
+  } catch (error) {
+    throw new Error(`Failed to join tailnet: ${error.message}`);
+  }
+}
+
+async function leaveTailnet(): Promise<void> {
+  try {
+    await execAsync('sudo tailscale down');
+  } catch (error) {
+    core.warning(`Error leaving tailnet: ${error.message}`);
+  }
+}
 
 async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
   let toolPath;
@@ -70,6 +94,8 @@ async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
  */
 export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{addr: string | null; buildId: string | null; exposeId: string}> {
   try {
+    await joinTailnet();
+
     const dockerfilePath = context.getDockerfilePath(inputs);
     if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
@@ -323,6 +349,9 @@ actionsToolkit.run(
             refs: ref ? [ref] : []
           });
         }
+
+        await leaveTailnet();
+
         try {
           const {stdout} = await execAsync('pgrep buildkitd');
           if (stdout.trim()) {
@@ -403,6 +432,10 @@ actionsToolkit.run(
         fs.rmSync(stateHelper.tmpDir, {recursive: true});
       });
     }
+
+    // Ensure we've left the tailnet.
+    await leaveTailnet();
+
     // Check for any lingering buildkitd processes and try to clean up mounts
     try {
       // Check for buildkitd processes first
