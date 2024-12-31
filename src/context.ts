@@ -89,18 +89,17 @@ export async function getInputs(): Promise<Inputs> {
 export function getDockerfilePath(inputs: Inputs): string | null {
   try {
     const context = inputs.context || Context.gitContext();
-    const normalizedContext = path.normalize(context);
     let dockerfilePath: string;
 
     if (inputs.file) {
-      const normalizedFile = path.normalize(inputs.file);
-      dockerfilePath = normalizedFile.startsWith(normalizedContext) ? normalizedFile : path.join(normalizedContext, normalizedFile);
+      // If context is git context, just use the file path directly
+      dockerfilePath = context === Context.gitContext() ? inputs.file : path.join(path.normalize(context), inputs.file);
     } else if (inputs['dockerfile']) {
-      const normalizedDockerfile = path.normalize(inputs['dockerfile']);
-      dockerfilePath = normalizedDockerfile.startsWith(normalizedContext) ? normalizedDockerfile : path.join(normalizedContext, normalizedDockerfile);
+      // If context is git context, just use the dockerfile path directly
+      dockerfilePath = context === Context.gitContext() ? inputs['dockerfile'] : path.join(path.normalize(context), inputs['dockerfile']);
     } else {
-      // Default to Dockerfile in the context directory
-      dockerfilePath = path.join(normalizedContext, 'Dockerfile');
+      // If context is git context, just use 'Dockerfile'
+      dockerfilePath = context === Context.gitContext() ? 'Dockerfile' : path.join(path.normalize(context), 'Dockerfile');
     }
 
     // Verify the file exists
