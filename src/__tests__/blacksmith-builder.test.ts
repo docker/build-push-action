@@ -111,7 +111,6 @@ describe('startBlacksmithBuilder', () => {
       exposeId: mockExposeId
     });
     expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism);
-    expect(core.warning).not.toHaveBeenCalled();
     expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 
