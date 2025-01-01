@@ -21,7 +21,7 @@ import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
 import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs} from './setup_builder';
-import { Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
+import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
@@ -29,7 +29,7 @@ const execAsync = promisify(exec);
 
 async function joinTailnet(): Promise<void> {
   const token = process.env.BLACKSMITH_TAILSCALE_TOKEN;
-  if (!token) {
+  if (!token || token === 'unset') {
     core.warning('BLACKSMITH_TAILSCALE_TOKEN environment variable not set, skipping tailnet join');
     return;
   }
@@ -115,7 +115,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
     // If we should not fallback, we rethrow the error and fail the build.
-    await reporter.reportBuildPushActionFailure(error, "starting blacksmith builder");
+    await reporter.reportBuildPushActionFailure(error, 'starting blacksmith builder');
 
     let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
     if (error.message.includes('buildkitd')) {
@@ -406,7 +406,7 @@ actionsToolkit.run(
         }
       } catch (error) {
         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-        await reporter.reportBuildPushActionFailure(error, "shutting down blacksmith builder");
+        await reporter.reportBuildPushActionFailure(error, 'shutting down blacksmith builder');
       } finally {
         if (buildError) {
           try {
