@@ -74,7 +74,7 @@ async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
         // has been seen to negatively affect startup times of the daemon.
         gc: false,
         'max-parallelism': parallelism,
-        snapshotter: 'overlayfs',
+        snapshotter: 'overlayfs'
       },
       containerd: {
         enabled: false
@@ -101,14 +101,7 @@ async function startBuildkitd(parallelism: number): Promise<string> {
     const addr = 'unix:///run/buildkit/buildkitd.sock';
 
     const logStream = fs.createWriteStream('buildkitd.log');
-    const buildkitd = spawn('sudo', [
-      'buildkitd',
-      '--debug',
-      '--addr', addr,
-      '--allow-insecure-entitlement', 'security.insecure',
-      '--config=buildkitd.toml',
-      '--allow-insecure-entitlement', 'network.host'
-    ], {
+    const buildkitd = spawn('sudo', ['buildkitd', '--debug', '--addr', addr, '--allow-insecure-entitlement', 'security.insecure', '--config=buildkitd.toml', '--allow-insecure-entitlement', 'network.host'], {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -116,7 +109,7 @@ async function startBuildkitd(parallelism: number): Promise<string> {
     buildkitd.stdout.pipe(logStream);
     buildkitd.stderr.pipe(logStream);
 
-    buildkitd.on('error', (error) => {
+    buildkitd.on('error', error => {
       throw new Error(`Failed to start buildkitd: ${error.message}`);
     });
 
@@ -161,30 +154,37 @@ async function getDiskSize(device: string): Promise<number> {
 
 export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
   const client = await reporter.createBlacksmithAgentClient();
-  
+
   const stickyDiskKey = process.env.GITHUB_REPO_NAME || '';
   if (stickyDiskKey === '') {
     throw new Error('GITHUB_REPO_NAME is not set');
   }
   core.debug(`Getting sticky disk for ${stickyDiskKey}`);
 
-
-  const response = await client.getStickyDisk({
-    stickyDiskKey: stickyDiskKey,
-    region: process.env.BLACKSMITH_REGION || 'eu-central',
-    installationModelId: process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '',
-    vmId: process.env.VM_ID || '',
-    stickyDiskType: 'dockerfile',
-    repoName: process.env.GITHUB_REPO_NAME || '',
-    stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
-  }, {
-    signal: options?.signal
-  });
+  const response = await client.getStickyDisk(
+    {
+      stickyDiskKey: stickyDiskKey,
+      region: process.env.BLACKSMITH_REGION || 'eu-central',
+      installationModelId: process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '',
+      vmId: process.env.VM_ID || '',
+      stickyDiskType: 'dockerfile',
+      repoName: process.env.GITHUB_REPO_NAME || '',
+      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+    },
+    {
+      signal: options?.signal
+    }
+  );
   return {
     expose_id: response.exposeId || '',
     device: response.diskIdentifier || ''
   };
 }
+
+// buildkitdTimeoutMs states the max amount of time this action will wait for the buildkitd
+// daemon to start have its socket ready. It also additionally governs how long we will wait for
+// the buildkitd workers to be ready.
+const buildkitdTimeoutMs = 15000;
 
 export async function startAndConfigureBuildkitd(parallelism: number): Promise<string> {
   const buildkitdAddr = await startBuildkitd(parallelism);
@@ -192,7 +192,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
 
   // Change permissions on the buildkitd socket to allow non-root access
   const startTime = Date.now();
-  const timeout = 45000; // 45 seconds in milliseconds
+  const timeout = buildkitdTimeoutMs;
 
   while (Date.now() - startTime < timeout) {
     if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
@@ -204,17 +204,18 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
   }
 
   if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-    throw new Error('buildkitd socket not found after 30s timeout');
+    throw new Error('buildkitd socket not found after 15s timeout');
   }
   // Check that buildkit instance is ready by querying workers for up to 30s
   const startTimeBuildkitReady = Date.now();
-  const timeoutBuildkitReady = 30000; // 30 seconds
-  
+  const timeoutBuildkitReady = buildkitdTimeoutMs;
+
   while (Date.now() - startTimeBuildkitReady < timeoutBuildkitReady) {
     try {
       const {stdout} = await execAsync('sudo buildctl debug workers');
       const lines = stdout.trim().split('\n');
-      if (lines.length > 1) { // Check if we have output lines beyond the header
+      if (lines.length > 1) {
+        // Check if we have output lines beyond the header
         break;
       }
     } catch (error) {
@@ -228,7 +229,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
     const {stdout} = await execAsync('sudo buildctl debug workers');
     const lines = stdout.trim().split('\n');
     if (lines.length <= 1) {
-      throw new Error('buildkit workers not ready after 30s timeout');
+      throw new Error('buildkit workers not ready after 15s timeout');
     }
   } catch (error) {
     core.warning(`Error checking buildkit workers: ${error.message}`);
@@ -261,13 +262,17 @@ export async function pruneBuildkitCache(): Promise<void> {
   }
 }
 
+// stickyDiskTimeoutMs states the max amount of time this action will wait for the VM agent to
+// expose the sticky disk from the storage agent, map it onto the host and then patch the drive
+// into the VM.
+const stickyDiskTimeoutMs = 45000;
 
 // setupStickyDisk mounts a sticky disk for the entity and returns the device information.
 // throws an error if it is unable to do so because of a timeout or an error
 export async function setupStickyDisk(dockerfilePath: string): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), stickyDiskTimeoutMs);
 
     let buildResponse: {docker_build_id: string} | null = null;
     let exposeId: string = '';
@@ -291,7 +296,8 @@ export async function setupStickyDisk(dockerfilePath: string): Promise<{device: 
     try {
       const {stdout} = await execAsync(`df -i ${mountPoint} | tail -1 | awk '{print $5}' | sed 's/%//'`);
       const inodePercentage = parseInt(stdout.trim());
-      if (!isNaN(inodePercentage) && inodePercentage > 80) { // Report if over 80%
+      if (!isNaN(inodePercentage) && inodePercentage > 80) {
+        // Report if over 80%
         await reporter.reportBuildPushActionFailure(new Error(`High inode usage (${inodePercentage}%) detected at ${mountPoint}`), 'setupStickyDisk', true /* isWarning */);
         core.warning(`High inode usage (${inodePercentage}%) detected at ${mountPoint}`);
       }
