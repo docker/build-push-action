@@ -192,7 +192,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
 
   // Change permissions on the buildkitd socket to allow non-root access
   const startTime = Date.now();
-  const timeout = 30000; // 30 seconds in milliseconds
+  const timeout = 45000; // 45 seconds in milliseconds
 
   while (Date.now() - startTime < timeout) {
     if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
