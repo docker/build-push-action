@@ -30,7 +30,7 @@ const execAsync = promisify(exec);
 async function joinTailnet(): Promise<void> {
   const token = process.env.BLACKSMITH_TAILSCALE_TOKEN;
   if (!token || token === 'unset') {
-    core.warning('BLACKSMITH_TAILSCALE_TOKEN environment variable not set, skipping tailnet join');
+    core.debug('BLACKSMITH_TAILSCALE_TOKEN environment variable not set, skipping tailnet join');
     return;
   }
 
