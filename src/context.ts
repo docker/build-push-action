@@ -132,7 +132,12 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   });
   if (await toolkit.buildx.versionSatisfies('>=0.8.0')) {
     await Util.asyncForEach(inputs['build-contexts'], async buildContext => {
-      args.push('--build-context', buildContext);
+      args.push(
+        '--build-context',
+        handlebars.compile(buildContext)({
+          defaultContext: Context.gitContext()
+        })
+      );
     });
   } else if (inputs['build-contexts'].length > 0) {
     core.warning("Build contexts are only supported by buildx >= 0.8.0; the input 'build-contexts' is ignored.");
