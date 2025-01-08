@@ -184,7 +184,7 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
 // buildkitdTimeoutMs states the max amount of time this action will wait for the buildkitd
 // daemon to start have its socket ready. It also additionally governs how long we will wait for
 // the buildkitd workers to be ready.
-const buildkitdTimeoutMs = 15000;
+const buildkitdTimeoutMs = 30000;
 
 export async function startAndConfigureBuildkitd(parallelism: number): Promise<string> {
   const buildkitdAddr = await startBuildkitd(parallelism);
