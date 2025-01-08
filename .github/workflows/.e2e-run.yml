@@ -65,10 +65,11 @@ jobs:
         if: inputs.type == 'local'
         run: |
           if [ ! -e /etc/docker/daemon.json ]; then
-            echo '{}' | tee /etc/docker/daemon.json >/dev/null
+            echo '{}' | sudo tee /etc/docker/daemon.json >/dev/null
           fi
           DOCKERD_CONFIG=$(jq '.+{"insecure-registries":["http://${{ env.REGISTRY_FQDN }}"]}' /etc/docker/daemon.json)
           sudo tee /etc/docker/daemon.json <<<"$DOCKERD_CONFIG" >/dev/null
+          cat /etc/docker/daemon.json
           sudo service docker restart
       -
         name: Install ${{ inputs.name }}
