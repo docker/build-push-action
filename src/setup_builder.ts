@@ -204,7 +204,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
   }
 
   if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-    throw new Error('buildkitd socket not found after 15s timeout');
+    throw new Error('buildkitd socket not found after 30s timeout');
   }
   // Check that buildkit instance is ready by querying workers for up to 30s
   const startTimeBuildkitReady = Date.now();
