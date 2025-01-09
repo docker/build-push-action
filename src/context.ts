@@ -9,6 +9,21 @@ import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {Util} from '@docker/actions-toolkit/lib/util';
 import * as path from 'path';
 
+// Helper function to join paths while avoiding duplication of context path
+function joinNonOverlapping(context: string, filePath: string): string {
+  // Normalize both paths to handle any '..' or '.' segments
+  const normalizedContext = path.normalize(context);
+  const normalizedFilePath = path.normalize(filePath);
+
+  // If the file path starts with the context, use it as is to avoid duplication
+  if (normalizedFilePath.startsWith(normalizedContext)) {
+    return normalizedFilePath;
+  }
+
+  // Otherwise join them normally
+  return path.join(normalizedContext, normalizedFilePath);
+}
+
 export interface Inputs {
   'add-hosts': string[];
   allow: string[];
@@ -93,13 +108,13 @@ export function getDockerfilePath(inputs: Inputs): string | null {
 
     if (inputs.file) {
       // If context is git context, just use the file path directly
-      dockerfilePath = context === Context.gitContext() ? inputs.file : path.join(path.normalize(context), inputs.file);
+      dockerfilePath = context === Context.gitContext() ? inputs.file : joinNonOverlapping(context, inputs.file);
     } else if (inputs['dockerfile']) {
       // If context is git context, just use the dockerfile path directly
-      dockerfilePath = context === Context.gitContext() ? inputs['dockerfile'] : path.join(path.normalize(context), inputs['dockerfile']);
+      dockerfilePath = context === Context.gitContext() ? inputs['dockerfile'] : joinNonOverlapping(context, inputs['dockerfile']);
     } else {
       // If context is git context, just use 'Dockerfile'
-      dockerfilePath = context === Context.gitContext() ? 'Dockerfile' : path.join(path.normalize(context), 'Dockerfile');
+      dockerfilePath = context === Context.gitContext() ? 'Dockerfile' : joinNonOverlapping(context, 'Dockerfile');
     }
 
     // Verify the file exists
