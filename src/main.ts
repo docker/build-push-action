@@ -213,6 +213,14 @@ actionsToolkit.run(
           }
         });
       }
+      // Write a sentinel file to indicate builder setup is complete.
+      const sentinelPath = path.join('/tmp', 'builder-setup-complete');
+      try {
+        fs.writeFileSync(sentinelPath, 'Builder setup completed successfully.');
+        core.debug(`Created builder setup sentinel file at ${sentinelPath}`);
+      } catch (error) {
+        core.warning(`Failed to create builder setup sentinel file: ${error.message}`);
+      }
 
       await core.group(`Proxy configuration`, async () => {
         let dockerConfig: ConfigFile | undefined;
