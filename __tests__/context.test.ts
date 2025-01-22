@@ -799,6 +799,27 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '.'
       ]
     ],
+    [
+      34,
+      '0.20.0',
+      new Map<string, string>([
+        ['cache-from', `type=gha
+type=registry,ref=foo/bar:cache`],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--cache-from', 'type=gha',
+        '--cache-from', 'type=registry,ref=foo/bar:cache',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--metadata-file', metadataJson,
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
+      ]
+    ]
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
