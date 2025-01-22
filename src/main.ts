@@ -378,6 +378,8 @@ actionsToolkit.run(
           }
         }
         try {
+          // Run sync to flush any pending writes before unmounting.
+          await execAsync('sync');
           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
           if (mountOutput) {
             for (let attempt = 1; attempt <= 3; attempt++) {
