@@ -33,9 +33,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "@actions/cache@npm:3.3.0"
+"@actions/cache@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@actions/cache@npm:4.0.0"
   dependencies:
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.0.1
@@ -45,8 +45,10 @@ __metadata:
     "@azure/abort-controller": ^1.1.0
     "@azure/ms-rest-js": ^2.6.0
     "@azure/storage-blob": ^12.13.0
+    "@protobuf-ts/plugin": ^2.9.4
     semver: ^6.3.1
-  checksum: f0761b1491b7706a80b44d68ed52eb48c04653fc939525a7c7b606e9d9251c40c7e4ac20846ab92ac32db6869e1a6f0f574bd6b7fec1ab9378c8e199c5acc9c9
+    twirp-ts: ^2.5.0
+  checksum: 8ab819a67b578a5ce6de984f4ef8420066f8270e1f9db053700f4a8f084d0bbe4f911114f7088a95a987372ea63078550355d99849412152dd0efdf688bf9144
   languageName: node
   linkType: hard
 
@@ -140,17 +142,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/tool-cache@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@actions/tool-cache@npm:2.0.1"
+"@actions/tool-cache@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@actions/tool-cache@npm:2.0.2"
   dependencies:
-    "@actions/core": ^1.2.6
+    "@actions/core": ^1.11.1
     "@actions/exec": ^1.0.0
     "@actions/http-client": ^2.0.1
     "@actions/io": ^1.1.1
     semver: ^6.1.0
-    uuid: ^3.3.2
-  checksum: 33f6393b9b163e4af2b9759e8d37cda4f018f10ddda3643355bb8a9f92d732e5bdff089cf8036b46d181e1ef2b3210b895b2f746fdf54487afe88f1d340aa9e1
+  checksum: c2bab4297be752bdda9dd61f8159a201ad0d37d026134b960f1edcc9418a80387f44d1f24a070fe992c44dcfc28a152f70600e76669bb0578132789a6f37a596
   languageName: node
   linkType: hard
 
@@ -1073,18 +1074,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.51.0":
-  version: 0.51.0
-  resolution: "@docker/actions-toolkit@npm:0.51.0"
+"@docker/actions-toolkit@npm:0.53.0":
+  version: 0.53.0
+  resolution: "@docker/actions-toolkit@npm:0.53.0"
   dependencies:
     "@actions/artifact": ^2.2.1
-    "@actions/cache": ^3.3.0
+    "@actions/cache": ^4.0.0
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.1.1
     "@actions/github": ^6.0.0
     "@actions/http-client": ^2.2.3
     "@actions/io": ^1.1.3
-    "@actions/tool-cache": ^2.0.1
+    "@actions/tool-cache": ^2.0.2
     "@azure/storage-blob": ^12.15.0
     "@octokit/core": ^5.1.0
     "@octokit/plugin-rest-endpoint-methods": ^10.4.0
@@ -1098,7 +1099,7 @@ __metadata:
     semver: ^7.6.3
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 03d25e8896fed69db608aad58995a41f57325c1e26c197040990c671dfbdeddd2483028d24c2d4505c010a87992780ee09d9e1f1141dda5662857050d644a99b
+  checksum: 9b14d8e0d17cbf52a38e66e85c1d04f599a64633aaaac550f9dcbed51567f7cc2c36ad2c748884fecf3355f25dc05b783e500e621014f43348a776f5433de927
   languageName: node
   linkType: hard
 
@@ -1901,7 +1902,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@protobuf-ts/plugin@npm:^2.2.3-alpha.1":
+"@protobuf-ts/plugin@npm:^2.2.3-alpha.1, @protobuf-ts/plugin@npm:^2.9.4":
   version: 2.9.4
   resolution: "@protobuf-ts/plugin@npm:2.9.4"
   dependencies:
@@ -3161,7 +3162,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@docker/actions-toolkit": 0.51.0
+    "@docker/actions-toolkit": 0.53.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
@@ -6621,15 +6622,6 @@ __metadata:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 474acf1146cb2701fe3b074892217553dfcf9a031280919ba1b8d651a068c9b15d863b7303cb15bd00a862b498e6cf4ad7b4a08fb134edd5a6f7641681cb54a2
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^3.3.2":
-  version: 3.4.0
-  resolution: "uuid@npm:3.4.0"
-  bin:
-    uuid: ./bin/uuid
-  checksum: 58de2feed61c59060b40f8203c0e4ed7fd6f99d42534a499f1741218a1dd0c129f4aa1de797bcf822c8ea5da7e4137aa3673431a96dae729047f7aca7b27866f
   languageName: node
   linkType: hard
 
