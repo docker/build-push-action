@@ -1074,9 +1074,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.53.0":
-  version: 0.53.0
-  resolution: "@docker/actions-toolkit@npm:0.53.0"
+"@docker/actions-toolkit@npm:0.54.0":
+  version: 0.54.0
+  resolution: "@docker/actions-toolkit@npm:0.54.0"
   dependencies:
     "@actions/artifact": ^2.2.1
     "@actions/cache": ^4.0.0
@@ -1096,10 +1096,10 @@ __metadata:
     he: ^1.2.0
     js-yaml: ^4.1.0
     jwt-decode: ^4.0.0
-    semver: ^7.6.3
+    semver: ^7.7.1
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 9b14d8e0d17cbf52a38e66e85c1d04f599a64633aaaac550f9dcbed51567f7cc2c36ad2c748884fecf3355f25dc05b783e500e621014f43348a776f5433de927
+  checksum: 1a01a61eb8526a89cd0289b2b5e7dbfcf9979f0a51b04ac3b99844ac3261d77fc609c3385844e15027a4f99c27fe833e24f7839fb0d67200a59205738eae31fa
   languageName: node
   linkType: hard
 
@@ -3162,7 +3162,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@docker/actions-toolkit": 0.53.0
+    "@docker/actions-toolkit": 0.54.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
@@ -5915,12 +5915,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.6.3":
-  version: 7.6.3
-  resolution: "semver@npm:7.6.3"
+"semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
   bin:
     semver: bin/semver.js
-  checksum: 4110ec5d015c9438f322257b1c51fe30276e5f766a3f64c09edd1d7ea7118ecbc3f379f3b69032bacf13116dc7abc4ad8ce0d7e2bd642e26b0d271b56b61a7d8
+  checksum: 586b825d36874007c9382d9e1ad8f93888d8670040add24a28e06a910aeebd673a2eb9e3bf169c6679d9245e66efb9057e0852e70d9daa6c27372aab1dda7104
   languageName: node
   linkType: hard
 
