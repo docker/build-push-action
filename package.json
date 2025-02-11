@@ -27,7 +27,7 @@
   "packageManager": "yarn@3.6.3",
   "dependencies": {
     "@actions/core": "^1.10.1",
-    "@buf/blacksmith_vm-agent.connectrpc_es": "^1.6.1-20241220192643-e85a9caa965d.2",
+    "@buf/blacksmith_vm-agent.connectrpc_es": "^1.6.1-20250209182455-7d83cfb8ddb1.2",
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",
     "@docker/actions-toolkit": "0.37.1",
