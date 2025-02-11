@@ -5,6 +5,8 @@ import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
 
+// Constants for configuration.
+const BUILDKIT_DAEMON_ADDR = 'tcp://127.0.0.1:1234';
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
 
@@ -54,7 +56,7 @@ async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
   const jsonConfig: TOML.JsonMap = {
     root: '/var/lib/buildkit',
     grpc: {
-      address: ['unix:///run/buildkit/buildkitd.sock']
+      address: [BUILDKIT_DAEMON_ADDR]
     },
     registry: {
       'docker.io': {
@@ -96,9 +98,7 @@ async function writeBuildkitdTomlFile(parallelism: number): Promise<void> {
 async function startBuildkitd(parallelism: number): Promise<string> {
   try {
     await writeBuildkitdTomlFile(parallelism);
-    await execAsync('sudo mkdir -p /run/buildkit');
-    await execAsync('sudo chmod 755 /run/buildkit');
-    const addr = 'unix:///run/buildkit/buildkitd.sock';
+    const addr = BUILDKIT_DAEMON_ADDR;
 
     const logStream = fs.createWriteStream('buildkitd.log');
     const buildkitd = spawn('sudo', ['buildkitd', '--debug', '--addr', addr, '--allow-insecure-entitlement', 'security.insecure', '--config=buildkitd.toml', '--allow-insecure-entitlement', 'network.host'], {
@@ -190,29 +190,13 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
   const buildkitdAddr = await startBuildkitd(parallelism);
   core.debug(`buildkitd daemon started at addr ${buildkitdAddr}`);
 
-  // Change permissions on the buildkitd socket to allow non-root access
-  const startTime = Date.now();
-  const timeout = buildkitdTimeoutMs;
-
-  while (Date.now() - startTime < timeout) {
-    if (fs.existsSync('/run/buildkit/buildkitd.sock')) {
-      // Change permissions on the buildkitd socket to allow non-root access
-      await execAsync(`sudo chmod 666 /run/buildkit/buildkitd.sock`);
-      break;
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Poll every 100ms
-  }
-
-  if (!fs.existsSync('/run/buildkit/buildkitd.sock')) {
-    throw new Error('buildkitd socket not found after 30s timeout');
-  }
   // Check that buildkit instance is ready by querying workers for up to 30s
   const startTimeBuildkitReady = Date.now();
   const timeoutBuildkitReady = buildkitdTimeoutMs;
 
   while (Date.now() - startTimeBuildkitReady < timeoutBuildkitReady) {
     try {
-      const {stdout} = await execAsync('sudo buildctl debug workers');
+      const {stdout} = await execAsync(`sudo buildctl --addr ${BUILDKIT_DAEMON_ADDR} debug workers`);
       const lines = stdout.trim().split('\n');
       if (lines.length > 1) {
         // Check if we have output lines beyond the header
@@ -226,7 +210,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
 
   // Final check after timeout.
   try {
-    const {stdout} = await execAsync('sudo buildctl debug workers');
+    const {stdout} = await execAsync(`sudo buildctl --addr ${BUILDKIT_DAEMON_ADDR} debug workers`);
     const lines = stdout.trim().split('\n');
     if (lines.length <= 1) {
       throw new Error('buildkit workers not ready after 15s timeout');
@@ -254,7 +238,7 @@ export async function startAndConfigureBuildkitd(parallelism: number): Promise<s
 export async function pruneBuildkitCache(): Promise<void> {
   try {
     const fourteenDaysInHours = 14 * 24;
-    await execAsync(`sudo buildctl prune --keep-duration ${fourteenDaysInHours}h --all`);
+    await execAsync(`sudo buildctl --addr ${BUILDKIT_DAEMON_ADDR} prune --keep-duration ${fourteenDaysInHours}h --all`);
     core.debug('Successfully pruned buildkit cache');
   } catch (error) {
     core.warning(`Error pruning buildkit cache: ${error.message}`);
