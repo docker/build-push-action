@@ -9,16 +9,10 @@ const config: Config.InitialOptions = {
     '^.+\\.ts$': 'ts-jest',
     '^.+\\.js$': 'babel-jest'
   },
-  transformIgnorePatterns: [
-    '/node_modules/(?!(@buf|@connectrpc)/)'
-  ],
+  transformIgnorePatterns: ['/node_modules/(?!(@buf|@connectrpc)/)'],
   verbose: true,
   collectCoverage: true,
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/__tests__/**'
-  ]
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/__tests__/**']
 };
 
 export default config;

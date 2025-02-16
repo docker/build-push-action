@@ -3,7 +3,7 @@ import * as main from '../main';
 import * as reporter from '../reporter';
 import {getDockerfilePath} from '../context';
 import * as setupBuilder from '../setup_builder';
-import { Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
+import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 jest.mock('@actions/core', () => ({
   debug: jest.fn(),
@@ -34,7 +34,9 @@ jest.mock('../setup_builder', () => ({
   ...jest.requireActual('../setup_builder'),
   startAndConfigureBuildkitd: jest.fn(),
   setupStickyDisk: jest.fn(),
-  getNumCPUs: jest.fn().mockResolvedValue(4)
+  getNumCPUs: jest.fn().mockResolvedValue(4),
+  leaveTailnet: jest.fn().mockResolvedValue(undefined),
+  getTailscaleIP: jest.fn()
 }));
 
 describe('startBlacksmithBuilder', () => {
@@ -42,7 +44,7 @@ describe('startBlacksmithBuilder', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockInputs = {nofallback: false};
+    mockInputs = {nofallback: false, platforms: []};
   });
 
   test('should handle missing dockerfile path with nofallback=false', async () => {
@@ -110,7 +112,7 @@ describe('startBlacksmithBuilder', () => {
       buildId: mockBuildId,
       exposeId: mockExposeId
     });
-    expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism);
+    expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism, []);
     expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 

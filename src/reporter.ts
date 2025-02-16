@@ -1,22 +1,18 @@
 import * as core from '@actions/core';
-import axios, {AxiosError, AxiosInstance, AxiosResponse } from 'axios';
+import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
 import axiosRetry from 'axios-retry';
 import {ExportRecordResponse} from '@docker/actions-toolkit/lib/types/buildx/history';
 import FormData from 'form-data';
-import { createClient } from "@connectrpc/connect";
-import { createGrpcTransport } from "@connectrpc/connect-node";
-import { StickyDiskService } from "@buf/blacksmith_vm-agent.connectrpc_es/stickydisk/v1/stickydisk_connect";
-import { Metric, Metric_MetricType } from "@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb";
+import {createClient} from '@connectrpc/connect';
+import {createGrpcTransport} from '@connectrpc/connect-node';
+import {StickyDiskService} from '@buf/blacksmith_vm-agent.connectrpc_es/stickydisk/v1/stickydisk_connect';
+import {Metric, Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 // Configure base axios instance for Blacksmith API.
 const createBlacksmithAPIClient = () => {
-  const apiUrl = process.env.BLACKSMITH_BACKEND_URL || (
-    process.env.BLACKSMITH_ENV?.includes('staging') 
-      ? 'https://stagingapi.blacksmith.sh' 
-      : 'https://api.blacksmith.sh'
-  );
+  const apiUrl = process.env.BLACKSMITH_BACKEND_URL || (process.env.BLACKSMITH_ENV?.includes('staging') ? 'https://stagingapi.blacksmith.sh' : 'https://api.blacksmith.sh');
   core.debug(`Using Blacksmith API URL: ${apiUrl}`);
-  
+
   const client = axios.create({
     baseURL: apiUrl,
     headers: {
@@ -30,8 +26,7 @@ const createBlacksmithAPIClient = () => {
     retries: 5,
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: (error: AxiosError) => {
-      return axiosRetry.isNetworkOrIdempotentRequestError(error) || 
-             (error.response?.status ? error.response.status >= 500 : false);
+      return axiosRetry.isNetworkOrIdempotentRequestError(error) || (error.response?.status ? error.response.status >= 500 : false);
     }
   });
 
@@ -41,7 +36,7 @@ const createBlacksmithAPIClient = () => {
 export function createBlacksmithAgentClient() {
   const transport = createGrpcTransport({
     baseUrl: 'http://192.168.127.1:5557',
-    httpVersion: '2',
+    httpVersion: '2'
   });
 
   return createClient(StickyDiskService, transport);
@@ -58,7 +53,7 @@ export async function reportBuildPushActionFailure(error?: Error, event?: string
     message: event ? `${event}: ${error?.message || ''}` : error?.message || '',
     warning: isWarning || false
   };
-  
+
   const client = createBlacksmithAPIClient();
   const response = await client.post('/stickydisks/report-failed', requestOptions);
   return response.data;
@@ -72,7 +67,7 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
 
   try {
     const agentClient = createBlacksmithAgentClient();
-    
+
     await agentClient.commitStickyDisk({
       exposeId: exposeId || '',
       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
@@ -175,22 +170,19 @@ export async function post(client: AxiosInstance, url: string, formData: FormDat
   return await client.post(url, formData, {
     headers: {
       ...client.defaults.headers.common,
-      ...(formData && { 'Content-Type': 'multipart/form-data' }),
+      ...(formData && {'Content-Type': 'multipart/form-data'})
     },
     signal: options?.signal
   });
 }
 
-export async function reportMetric(
-  metricType: Metric_MetricType,
-  value: number
-): Promise<void> {
+export async function reportMetric(metricType: Metric_MetricType, value: number): Promise<void> {
   try {
     const agentClient = createBlacksmithAgentClient();
-    
+
     const metric = new Metric({
       type: metricType,
-      value: { case: "intValue", value: BigInt(value) }
+      value: {case: 'intValue', value: BigInt(value)}
     });
 
     await agentClient.reportMetric({
