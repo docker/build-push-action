@@ -156,6 +156,7 @@ jobs:
 ## Examples
 
 * [Multi-platform image](https://docs.docker.com/build/ci/github-actions/multi-platform/)
+* [Distribute multi-platform build across runners](https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-multi-platform-build-across-runners)
 * [Secrets](https://docs.docker.com/build/ci/github-actions/secrets/)
 * [Push to multi-registries](https://docs.docker.com/build/ci/github-actions/push-multi-registries/)
 * [Manage tags and labels](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
@@ -170,6 +171,7 @@ jobs:
 * [SBOM and provenance attestations](https://docs.docker.com/build/ci/github-actions/attestations/)
 * [Annotations](https://docs.docker.com/build/ci/github-actions/annotations/)
 * [Reproducible builds](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
+* [Build checks](https://docs.docker.com/build/ci/github-actions/checks/#run-checks-with-dockerbuild-push-action)
 
 ## Summaries
 
