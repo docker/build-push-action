@@ -20,36 +20,12 @@ import * as context from './context';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs} from './setup_builder';
+import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
-
-async function joinTailnet(): Promise<void> {
-  const token = process.env.BLACKSMITH_TAILSCALE_TOKEN;
-  if (!token || token === 'unset') {
-    core.debug('BLACKSMITH_TAILSCALE_TOKEN environment variable not set, skipping tailnet join');
-    return;
-  }
-
-  try {
-    await execAsync(`sudo tailscale up --authkey=${token} --hostname=${process.env.VM_ID}`);
-
-    core.info('Successfully joined tailnet');
-  } catch (error) {
-    throw new Error(`Failed to join tailnet: ${error.message}`);
-  }
-}
-
-async function leaveTailnet(): Promise<void> {
-  try {
-    await execAsync('sudo tailscale down');
-  } catch (error) {
-    core.warning(`Error leaving tailnet: ${error.message}`);
-  }
-}
 
 async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
   let toolPath;
@@ -94,8 +70,6 @@ async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
  */
 export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{addr: string | null; buildId: string | null; exposeId: string}> {
   try {
-    await joinTailnet();
-
     const dockerfilePath = context.getDockerfilePath(inputs);
     if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
@@ -107,7 +81,7 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     const parallelism = await getNumCPUs();
 
     const buildkitdStartTime = Date.now();
-    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism);
+    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, inputs.platforms);
     const buildkitdDurationMs = Date.now() - buildkitdStartTime;
     await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_READY_DURATION_MS, buildkitdDurationMs);
 
@@ -128,6 +102,8 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
 
     core.warning(`${errorMessage}. Falling back to a local build.`);
     return {addr: null, buildId: null, exposeId: ''};
+  } finally {
+    await leaveTailnet();
   }
 }
 
