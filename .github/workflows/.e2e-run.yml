@@ -39,6 +39,9 @@ jobs:
       matrix:
         include:
           -
+            buildx_version: edge
+            buildkit_image: moby/buildkit:latest
+          -
             buildx_version: latest
             buildkit_image: moby/buildkit:buildx-stable-1
           -

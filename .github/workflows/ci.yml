@@ -24,8 +24,8 @@ on:
   pull_request:
 
 env:
-  BUILDX_VERSION: latest
-  BUILDKIT_IMAGE: moby/buildkit:buildx-stable-1
+  BUILDX_VERSION: edge
+  BUILDKIT_IMAGE: moby/buildkit:latest
 
 jobs:
   minimal:
@@ -565,6 +565,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - buildx: edge
+            buildkit: moby/buildkit:latest
           - buildx: latest
             buildkit: moby/buildkit:buildx-stable-1
           - buildx: latest
@@ -1468,6 +1470,7 @@ jobs:
       fail-fast: false
       matrix:
         buildx-version:
+          - edge
           - latest
           - v0.14.1
     steps:
