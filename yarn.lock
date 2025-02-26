@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/artifact@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "@actions/artifact@npm:2.2.1"
+"@actions/artifact@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "@actions/artifact@npm:2.2.2"
   dependencies:
     "@actions/core": ^1.10.0
     "@actions/github": ^5.1.1
@@ -27,15 +27,14 @@ __metadata:
     "@protobuf-ts/plugin": ^2.2.3-alpha.1
     archiver: ^7.0.1
     jwt-decode: ^3.1.2
-    twirp-ts: ^2.5.0
     unzip-stream: ^0.3.1
-  checksum: 6ce4e62d941f17743c845637cdd832ca34c77efe0c31cf7f6ab3ad0531e54e62d4379198e8af5e84463b5f5ae0bc0ea11d41cc77c5fae7e511c7ef01742892ea
+  checksum: 1501b3d0ceb671f370786ccf70014de9586c5a78c95d235248fc16c73bf928f8de2aa932a679258f6d9bc2f2e570648d830551af9f063298f05d19f3330b33bc
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "@actions/cache@npm:4.0.1"
+"@actions/cache@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@actions/cache@npm:4.0.2"
   dependencies:
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.0.1
@@ -47,7 +46,7 @@ __metadata:
     "@azure/storage-blob": ^12.13.0
     "@protobuf-ts/plugin": ^2.9.4
     semver: ^6.3.1
-  checksum: ca2cc59c8682817788f387bdb83279e1924dece32cb5a0789b0d57837c317caf35a90ec240f7671798ca3bf620a72085ddbdc86ef1c309a79e4b8efe73074bae
+  checksum: 208f11238a26194f331b329bb99d50a87c1a3ccef1dbae181e5c142b3faf41715203e0c5cbc491519d3d97540a68fbd418c25fb6e16caabf76248c40867c02b4
   languageName: node
   linkType: hard
 
@@ -1073,12 +1072,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.55.0":
-  version: 0.55.0
-  resolution: "@docker/actions-toolkit@npm:0.55.0"
+"@docker/actions-toolkit@npm:0.56.0":
+  version: 0.56.0
+  resolution: "@docker/actions-toolkit@npm:0.56.0"
   dependencies:
-    "@actions/artifact": ^2.2.1
-    "@actions/cache": ^4.0.1
+    "@actions/artifact": ^2.2.2
+    "@actions/cache": ^4.0.2
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.1.1
     "@actions/github": ^6.0.0
@@ -1098,7 +1097,7 @@ __metadata:
     semver: ^7.7.1
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 1d596fa95e26273d8974f9d3310018b0a0bdc5e1994c8e088a148b17298ec6bf398ed2a257b9c6eee221a095168d05ea81ce3f0b5d6fd422550dce4100529408
+  checksum: 0f1b569f8bb206399f8c26e566c78e30e4a311bbd64486016e7fa1d35fbbb4c94d4f55afa6b711afa4b41c5835b40b038f48c3d1bfdfdc6f7c6680973e922d9e
   languageName: node
   linkType: hard
 
@@ -1891,7 +1890,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@protobuf-ts/plugin-framework@npm:^2.0.7, @protobuf-ts/plugin-framework@npm:^2.9.4":
+"@protobuf-ts/plugin-framework@npm:^2.9.4":
   version: 2.9.4
   resolution: "@protobuf-ts/plugin-framework@npm:2.9.4"
   dependencies:
@@ -2770,16 +2769,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"camel-case@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "camel-case@npm:4.1.2"
-  dependencies:
-    pascal-case: ^3.1.2
-    tslib: ^2.0.3
-  checksum: bcbd25cd253b3cbc69be3f535750137dbf2beb70f093bdc575f73f800acc8443d34fd52ab8f0a2413c34f1e8203139ffc88428d8863e4dfe530cfb257a379ad6
-  languageName: node
-  linkType: hard
-
 "camelcase@npm:^5.3.1":
   version: 5.3.1
   resolution: "camelcase@npm:5.3.1"
@@ -2936,13 +2925,6 @@ __metadata:
   dependencies:
     delayed-stream: ~1.0.0
   checksum: 49fa4aeb4916567e33ea81d088f6584749fc90c7abec76fd516bf1c5aa5c79f3584b5ba3de6b86d26ddd64bae5329c4c7479343250cfe71c75bb366eae53bb7c
-  languageName: node
-  linkType: hard
-
-"commander@npm:^6.1.0":
-  version: 6.2.1
-  resolution: "commander@npm:6.2.1"
-  checksum: d7090410c0de6bc5c67d3ca41c41760d6d268f3c799e530aafb73b7437d1826bbf0d2a3edac33f8b57cc9887b4a986dce307fa5557e109be40eadb7c43b21742
   languageName: node
   linkType: hard
 
@@ -3161,7 +3143,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@docker/actions-toolkit": 0.55.0
+    "@docker/actions-toolkit": 0.56.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
@@ -3185,18 +3167,6 @@ __metadata:
   dependencies:
     esutils: ^2.0.2
   checksum: fd7673ca77fe26cd5cba38d816bc72d641f500f1f9b25b83e8ce28827fe2da7ad583a8da26ab6af85f834138cf8dae9f69b0cd6ab925f52ddab1754db44d99ce
-  languageName: node
-  linkType: hard
-
-"dot-object@npm:^2.1.4":
-  version: 2.1.5
-  resolution: "dot-object@npm:2.1.5"
-  dependencies:
-    commander: ^6.1.0
-    glob: ^7.1.6
-  bin:
-    dot-object: bin/dot-object
-  checksum: 3e5a681bbea32dfc1cd0b1254adc93531bd462f7474a355e981738ef37253e4bc5c9482926289ef4d3c6ef9adb0a7ed894725ed3a69aa22063343dc2a57dd764
   languageName: node
   linkType: hard
 
@@ -3849,20 +3819,6 @@ __metadata:
     once: ^1.3.0
     path-is-absolute: ^1.0.0
   checksum: b61f48973bbdcf5159997b0874a2165db572b368b931135832599875919c237fc05c12984e38fe828e69aa8a921eb0e8a4997266211c517c9cfaae8a93988bb8
-  languageName: node
-  linkType: hard
-
-"glob@npm:^7.1.6":
-  version: 7.2.3
-  resolution: "glob@npm:7.2.3"
-  dependencies:
-    fs.realpath: ^1.0.0
-    inflight: ^1.0.4
-    inherits: 2
-    minimatch: ^3.1.1
-    once: ^1.3.0
-    path-is-absolute: ^1.0.0
-  checksum: 29452e97b38fa704dabb1d1045350fb2467cf0277e155aa9ff7077e90ad81d1ea9d53d3ee63bd37c05b09a065e90f16aec4a65f5b8de401d1dac40bc5605d133
   languageName: node
   linkType: hard
 
@@ -4947,15 +4903,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lower-case@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "lower-case@npm:2.0.2"
-  dependencies:
-    tslib: ^2.0.3
-  checksum: 83a0a5f159ad7614bee8bf976b96275f3954335a84fad2696927f609ddae902802c4f3312d86668722e668bef41400254807e1d3a7f2e8c3eede79691aa1f010
-  languageName: node
-  linkType: hard
-
 "lru-cache@npm:^10.0.1":
   version: 10.2.2
   resolution: "lru-cache@npm:10.2.2"
@@ -5080,7 +5027,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^3.0.4, minimatch@npm:^3.0.5, minimatch@npm:^3.1.1, minimatch@npm:^3.1.2":
+"minimatch@npm:^3.0.4, minimatch@npm:^3.0.5, minimatch@npm:^3.1.2":
   version: 3.1.2
   resolution: "minimatch@npm:3.1.2"
   dependencies:
@@ -5257,16 +5204,6 @@ __metadata:
   version: 2.6.2
   resolution: "neo-async@npm:2.6.2"
   checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
-  languageName: node
-  linkType: hard
-
-"no-case@npm:^3.0.4":
-  version: 3.0.4
-  resolution: "no-case@npm:3.0.4"
-  dependencies:
-    lower-case: ^2.0.2
-    tslib: ^2.0.3
-  checksum: 0b2ebc113dfcf737d48dde49cfebf3ad2d82a8c3188e7100c6f375e30eafbef9e9124aadc3becef237b042fd5eb0aad2fd78669c20972d045bbe7fea8ba0be5c
   languageName: node
   linkType: hard
 
@@ -5464,16 +5401,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pascal-case@npm:^3.1.2":
-  version: 3.1.2
-  resolution: "pascal-case@npm:3.1.2"
-  dependencies:
-    no-case: ^3.0.4
-    tslib: ^2.0.3
-  checksum: ba98bfd595fc91ef3d30f4243b1aee2f6ec41c53b4546bfa3039487c367abaa182471dcfc830a1f9e1a0df00c14a370514fa2b3a1aacc68b15a460c31116873e
-  languageName: node
-  linkType: hard
-
 "path-exists@npm:^4.0.0":
   version: 4.0.0
   resolution: "path-exists@npm:4.0.0"
@@ -5509,13 +5436,6 @@ __metadata:
     lru-cache: ^10.2.0
     minipass: ^5.0.0 || ^6.0.2 || ^7.0.0
   checksum: 6739b4290f7d1a949c61c758b481c07ac7d1a841964c68cf5e1fa153d7e18cbde4872b37aadf9c5173c800d627f219c47945859159de36c977dd82419997b9b8
-  languageName: node
-  linkType: hard
-
-"path-to-regexp@npm:^6.2.0":
-  version: 6.3.0
-  resolution: "path-to-regexp@npm:6.3.0"
-  checksum: eca78602e6434a1b6799d511d375ec044e8d7e28f5a48aa5c28d57d8152fb52f3fc62fb1cfc5dfa2198e1f041c2a82ed14043d75740a2fe60e91b5089a153250
   languageName: node
   linkType: hard
 
@@ -5580,15 +5500,6 @@ __metadata:
   dependencies:
     fast-diff: ^1.1.2
   checksum: 00ce8011cf6430158d27f9c92cfea0a7699405633f7f1d4a45f07e21bf78e99895911cbcdc3853db3a824201a7c745bd49bfea8abd5fb9883e765a90f74f8392
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^2.5.1":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
-  bin:
-    prettier: bin-prettier.js
-  checksum: b49e409431bf129dd89238d64299ba80717b57ff5a6d1c1a8b1a28b590d998a34e083fa13573bc732bb8d2305becb4c9a4407f8486c81fa7d55100eb08263cf8
   languageName: node
   linkType: hard
 
@@ -6402,27 +6313,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-poet@npm:^4.5.0":
-  version: 4.15.0
-  resolution: "ts-poet@npm:4.15.0"
-  dependencies:
-    lodash: ^4.17.15
-    prettier: ^2.5.1
-  checksum: 93490e8b5921e23ac65afdecc00b4dd53f3560d7d9c19778a3f0bd9a300ba7ca71585a989d564508313bc73e8c431413714d513ebca2d5c428f909ec36bcf6e9
-  languageName: node
-  linkType: hard
-
 "tslib@npm:^1.10.0":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: dbe628ef87f66691d5d2959b3e41b9ca0045c3ee3c7c7b906cc1e328b39f199bb1ad9e671c39025bd56122ac57dfbf7385a94843b1cc07c60a4db74795829acd
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^2.0.3, tslib@npm:^2.6.2":
-  version: 2.6.2
-  resolution: "tslib@npm:2.6.2"
-  checksum: 329ea56123005922f39642318e3d1f0f8265d1e7fcb92c633e0809521da75eeaca28d2cf96d7248229deb40e5c19adf408259f4b9640afd20d13aecc1430f3ad
   languageName: node
   linkType: hard
 
@@ -6433,34 +6327,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tslib@npm:^2.6.2":
+  version: 2.6.2
+  resolution: "tslib@npm:2.6.2"
+  checksum: 329ea56123005922f39642318e3d1f0f8265d1e7fcb92c633e0809521da75eeaca28d2cf96d7248229deb40e5c19adf408259f4b9640afd20d13aecc1430f3ad
+  languageName: node
+  linkType: hard
+
 "tunnel@npm:0.0.6, tunnel@npm:^0.0.6":
   version: 0.0.6
   resolution: "tunnel@npm:0.0.6"
   checksum: c362948df9ad34b649b5585e54ce2838fa583aa3037091aaed66793c65b423a264e5229f0d7e9a95513a795ac2bd4cb72cda7e89a74313f182c1e9ae0b0994fa
-  languageName: node
-  linkType: hard
-
-"twirp-ts@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "twirp-ts@npm:2.5.0"
-  dependencies:
-    "@protobuf-ts/plugin-framework": ^2.0.7
-    camel-case: ^4.1.2
-    dot-object: ^2.1.4
-    path-to-regexp: ^6.2.0
-    ts-poet: ^4.5.0
-    yaml: ^1.10.2
-  peerDependencies:
-    "@protobuf-ts/plugin": ^2.5.0
-    ts-proto: ^1.81.3
-  peerDependenciesMeta:
-    "@protobuf-ts/plugin":
-      optional: true
-    ts-proto:
-      optional: true
-  bin:
-    protoc-gen-twirp_ts: protoc-gen-twirp_ts
-  checksum: e7cf87d77ab4d2cd327c9d8307e82ff61afc5af56883aed5fb6ac7d57999b646945e11158be87c10f0340aeef2efde6eb896f2efd60599498f17b4f310d66e4f
   languageName: node
   linkType: hard
 
@@ -6787,13 +6664,6 @@ __metadata:
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
-  languageName: node
-  linkType: hard
-
-"yaml@npm:^1.10.2":
-  version: 1.10.2
-  resolution: "yaml@npm:1.10.2"
-  checksum: ce4ada136e8a78a0b08dc10b4b900936912d15de59905b2bf415b4d33c63df1d555d23acb2a41b23cf9fb5da41c256441afca3d6509de7247daa062fd2c5ea5f
   languageName: node
   linkType: hard
 
