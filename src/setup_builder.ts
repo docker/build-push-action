@@ -195,15 +195,25 @@ export async function joinTailnet(): Promise<void> {
 export async function leaveTailnet(): Promise<void> {
   try {
     // Check if we're part of a tailnet before trying to leave
-    const {stdout} = await execAsync('sudo tailscale status');
-    if (stdout.trim() !== '') {
-      await execAsync('sudo tailscale down');
-      core.debug('Successfully left tailnet');
-    } else {
-      core.debug('Not part of a tailnet, skipping leave');
+    try {
+      const {stdout} = await execAsync('sudo tailscale status');
+      if (stdout.trim() !== '') {
+        await execAsync('sudo tailscale down');
+        core.debug('Successfully left tailnet.');
+      } else {
+        core.debug('Not part of a tailnet, skipping leave.');
+      }
+    } catch (error: unknown) {
+      // Type guard for ExecException which has the code property
+      if (error && typeof error === 'object' && 'code' in error && error.code === 1) {
+        core.debug('Not part of a tailnet, skipping leave.');
+        return;
+      }
+      // Any other exit code indicates a real error
+      throw error;
     }
   } catch (error) {
-    core.warning(`Error leaving tailnet: ${error.message}`);
+    core.warning(`Error leaving tailnet: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
