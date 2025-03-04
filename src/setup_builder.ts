@@ -225,10 +225,11 @@ const buildkitdTimeoutMs = 30000;
 export async function startAndConfigureBuildkitd(parallelism: number, platforms?: string[]): Promise<string> {
   // For multi-platform builds, we need to use the tailscale IP
   let buildkitdAddr = BUILDKIT_DAEMON_ADDR;
+  const nativeMultiPlatformBuildsEnabled = false && (platforms?.length ?? 0 > 1);
 
   // If we are doing a multi-platform build, we need to join the tailnet and bind buildkitd to the tailscale IP.
   // We do this so that the remote VM can join the same buildkitd cluster as a worker.
-  if (platforms && platforms.length > 1) {
+  if (nativeMultiPlatformBuildsEnabled) {
     await joinTailnet();
     const tailscaleIP = await getTailscaleIP();
     if (!tailscaleIP) {
@@ -241,11 +242,6 @@ export async function startAndConfigureBuildkitd(parallelism: number, platforms?
   const addr = await startBuildkitd(parallelism, buildkitdAddr);
   core.debug(`buildkitd daemon started at addr ${addr}`);
 
-  if (platforms && platforms.length > 1) {
-    // TODO(adityamaru): Queue docker job for multi-platform build with a well known tailscale hostname.
-    // TODO(adityamaru): Wait until the VM joins the tailnet.
-  }
-
   // Check that buildkit instance is ready by querying workers for up to 30s
   const startTimeBuildkitReady = Date.now();
   const timeoutBuildkitReady = buildkitdTimeoutMs;
@@ -255,7 +251,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, platforms?
       const {stdout} = await execAsync(`sudo buildctl --addr ${addr} debug workers`);
       const lines = stdout.trim().split('\n');
       // For multi-platform builds, we need at least 2 workers
-      const requiredWorkers = platforms && platforms.length > 1 ? 2 : 1;
+      const requiredWorkers = nativeMultiPlatformBuildsEnabled ? 2 : 1;
       if (lines.length > requiredWorkers) {
         core.info(`Found ${lines.length - 1} workers, required ${requiredWorkers}`);
         break;
@@ -270,7 +266,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, platforms?
   try {
     const {stdout} = await execAsync(`sudo buildctl --addr ${addr} debug workers`);
     const lines = stdout.trim().split('\n');
-    const requiredWorkers = platforms && platforms.length > 1 ? 2 : 1;
+    const requiredWorkers = nativeMultiPlatformBuildsEnabled ? 2 : 1;
     if (lines.length <= requiredWorkers) {
       throw new Error(`buildkit workers not ready after ${buildkitdTimeoutMs}ms timeout. Found ${lines.length - 1} workers, required ${requiredWorkers}`);
     }
