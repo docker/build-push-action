@@ -108,27 +108,15 @@ export function getDockerfilePath(inputs: Inputs): string | null {
 
     if (inputs.file) {
       // If context is git context, just use the file path directly
-      dockerfilePath = context === Context.gitContext() ? inputs.file : joinNonOverlapping(context, inputs.file);
+      dockerfilePath = context === Context.gitContext() ? path.normalize(inputs.file) : joinNonOverlapping(context, inputs.file);
     } else if (inputs['dockerfile']) {
       // If context is git context, just use the dockerfile path directly
-      dockerfilePath = context === Context.gitContext() ? inputs['dockerfile'] : joinNonOverlapping(context, inputs['dockerfile']);
+      dockerfilePath = context === Context.gitContext() ? path.normalize(inputs['dockerfile']) : joinNonOverlapping(context, inputs['dockerfile']);
     } else {
       // If context is git context, just use 'Dockerfile'
       dockerfilePath = context === Context.gitContext() ? 'Dockerfile' : joinNonOverlapping(context, 'Dockerfile');
     }
-
-    // Verify the file exists
-    try {
-      const stats = fs.statSync(dockerfilePath);
-      if (!stats.isFile()) {
-        core.warning(`Path exists but is not a file: ${dockerfilePath}`);
-        return null;
-      }
-      return dockerfilePath;
-    } catch (statError) {
-      core.warning(`Dockerfile not found at path: ${dockerfilePath}`);
-      return null;
-    }
+    return dockerfilePath;
   } catch (error) {
     core.warning(`Error getting dockerfile path: ${(error as Error).message}`);
     return null;
