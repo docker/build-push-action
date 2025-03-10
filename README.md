@@ -185,6 +185,19 @@ additional details about the build, including build stats, logs, outputs, and
 more. The build record can be imported to Docker Desktop for inspecting the
 build in greater detail.
 
+> [!WARNING]
+>
+> If you're using the [`actions/download-artifact`](https://github.com/actions/download-artifact)
+> action in your workflow, you need to ignore the build record artifacts
+> if `name` and `pattern` inputs are not specified ([defaults to download all artifacts](https://github.com/actions/download-artifact?tab=readme-ov-file#download-all-artifacts) of the workflow),
+> otherwise the action will fail:
+> ```yaml
+> - uses: actions/download-artifact@v4
+>   with:
+>     pattern: "!*.dockerbuild"
+> ```
+> More info: https://github.com/actions/toolkit/pull/1874
+
 Summaries are enabled by default, but can be disabled with the
 `DOCKER_BUILD_SUMMARY` [environment variable](#environment-variables).
 
