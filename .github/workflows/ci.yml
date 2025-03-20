@@ -15,8 +15,6 @@ on:
         description: 'BuildKit image'
         default: 'moby/buildkit:buildx-stable-1'
         required: false
-  schedule:
-    - cron: '0 10 * * *'
   push:
     branches:
       - 'master'

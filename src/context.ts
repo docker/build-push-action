@@ -41,6 +41,9 @@ export interface Inputs {
   target: string;
   ulimit: string[];
   'github-token': string;
+  apiKey: string;
+  profileName: string;
+  timeout: string;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -77,7 +80,10 @@ export async function getInputs(): Promise<Inputs> {
     tags: Util.getInputList('tags'),
     target: core.getInput('target'),
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
-    'github-token': core.getInput('github-token')
+    'github-token': core.getInput('github-token'),
+    apiKey: core.getInput('api-key'),
+    profileName: core.getInput('profile-name'),
+    timeout: core.getInput('timeout')
   };
 }
 
