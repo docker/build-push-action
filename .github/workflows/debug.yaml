@@ -26,3 +26,4 @@ jobs:
           tags: test-image-run-${{ matrix.run_number }}
           push: false
           platforms: linux/amd64,linux/arm64
+          profile-name: test-multi-builder
