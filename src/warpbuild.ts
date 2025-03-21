@@ -171,7 +171,7 @@ export class WarpBuildRemoteBuilders {
 
             // Not a retriable error
             const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
-            throw new Error(`API Error: HTTP Status ${statusCode} - ${errorData.message || 'Unknown error'}`);
+            throw new Error(`API Error: HTTP Status ${statusCode} - ${errorData.description || errorData.message || 'Unknown error'}`);
           }
 
           const data = (await response.json()) as AssignBuilderResponse;
