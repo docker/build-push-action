@@ -1,9 +1,8 @@
-# https://help.github.com/en/articles/metadata-syntax-for-github-actions
-name: Build and push Docker images
-description: Build and push Docker images with Buildx
-author: docker
+name: Build and push Docker images with WarpBuild
+description: Build and push Docker images with Buildx and WarpBuild's remote builders
+author: WarpBuilds
 branding:
-  icon: 'anchor'
+  icon: 'cpu'
   color: 'blue'
 
 inputs:
