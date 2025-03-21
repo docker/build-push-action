@@ -25,7 +25,7 @@ jobs:
           file: __tests__/Dockerfile
           tags: test-image-run-${{ matrix.run_number }}
           push: false
-          platforms: linux/arm64
-          profile-name: test-multi-builder-wrong
+          platforms: linux/amd64,linux/arm64
+          profile-name: test-multi-builder
 
 
