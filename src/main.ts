@@ -17,7 +17,11 @@ import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 
+import {WarpBuildRemoteBuilders, performCleanup} from './warpbuild';
+
 import * as context from './context';
+
+let remoteBuilders: WarpBuildRemoteBuilders;
 
 actionsToolkit.run(
   // main
@@ -28,6 +32,17 @@ actionsToolkit.run(
     stateHelper.setInputs(inputs);
 
     const toolkit = new Toolkit();
+    const parsedTimeout = parseInt(inputs.timeout);
+
+    remoteBuilders = new WarpBuildRemoteBuilders({
+      apiKey: inputs.apiKey,
+      profileName: inputs.profileName,
+      timeout: parsedTimeout
+    });
+
+    // We don't need to wait for the builder assignment to complete here
+    // because the setupBuilders() method will wait for it if needed
+    remoteBuilders.assignBuilder();
 
     await core.group(`GitHub Actions runtime token ACs`, async () => {
       try {
@@ -81,6 +96,8 @@ actionsToolkit.run(
     await core.group(`Buildx version`, async () => {
       await toolkit.buildx.printVersion();
     });
+
+    await remoteBuilders.setupBuilders();
 
     let builder: BuilderInfo;
     await core.group(`Builder info`, async () => {
@@ -186,6 +203,10 @@ actionsToolkit.run(
     if (err) {
       throw err;
     }
+
+    if (remoteBuilders) {
+      remoteBuilders.saveCleanupState();
+    }
   },
   // post
   async () => {
@@ -228,6 +249,8 @@ actionsToolkit.run(
         fs.rmSync(stateHelper.tmpDir, {recursive: true});
       });
     }
+
+    await performCleanup();
   }
 );
 
@@ -258,13 +281,16 @@ function buildChecksAnnotationsEnabled(): boolean {
 }
 
 function buildSummaryEnabled(): boolean {
-  if (process.env.DOCKER_BUILD_NO_SUMMARY) {
-    core.warning('DOCKER_BUILD_NO_SUMMARY is deprecated. Set DOCKER_BUILD_SUMMARY to false instead.');
-    return !Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
-  } else if (process.env.DOCKER_BUILD_SUMMARY) {
-    return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
-  }
-  return true;
+  // WarpBuild remote builders don't support build summary
+  return false;
+
+  // if (process.env.DOCKER_BUILD_NO_SUMMARY) {
+  //   core.warning('DOCKER_BUILD_NO_SUMMARY is deprecated. Set DOCKER_BUILD_SUMMARY to false instead.');
+  //   return !Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
+  // } else if (process.env.DOCKER_BUILD_SUMMARY) {
+  //   return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
+  // }
+  // return true;
 }
 
 function buildRecordUploadEnabled(): boolean {

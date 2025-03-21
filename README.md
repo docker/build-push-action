@@ -1,17 +1,13 @@
-[![GitHub release](https://img.shields.io/github/release/docker/build-push-action.svg?style=flat-square)](https://github.com/docker/build-push-action/releases/latest)
-[![GitHub marketplace](https://img.shields.io/badge/marketplace-build--and--push--docker--images-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/build-and-push-docker-images)
-[![CI workflow](https://img.shields.io/github/actions/workflow/status/docker/build-push-action/ci.yml?branch=master&label=ci&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=ci)
-[![Test workflow](https://img.shields.io/github/actions/workflow/status/docker/build-push-action/test.yml?branch=master&label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
-[![Codecov](https://img.shields.io/codecov/c/github/docker/build-push-action?logo=codecov&style=flat-square)](https://codecov.io/gh/docker/build-push-action)
+# Build and push Docker images with WarpBuild
 
 ## About
 
-GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx)
+WarpBuild's fork of the `docker/build-push-action` to build and push Docker images with [Buildx](https://github.com/docker/buildx) and WarpBuild's [remote builders](https://docs.warpbuild.com/docker-builders)
 with full support of the features provided by [Moby BuildKit](https://github.com/moby/buildkit)
 builder toolkit. This includes multi-platform build, secrets, remote cache, etc.
 and different builder deployment/namespacing options.
 
-![Screenshot](.github/build-push-action.png)
+![Screenshot](https://docs.warpbuild.com/assets/images/benchmarks-3494176636319a86b311a3ea11541b61.png)
 
 ___
 
@@ -29,17 +25,15 @@ ___
 
 ## Usage
 
-In the examples below we are also using 3 other actions:
+The usage is the same as the original `docker/build-push-action`, but with the added benefit of using powerful WarpBuild's remote docker builders.
 
-* [`setup-buildx`](https://github.com/docker/setup-buildx-action) action will
-  create and boot a builder using by default the [`docker-container` driver](https://docs.docker.com/build/building/drivers/docker-container/).
-  This is **not required but recommended** using it to be able to build
-  multi-platform images, export cache, etc.
-* [`setup-qemu`](https://github.com/docker/setup-qemu-action) action can be
-  useful if you want to add emulation support with QEMU to be able to build
-  against more platforms. 
-* [`login`](https://github.com/docker/login-action) action will take care to
-  log in against a Docker registry.
+> Note: We recommend to **not** use `docker/setup-buildx-action` as this action will automatically setup builders for you.
+
+Additionally, this action requires an additional input called `profile-name` which is the name of the WarpBuild profile to use. Refer to the [WarpBuild documentation](https://docs.warpbuild.com/docker-builders#see-it-in-action) for more information on how to create and use profiles.
+
+> Note: The `profile-name` input is required.
+
+If you want to use this action on non-WarpBuild runners, you will also need to provide the `api-key` input. Learn more about creating an API key [here](https://docs.warpbuild.com/api-keys#creating-an-api-key).
 
 ### Git context
 
@@ -58,7 +52,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: warp-ubuntu-latest-x64-2x
     steps:
       -
         name: Login to Docker Hub
@@ -70,14 +64,12 @@ jobs:
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: Warpbuilds/build-push-action@v6
         with:
           push: true
           tags: user/app:latest
+          profile-name: super-fast-builder
 ```
 
 Be careful because **any file mutation in the steps that precede the build step
@@ -94,11 +86,12 @@ to the default Git context:
 ```yaml
       -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: Warpbuilds/build-push-action@v6
         with:
           context: "{{defaultContext}}:mysubdir"
           push: true
           tags: user/app:latest
+          profile-name: super-fast-builder
 ```
 
 Building from the current repository automatically uses the [GitHub Token](https://docs.github.com/en/actions/security-guides/automatic-token-authentication),
@@ -109,10 +102,11 @@ named `GIT_AUTH_TOKEN` to be able to authenticate against it with Buildx:
 ```yaml
       -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: Warpbuilds/build-push-action@v6
         with:
           push: true
           tags: user/app:latest
+          profile-name: super-fast-builder
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.MYTOKEN }}
 ```
@@ -127,7 +121,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: warp-ubuntu-latest-x64-2x
     steps:
       -
         name: Checkout
@@ -146,11 +140,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
       -
         name: Build and push
-        uses: docker/build-push-action@v6
+        uses: Warpbuilds/build-push-action@v6
         with:
           context: .
           push: true
           tags: user/app:latest
+          profile-name: super-fast-builder
 ```
 
 ## Examples
@@ -173,36 +168,7 @@ jobs:
 
 ## Summaries
 
-This action generates a [job summary](https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/)
-that provides a detailed overview of the build execution. The summary shows an
-overview of all the steps executed during the build, including the build inputs
-and eventual errors.
-
-![build-push-action job summary](./.github/build-push-summary.png)
-
-The summary also includes a link for downloading the build record with
-additional details about the build, including build stats, logs, outputs, and
-more. The build record can be imported to Docker Desktop for inspecting the
-build in greater detail.
-
-> [!WARNING]
->
-> If you're using the [`actions/download-artifact`](https://github.com/actions/download-artifact)
-> action in your workflow, you need to ignore the build record artifacts
-> if `name` and `pattern` inputs are not specified ([defaults to download all artifacts](https://github.com/actions/download-artifact?tab=readme-ov-file#download-all-artifacts) of the workflow),
-> otherwise the action will fail:
-> ```yaml
-> - uses: actions/download-artifact@v4
->   with:
->     pattern: "!*.dockerbuild"
-> ```
-> More info: https://github.com/actions/toolkit/pull/1874
-
-Summaries are enabled by default, but can be disabled with the
-`DOCKER_BUILD_SUMMARY` [environment variable](#environment-variables).
-
-For more information about summaries, refer to the
-[documentation](https://docs.docker.com/go/build-summary/).
+Build summaries are not supported at the moment.
 
 ## Customizing
 
@@ -227,7 +193,7 @@ The following inputs can be used as `step.with` keys:
 | `add-hosts`        | List/CSV    | List of [customs host-to-IP mapping](https://docs.docker.com/engine/reference/commandline/build/#add-entries-to-container-hosts-file---add-host) (e.g., `docker:10.180.0.1`)      |
 | `allow`            | List/CSV    | List of [extra privileged entitlement](https://docs.docker.com/engine/reference/commandline/buildx_build/#allow) (e.g., `network.host,security.insecure`)                         |
 | `annotations`      | List        | List of annotation to set to the image                                                                                                                                            |
-| `attests`          | List        | List of [attestation](https://docs.docker.com/build/attestations/) parameters (e.g., `type=sbom,generator=image`)                                                                 | 
+| `attests`          | List        | List of [attestation](https://docs.docker.com/build/attestations/) parameters (e.g., `type=sbom,generator=image`)                                                                 |
 | `builder`          | String      | Builder instance (see [setup-buildx](https://github.com/docker/setup-buildx-action) action)                                                                                       |
 | `build-args`       | List        | List of [build-time variables](https://docs.docker.com/engine/reference/commandline/buildx_build/#build-arg)                                                                      |
 | `build-contexts`   | List        | List of additional [build contexts](https://docs.docker.com/engine/reference/commandline/buildx_build/#build-context) (e.g., `name=path`)                                         |
@@ -281,7 +247,6 @@ The following outputs are available:
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
-## Contributing
+## Support
 
-Want to contribute? Awesome! You can find information about contributing to
-this project in the [CONTRIBUTING.md](/.github/CONTRIBUTING.md)
+If you need help, please reach out to us on [Email](mailto:support@warpbuild.com) or [Website](https://app.warpbuild.com).

@@ -40,7 +40,7 @@ on:
 
 jobs:
   containerd:
-    runs-on: ubuntu-latest
+    runs-on: warp-ubuntu-latest-x64-2x
     steps:
       -
         name: Checkout
@@ -49,16 +49,11 @@ jobs:
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          buildkitd-flags: --debug
-      -
         name: Set up containerd
         uses: crazy-max/ghaction-setup-containerd@v2
       -
         name: Build Docker image
-        uses: docker/build-push-action@v6
+        uses: Warpbuilds/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -111,10 +106,11 @@ to generate sanitized tags:
     tags: latest
 
 - name: Build and push
-  uses: docker/build-push-action@v6
+  uses: Warpbuilds/build-push-action@v6
   with:
     context: .
     push: true
+    profile-name: super-fast-builder
     tags: ${{ steps.meta.outputs.tags }}
 ```
 
@@ -129,9 +125,10 @@ Or a dedicated step to sanitize the slug:
     script: return 'ghcr.io/${{ github.repository }}'.toLowerCase()
 
 - name: Build and push
-  uses: docker/build-push-action@v6
+  uses: Warpbuilds/build-push-action@v6
   with:
     context: .
     push: true
+    profile-name: super-fast-builder
     tags: ${{ steps.repo_slug.outputs.result }}:latest
 ```

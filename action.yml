@@ -1,9 +1,8 @@
-# https://help.github.com/en/articles/metadata-syntax-for-github-actions
-name: Build and push Docker images
-description: Build and push Docker images with Buildx
-author: docker
+name: Build and push Docker images with WarpBuild
+description: Build and push Docker images with Buildx and WarpBuild's remote builders
+author: WarpBuilds
 branding:
-  icon: 'anchor'
+  icon: 'cpu'
   color: 'blue'
 
 inputs:
@@ -111,6 +110,17 @@ inputs:
     description: "GitHub Token used to authenticate against a repository for Git context"
     default: ${{ github.token }}
     required: false
+
+  api-key:
+    description: "The API key for the WarpBuild API. This is not required in case of using WarpBuild runners"
+    required: false
+  profile-name:
+    description: "The profile name to use for the WarpBuild Docker Builders"
+    required: true
+  timeout:
+    description: "The timeout(in ms) to wait for the Docker Builders to be ready. By default, it is 5 minutes"
+    required: false
+    default: "300000"
 
 outputs:
   imageid:
