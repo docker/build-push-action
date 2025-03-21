@@ -21,6 +21,8 @@ import {WarpBuildRemoteBuilders} from './warpbuild';
 
 import * as context from './context';
 
+let remoteBuilders: WarpBuildRemoteBuilders;
+
 actionsToolkit.run(
   // main
   async () => {
@@ -32,7 +34,7 @@ actionsToolkit.run(
     const toolkit = new Toolkit();
     const parsedTimeout = parseInt(inputs.timeout);
 
-    const remoteBuilders = new WarpBuildRemoteBuilders({
+    remoteBuilders = new WarpBuildRemoteBuilders({
       apiKey: inputs.apiKey,
       profileName: inputs.profileName,
       timeout: parsedTimeout
@@ -242,6 +244,10 @@ actionsToolkit.run(
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
         fs.rmSync(stateHelper.tmpDir, {recursive: true});
       });
+    }
+
+    if (remoteBuilders) {
+      await remoteBuilders.cleanup();
     }
   }
 );

@@ -62,32 +62,6 @@ export class WarpBuildRemoteBuilders {
   }
 
   /**
-   * Print Docker and Buildx information
-   */
-  public async printDockerInfo(): Promise<void> {
-    await core.group(`Docker info`, async () => {
-      try {
-        const dockerVersion = await execAsync('docker --version');
-        core.info(dockerVersion.stdout);
-
-        const dockerInfo = await execAsync('docker info');
-        core.info(dockerInfo.stdout);
-      } catch (e) {
-        core.info(`Error getting Docker info: ${e.message}`);
-      }
-    });
-
-    await core.group(`Buildx version`, async () => {
-      try {
-        const buildxVersion = await execAsync('docker buildx version');
-        core.info(buildxVersion.stdout);
-      } catch (e) {
-        core.info(`Error getting Buildx info: ${e.message}`);
-      }
-    });
-  }
-
-  /**
    * Check if required tools are available
    */
   public async checkRequiredTools(): Promise<void> {
@@ -104,20 +78,6 @@ export class WarpBuildRemoteBuilders {
         core.info('✓ curl is installed');
       } catch (error) {
         throw new Error('curl is not installed. Please install curl to use this action.');
-      }
-
-      try {
-        await execAsync('docker --version');
-        core.info('✓ Docker is installed');
-      } catch (error) {
-        throw new Error('Docker is not installed. Please install Docker to use this action.');
-      }
-
-      try {
-        await execAsync('docker buildx version');
-        core.info('✓ Docker Buildx is installed');
-      } catch (error) {
-        core.warning('Docker Buildx not available. Will attempt to use Docker directly.');
       }
     });
   }
@@ -171,7 +131,8 @@ export class WarpBuildRemoteBuilders {
 
             // Not a retriable error
             const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
-            throw new Error(`API Error: HTTP Status ${statusCode} - ${JSON.stringify(errorData) || errorData.message || 'Unknown error'}`);
+            core.debug(`Error data: ${JSON.stringify(errorData)}`);
+            throw new Error(`API Error: HTTP Status ${statusCode} - ${errorData.description || errorData.message || 'Unknown error'}`);
           }
 
           const data = (await response.json()) as AssignBuilderResponse;
