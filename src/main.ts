@@ -17,7 +17,7 @@ import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 
-import {WarpBuildRemoteBuilders} from './warpbuild';
+import {WarpBuildRemoteBuilders, performCleanup} from './warpbuild';
 
 import * as context from './context';
 
@@ -203,6 +203,10 @@ actionsToolkit.run(
     if (err) {
       throw err;
     }
+
+    if (remoteBuilders) {
+      remoteBuilders.saveCleanupState();
+    }
   },
   // post
   async () => {
@@ -246,9 +250,7 @@ actionsToolkit.run(
       });
     }
 
-    if (remoteBuilders) {
-      await remoteBuilders.cleanup();
-    }
+    await performCleanup();
   }
 );
 

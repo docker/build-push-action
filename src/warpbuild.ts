@@ -32,6 +32,11 @@ interface AssignBuilderResponse {
 
 interface BuilderDetailsResponse extends BuilderInstance {}
 
+interface CleanupState {
+  builderName: string;
+  certDirs: string[];
+}
+
 export class WarpBuildRemoteBuilders {
   private readonly profileName: string;
   private readonly apiKey?: string;
@@ -43,7 +48,6 @@ export class WarpBuildRemoteBuilders {
   private builderInstances: BuilderInstance[] = [];
   private certDirs: string[] = [];
   private assignmentPromise: Promise<void> | null = null;
-  private initialized: boolean = false;
 
   constructor(config: BuilderConfig) {
     this.profileName = config.profileName;
@@ -51,7 +55,7 @@ export class WarpBuildRemoteBuilders {
     this.timeout = config.timeout || 200000; // Default timeout 200 seconds
     this.scriptStartTime = Date.now();
     this.apiDomain = process.env.WARPBUILD_API_DOMAIN || 'https://api.warpbuild.com';
-    this.isWarpBuildRunner = Boolean(process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN);
+    this.isWarpBuildRunner = this.determineRunnerType();
     this.builderName = `builder-${uuidv4()}`;
 
     core.debug(`API domain: ${this.apiDomain}`);
@@ -62,20 +66,47 @@ export class WarpBuildRemoteBuilders {
   }
 
   /**
+   * Get the builder name
+   */
+  public getBuilderName(): string {
+    return this.builderName;
+  }
+
+  /**
+   * Get certificate directories
+   */
+  public getCertDirs(): string[] {
+    return this.certDirs;
+  }
+
+  /**
+   * Save cleanup state to GitHub Actions state
+   */
+  public saveCleanupState(): void {
+    const state: CleanupState = {
+      builderName: this.builderName,
+      certDirs: this.certDirs
+    };
+
+    core.saveState('warpbuild-cleanup-state', JSON.stringify(state));
+    core.debug(`Saved cleanup state: ${JSON.stringify(state)}`);
+  }
+
+  /**
    * Check if required tools are available
    */
   public async checkRequiredTools(): Promise<void> {
     await core.group(`Checking required tools`, async () => {
       try {
         await execAsync('which jq');
-        core.info('✓ jq is installed');
+        core.debug('✓ jq is installed');
       } catch (error) {
         throw new Error('jq is not installed. Please install jq to use this action.');
       }
 
       try {
         await execAsync('which curl');
-        core.info('✓ curl is installed');
+        core.debug('✓ curl is installed');
       } catch (error) {
         throw new Error('curl is not installed. Please install curl to use this action.');
       }
@@ -177,9 +208,6 @@ export class WarpBuildRemoteBuilders {
     for (let i = 0; i < this.builderInstances.length; i++) {
       await this.setupBuildxNode(i, this.builderInstances[i].id);
     }
-
-    // Mark as initialized after setup is complete
-    this.initialized = true;
   }
 
   /**
@@ -201,47 +229,6 @@ export class WarpBuildRemoteBuilders {
    */
   public getBuilderIds(): string[] {
     return this.builderInstances.map(instance => instance.id);
-  }
-
-  /**
-   * Get the builder name
-   */
-  public getBuilderName(): string {
-    return this.builderName;
-  }
-
-  /**
-   * Cleanup resources
-   */
-  public async cleanup(): Promise<void> {
-    if (!this.initialized) {
-      return;
-    }
-
-    // Remove builders
-    if (this.builderName) {
-      await core.group(`Removing builder`, async () => {
-        try {
-          const result = await execAsync(`docker buildx rm ${this.builderName}`);
-          if (result.stderr) {
-            core.warning(result.stderr);
-          } else {
-            core.info(`Builder ${this.builderName} removed`);
-          }
-        } catch (error) {
-          core.warning(`Error removing builder: ${error.message}`);
-        }
-      });
-    }
-
-    // Clean up certificate directories
-    for (const certDir of this.certDirs) {
-      if (fs.existsSync(certDir)) {
-        await core.group(`Cleaning up certificates in ${certDir}`, async () => {
-          fs.rmSync(certDir, {recursive: true});
-        });
-      }
-    }
   }
 
   /**
@@ -455,5 +442,50 @@ export class WarpBuildRemoteBuilders {
         throw new Error(`Failed to setup buildx node: ${error.message}`);
       }
     });
+  }
+
+  /**
+   * Determine the runner type
+   */
+  private determineRunnerType(): boolean {
+    return Boolean(process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN);
+  }
+}
+
+/**
+ * Static cleanup function that can be called from post step
+ * without needing the class instance
+ */
+export async function performCleanup(): Promise<void> {
+  const stateJson = core.getState('warpbuild-cleanup-state');
+  if (!stateJson) {
+    core.info('No cleanup state found');
+    return;
+  }
+
+  try {
+    const state: CleanupState = JSON.parse(stateJson);
+
+    await core.group(`Cleaning up WarpBuild resources from state`, async () => {
+      // Remove Docker buildx builder
+      if (state.builderName) {
+        core.info(`Removing Docker buildx builder: ${state.builderName}`);
+        await execAsync(`docker buildx rm ${state.builderName} --force`).catch(error => {
+          core.warning(`Failed to remove Docker buildx builder: ${error.message}`);
+        });
+      }
+
+      // Remove certificate directories
+      for (const certDir of state.certDirs) {
+        if (fs.existsSync(certDir)) {
+          core.info(`Removing certificate directory: ${certDir}`);
+          fs.rmSync(certDir, {recursive: true, force: true});
+        }
+      }
+
+      core.info('Cleanup completed successfully');
+    });
+  } catch (error) {
+    core.warning(`Error during cleanup from state: ${error.message}`);
   }
 }
