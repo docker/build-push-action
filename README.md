@@ -81,7 +81,7 @@ jobs:
 ```
 
 Be careful because **any file mutation in the steps that precede the build step
-will be ignored, including processing of the `.dockerignore` file** since
+will be ignored. Additionally the `.dockerignore` file is not used and can only be utilized by using path context.** since
 the context is based on the Git reference. However, you can use the
 [Path context](#path-context) using the [`context` input](#inputs) alongside
 the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
