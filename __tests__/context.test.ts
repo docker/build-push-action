@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, jest, test} from '@jest/globals';
+import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -68,6 +68,7 @@ jest.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<Bu
 });
 
 describe('getArgs', () => {
+  const originalEnv = process.env;
   beforeEach(() => {
     process.env = Object.keys(process.env).reduce((object, key) => {
       if (!key.startsWith('INPUT_')) {
@@ -75,6 +76,9 @@ describe('getArgs', () => {
       }
       return object;
     }, {});
+  });
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   // prettier-ignore
@@ -93,7 +97,8 @@ describe('getArgs', () => {
         'build',
         '--iidfile', imageIDFilePath,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       1,
@@ -116,7 +121,8 @@ ccc"`],
         '--build-arg', `MULTILINE=aaaa\nbbbb\nccc`,
         '--iidfile', imageIDFilePath,
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       2,
@@ -134,7 +140,8 @@ ccc"`],
         '--tag', 'name/app:7.4',
         '--tag', 'name/app:latest',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       3,
@@ -154,7 +161,8 @@ ccc"`],
         '--label', 'org.opencontainers.image.description=concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit',
         '--output', 'type=local,dest=./release-out',
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       4,
@@ -171,7 +179,8 @@ ccc"`],
         'build',
         '--platform', 'linux/amd64,linux/arm64',
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       5,
@@ -187,7 +196,8 @@ ccc"`],
         'build',
         '--iidfile', imageIDFilePath,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       6,
@@ -205,7 +215,8 @@ ccc"`],
         '--iidfile', imageIDFilePath,
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       7,
@@ -223,7 +234,8 @@ ccc"`],
         '--output', '.',
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       8,
@@ -249,7 +261,8 @@ ccc"`],
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       9,
@@ -286,7 +299,8 @@ ccc"`],
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       10,
@@ -323,7 +337,8 @@ ccc`],
         '--builder', 'builder-git-context-2',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       11,
@@ -349,7 +364,8 @@ ccc`],
         '--network', 'host',
         '--push',
         'https://github.com/docker/build-push-action.git#refs/heads/master'
-      ]
+      ],
+      undefined
     ],
     [
       12,
@@ -369,7 +385,8 @@ ccc`],
         '--label', 'org.opencontainers.image.description=Reference implementation of operation "filter results (top-n)"',
         '--output', 'type=local,dest=./release-out',
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       13,
@@ -395,7 +412,8 @@ ccc`],
         '--network', 'host',
         '--push',
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       14,
@@ -425,7 +443,8 @@ nproc=3`],
         '--ulimit', 'nproc=3',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       15,
@@ -442,7 +461,8 @@ nproc=3`],
         '--iidfile', imageIDFilePath,
         '--metadata-file', metadataJson,
         'https://github.com/docker/build-push-action.git#refs/heads/master:docker'
-      ]
+      ],
+      undefined
     ],
     [
       16,
@@ -461,7 +481,8 @@ nproc=3`],
         '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
         '--metadata-file', metadataJson,
         'https://github.com/docker/build-push-action.git#refs/heads/master:subdir'
-      ]
+      ],
+      undefined
     ],
     [
       17,
@@ -479,7 +500,8 @@ nproc=3`],
         '--iidfile', imageIDFilePath,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       18,
@@ -497,7 +519,8 @@ nproc=3`],
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       19,
@@ -516,7 +539,8 @@ nproc=3`],
         '--attest', `type=provenance,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       20,
@@ -535,7 +559,8 @@ nproc=3`],
         '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       21,
@@ -554,7 +579,8 @@ nproc=3`],
         '--attest', 'type=provenance,disabled=true',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       22,
@@ -573,7 +599,8 @@ nproc=3`],
         '--attest', 'type=provenance,builder-id=foo',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       23,
@@ -592,7 +619,8 @@ nproc=3`],
         "--output", 'type=docker',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       24,
@@ -610,7 +638,8 @@ nproc=3`],
         '--load',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       25,
@@ -630,7 +659,8 @@ nproc=3`],
         '--load',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       26,
@@ -652,7 +682,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--load',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       27,
@@ -673,7 +704,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--load',
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       28,
@@ -693,7 +725,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       29,
@@ -717,7 +750,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       30,
@@ -737,7 +771,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       31,
@@ -758,7 +793,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=sbom,disabled=false`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       32,
@@ -778,7 +814,8 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=provenance,mode=max,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
     ],
     [
       33,
@@ -797,11 +834,37 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         '--attest', `type=provenance,mode=min,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
         '--metadata-file', metadataJson,
         '.'
-      ]
+      ],
+      undefined
+    ],
+    [
+      34,
+      '0.13.1',
+      new Map<string, string>([
+        ['context', '.'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false']
+      ]),
+      [
+        'build',
+        '--iidfile', imageIDFilePath,
+        '--metadata-file', metadataJson,
+        '.'
+      ],
+      new Map<string, string>([
+        ['BUILDX_NO_DEFAULT_ATTESTATIONS', '1']
+      ])
     ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
-    async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>) => {
+    async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>, envs: Map<string, string> | undefined) => {
+      if (envs) {
+        envs.forEach((value: string, name: string) => {
+          process.env[name] = value;
+        });
+      }
       inputs.forEach((value: string, name: string) => {
         setInput(name, value);
       });

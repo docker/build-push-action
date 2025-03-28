@@ -245,7 +245,7 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   if (inputs.provenance) {
     args.push('--attest', Build.resolveAttestationAttrs(`type=provenance,${inputs.provenance}`));
     provenanceSet = true;
-  } else if (!hasAttestProvenance && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !Build.hasDockerExporter(inputs.outputs, inputs.load)) {
+  } else if (!hasAttestProvenance && !noDefaultAttestations() && (await toolkit.buildkit.versionSatisfies(inputs.builder, '>=0.11.0')) && !Build.hasDockerExporter(inputs.outputs, inputs.load)) {
     // if provenance not specified in provenance or attests inputs and BuildKit
     // version compatible for attestation, set default provenance. Also needs
     // to make sure user doesn't want to explicitly load the image to docker.
@@ -276,4 +276,11 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   });
 
   return args;
+}
+
+function noDefaultAttestations(): boolean {
+  if (process.env.BUILDX_NO_DEFAULT_ATTESTATIONS) {
+    return Util.parseBool(process.env.BUILDX_NO_DEFAULT_ATTESTATIONS);
+  }
+  return false;
 }
