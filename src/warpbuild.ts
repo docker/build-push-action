@@ -52,7 +52,7 @@ export class WarpBuildRemoteBuilders {
   constructor(config: BuilderConfig) {
     this.profileName = config.profileName;
     this.apiKey = config.apiKey;
-    this.timeout = config.timeout || 200000; // Default timeout 200 seconds
+    this.timeout = config.timeout || 600000; // Default timeout 600 seconds
     this.scriptStartTime = Date.now();
     this.apiDomain = process.env.WARPBUILD_API_DOMAIN || 'https://api.warpbuild.com';
     this.isWarpBuildRunner = this.determineRunnerType();
