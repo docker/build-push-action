@@ -108,9 +108,9 @@ actionsToolkit.run(
         if (inputs.call && inputs.call === 'check' && res.stdout.length > 0) {
           // checks warnings are printed to stdout: https://github.com/docker/buildx/pull/2647
           // take the first line with the message summaryzing the warnings
-          err = Error(res.stdout.split('\n')[0]?.trim());
+          err = new Error(res.stdout.split('\n')[0]?.trim());
         } else if (res.stderr.length > 0) {
-          err = Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+          err = new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
         }
       }
     });
@@ -225,7 +225,11 @@ actionsToolkit.run(
     }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
-        fs.rmSync(stateHelper.tmpDir, {recursive: true});
+        try {
+          fs.rmSync(stateHelper.tmpDir, {recursive: true});
+        } catch (e) {
+          core.warning(`Failed to remove temp folder ${stateHelper.tmpDir}`);
+        }
       });
     }
   }
@@ -285,7 +289,7 @@ function buildRecordRetentionDays(): number | undefined {
   if (val) {
     const res = parseInt(val);
     if (isNaN(res)) {
-      throw Error(`Invalid build record retention days: ${val}`);
+      throw new Error(`Invalid build record retention days: ${val}`);
     }
     return res;
   }
