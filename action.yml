@@ -118,9 +118,9 @@ inputs:
     description: "The profile name to use for the WarpBuild Docker Builders"
     required: true
   timeout:
-    description: "The timeout(in ms) to wait for the Docker Builders to be ready. By default, it is 5 minutes"
+    description: "The timeout(in ms) to wait for the Docker Builders to be ready. By default, it is 10 minutes"
     required: false
-    default: "300000"
+    default: "600000"
 
 outputs:
   imageid:
