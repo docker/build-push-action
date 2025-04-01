@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/artifact@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "@actions/artifact@npm:2.2.2"
+"@actions/artifact@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "@actions/artifact@npm:2.3.2"
   dependencies:
     "@actions/core": ^1.10.0
     "@actions/github": ^5.1.1
@@ -28,13 +28,13 @@ __metadata:
     archiver: ^7.0.1
     jwt-decode: ^3.1.2
     unzip-stream: ^0.3.1
-  checksum: 1501b3d0ceb671f370786ccf70014de9586c5a78c95d235248fc16c73bf928f8de2aa932a679258f6d9bc2f2e570648d830551af9f063298f05d19f3330b33bc
+  checksum: 78ee41b43800accb2f3527e1733217c43d53693e7f96ce2470b16890fb84f5c2ebaaa6048ccdb6cfe188b54c02779ec99623c6932558e757f6829cfde203cf2c
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "@actions/cache@npm:4.0.2"
+"@actions/cache@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@actions/cache@npm:4.0.3"
   dependencies:
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.0.1
@@ -46,7 +46,7 @@ __metadata:
     "@azure/storage-blob": ^12.13.0
     "@protobuf-ts/plugin": ^2.9.4
     semver: ^6.3.1
-  checksum: 208f11238a26194f331b329bb99d50a87c1a3ccef1dbae181e5c142b3faf41715203e0c5cbc491519d3d97540a68fbd418c25fb6e16caabf76248c40867c02b4
+  checksum: ee9c2a21a70bd3f35c63f302af478e23f135c26deb77ea2e4eed29c62766a4b201fc7435651c0d56fa504c02d203107e3bdfda1dba18a3ee09338e1dfc3f2fe8
   languageName: node
   linkType: hard
 
@@ -1072,12 +1072,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.56.0":
-  version: 0.56.0
-  resolution: "@docker/actions-toolkit@npm:0.56.0"
+"@docker/actions-toolkit@npm:0.58.0":
+  version: 0.58.0
+  resolution: "@docker/actions-toolkit@npm:0.58.0"
   dependencies:
-    "@actions/artifact": ^2.2.2
-    "@actions/cache": ^4.0.2
+    "@actions/artifact": ^2.3.2
+    "@actions/cache": ^4.0.3
     "@actions/core": ^1.11.1
     "@actions/exec": ^1.1.1
     "@actions/github": ^6.0.0
@@ -1097,7 +1097,7 @@ __metadata:
     semver: ^7.7.1
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 0f1b569f8bb206399f8c26e566c78e30e4a311bbd64486016e7fa1d35fbbb4c94d4f55afa6b711afa4b41c5835b40b038f48c3d1bfdfdc6f7c6680973e922d9e
+  checksum: 727ccde59eb610e616951ab9d493ab120f0e8a831779dc261c159c8d7fe772e79d2103f9e9d3c69055d6ccc5eaecbc219680f111f131b284e3985ac6ce7df3c7
   languageName: node
   linkType: hard
 
@@ -3143,7 +3143,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@docker/actions-toolkit": 0.56.0
+    "@docker/actions-toolkit": 0.58.0
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
