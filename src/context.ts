@@ -69,7 +69,7 @@ export async function getInputs(): Promise<Inputs> {
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
-    secrets: Util.getInputList('secrets', {ignoreComma: true}),
+    secrets: getSecretsInput(),
     'secret-envs': Util.getInputList('secret-envs'),
     'secret-files': Util.getInputList('secret-files', {ignoreComma: true}),
     'shm-size': core.getInput('shm-size'),
@@ -295,4 +295,19 @@ async function getAttestArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   });
 
   return args;
+}
+
+function getSecretsInput(): string[] {
+  const secrets = Util.getInputList('secrets', {ignoreComma: true});
+
+  for (const secret of secrets) {
+    try {
+      // enforce value as registered GitHub Secret
+      Build.parseSecretKvp(secret, true);
+    } catch (err) {
+      // ignore invalid secret
+    }
+  }
+
+  return secrets;
 }
