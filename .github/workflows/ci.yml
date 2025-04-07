@@ -137,14 +137,7 @@ jobs:
             localhost:5000/name/app:1.0.0
           secrets: |
             GIT_AUTH_TOKEN=${{ github.token }}
-            "MYSECRET=aaaaaaaa
-            bbbbbbb
-            ccccccccc"
-            FOO=bar
-            "EMPTYLINE=aaaa
-
-            bbbb
-            ccc"
+            MYSECRET=foo
       -
         name: Inspect
         run: |

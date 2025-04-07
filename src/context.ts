@@ -84,7 +84,7 @@ export async function getInputs(): Promise<Inputs> {
 export function sanitizeInputs(inputs: Inputs) {
   const res = {};
   for (const key of Object.keys(inputs)) {
-    if (key === 'github-token') {
+    if (key === 'secrets' || key === 'github-token') {
       continue;
     }
     const value: string | string[] | boolean = inputs[key];
