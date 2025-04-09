@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import {exec, spawn} from 'child_process';
+import {ChildProcess, exec, spawn} from 'child_process';
 import {promisify} from 'util';
 import * as TOML from '@iarna/toml';
 import * as reporter from './reporter';
+import {execa} from 'execa';
 
 // Constants for configuration.
 const BUILDKIT_DAEMON_ADDR = 'tcp://127.0.0.1:1234';
@@ -105,18 +106,42 @@ async function writeBuildkitdTomlFile(parallelism: number, addr: string): Promis
   }
 }
 
-export async function startBuildkitd(parallelism: number, addr: string): Promise<string> {
+export async function startBuildkitd(parallelism: number, addr: string, setupOnly: boolean): Promise<string> {
   try {
     await writeBuildkitdTomlFile(parallelism, addr);
 
-    const logStream = fs.createWriteStream('buildkitd.log');
-    const buildkitd = spawn('sudo', ['buildkitd', '--debug', '--config=buildkitd.toml', '--allow-insecure-entitlement', 'security.insecure', '--allow-insecure-entitlement', 'network.host'], {
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    // Creates a log stream to write buildkitd output to a file.
+    const logStream = fs.createWriteStream('/tmp/buildkitd.log', {flags: 'a'});
+    let buildkitd: ChildProcess;
+    if (!setupOnly) {
+      buildkitd = spawn('sudo', [
+        'buildkitd',
+        '--debug',
+        '--config=buildkitd.toml',
+        '--allow-insecure-entitlement',
+        'security.insecure',
+        '--allow-insecure-entitlement',
+        'network.host'
+      ], {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+    } else {
+      const buildkitdCommand = 'nohup sudo buildkitd --debug --config=buildkitd.toml --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host > /tmp/buildkitd.log 2>&1 &';
+      buildkitd = execa(buildkitdCommand, {
+        shell: '/bin/bash',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: true,
+        cleanup: false
+      });
+    }
 
     // Pipe stdout and stderr to log file
-    buildkitd.stdout.pipe(logStream);
-    buildkitd.stderr.pipe(logStream);
+    if (buildkitd.stdout) {
+      buildkitd.stdout.pipe(logStream);
+    }
+    if (buildkitd.stderr) {
+      buildkitd.stderr.pipe(logStream);
+    }
 
     buildkitd.on('error', error => {
       throw new Error(`Failed to start buildkitd: ${error.message}`);
@@ -222,7 +247,7 @@ export async function leaveTailnet(): Promise<void> {
 // the buildkitd workers to be ready.
 const buildkitdTimeoutMs = 30000;
 
-export async function startAndConfigureBuildkitd(parallelism: number, platforms?: string[]): Promise<string> {
+export async function startAndConfigureBuildkitd(parallelism: number, setupOnly: boolean, platforms?: string[]): Promise<string> {
   // For multi-platform builds, we need to use the tailscale IP
   let buildkitdAddr = BUILDKIT_DAEMON_ADDR;
   const nativeMultiPlatformBuildsEnabled = false && (platforms?.length ?? 0 > 1);
@@ -239,7 +264,7 @@ export async function startAndConfigureBuildkitd(parallelism: number, platforms?
     core.info(`Using tailscale IP for multi-platform build: ${buildkitdAddr}`);
   }
 
-  const addr = await startBuildkitd(parallelism, buildkitdAddr);
+  const addr = await startBuildkitd(parallelism, buildkitdAddr, setupOnly);
   core.debug(`buildkitd daemon started at addr ${addr}`);
 
   // Check that buildkit instance is ready by querying workers for up to 30s
@@ -308,7 +333,7 @@ const stickyDiskTimeoutMs = 45000;
 
 // setupStickyDisk mounts a sticky disk for the entity and returns the device information.
 // throws an error if it is unable to do so because of a timeout or an error
-export async function setupStickyDisk(dockerfilePath: string): Promise<{device: string; buildId?: string | null; exposeId: string}> {
+export async function setupStickyDisk(dockerfilePath: string, setupOnly: boolean): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), stickyDiskTimeoutMs);
@@ -325,7 +350,13 @@ export async function setupStickyDisk(dockerfilePath: string): Promise<{device: 
     }
     clearTimeout(timeoutId);
     await maybeFormatBlockDevice(device);
-    buildResponse = await reporter.reportBuild(dockerfilePath);
+
+    // If setup-only is true, we don't want to report the build to our control plane.
+    let buildId: string | undefined = undefined;
+    if (!setupOnly) {
+      buildResponse = await reporter.reportBuild(dockerfilePath);
+      buildId = buildResponse?.docker_build_id;
+    }
     await execAsync(`sudo mkdir -p ${mountPoint}`);
     await execAsync(`sudo mount ${device} ${mountPoint}`);
     core.debug(`${device} has been mounted to ${mountPoint}`);
@@ -343,7 +374,7 @@ export async function setupStickyDisk(dockerfilePath: string): Promise<{device: 
     } catch (error) {
       core.debug(`Error checking inode usage: ${error.message}`);
     }
-    return {device, buildId: buildResponse?.docker_build_id, exposeId: exposeId};
+    return {device, buildId, exposeId};
   } catch (error) {
     core.warning(`Error in setupStickyDisk: ${(error as Error).message}`);
     throw error;

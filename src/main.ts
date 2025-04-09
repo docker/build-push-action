@@ -70,21 +70,25 @@ async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
  */
 export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{addr: string | null; buildId: string | null; exposeId: string}> {
   try {
-    const dockerfilePath = context.getDockerfilePath(inputs);
-    if (!dockerfilePath) {
-      throw new Error('Failed to resolve dockerfile path');
+    // We only use the dockerfile path to report the build to our control plane.
+    // If setup-only is true, we don't want to report the build to our control plane
+    // since we are only setting up the builder and therefore cannot expose any analytics
+    // about the build.
+    const dockerfilePath = inputs.setupOnly ? "" : context.getDockerfilePath(inputs);
+    if (!inputs.setupOnly && !dockerfilePath) {
+        throw new Error('Failed to resolve dockerfile path');
     }
     const stickyDiskStartTime = Date.now();
-    const stickyDiskSetup = await setupStickyDisk(dockerfilePath);
+    const stickyDiskSetup = await setupStickyDisk(dockerfilePath || '', inputs.setupOnly);
     const stickyDiskDurationMs = Date.now() - stickyDiskStartTime;
     await reporter.reportMetric(Metric_MetricType.BPA_HOTLOAD_DURATION_MS, stickyDiskDurationMs);
     const parallelism = await getNumCPUs();
 
     const buildkitdStartTime = Date.now();
-    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, inputs.platforms);
+    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, inputs.setupOnly, inputs.platforms);
     const buildkitdDurationMs = Date.now() - buildkitdStartTime;
     await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_READY_DURATION_MS, buildkitdDurationMs);
-
+    stateHelper.setExposeId(stickyDiskSetup.exposeId);
     return {addr: buildkitdAddr, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
@@ -155,6 +159,7 @@ actionsToolkit.run(
       await core.group(`Starting Blacksmith builder`, async () => {
         builderInfo = await startBlacksmithBuilder(inputs);
       });
+
       if (builderInfo.addr) {
         await core.group(`Creating a builder instance`, async () => {
           const name = `blacksmith-${Date.now().toString(36)}`;
@@ -167,8 +172,21 @@ actionsToolkit.run(
               throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
             }
           });
+          // Set this builder as the global default since future docker commands will use this builder.
+          if (inputs.setupOnly) {
+            const setDefaultCmd = await toolkit.buildx.getCommand(await context.getUseBuilderArgs(name));
+            core.info('Setting builder as global default');
+            await Exec.getExecOutput(setDefaultCmd.command, setDefaultCmd.args, {
+              ignoreReturnCode: true
+            }).then(res => {
+              if (res.stderr.length > 0 && res.exitCode != 0) {
+                throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
+              }
+            });
+          }
         });
       } else {
+        core.warning('Failed to setup Blacksmith builder, falling back to default builder');
         await core.group(`Checking for configured builder`, async () => {
           try {
             const builder = await toolkit.builder.inspect();
@@ -189,6 +207,7 @@ actionsToolkit.run(
           }
         });
       }
+
       // Write a sentinel file to indicate builder setup is complete.
       const sentinelPath = path.join('/tmp', 'builder-setup-complete');
       try {
@@ -197,6 +216,21 @@ actionsToolkit.run(
       } catch (error) {
         core.warning(`Failed to create builder setup sentinel file: ${error.message}`);
       }
+
+
+      let builder: BuilderInfo;
+      await core.group(`Builder info`, async () => {
+        builder = await toolkit.builder.inspect();
+        core.info(JSON.stringify(builder, null, 2));
+      });
+
+      // If setup-only is true, we don't want to continue configuring and running the build.
+      if (inputs.setupOnly) {
+        core.info('setup-only mode enabled, builder is ready for use by Docker');
+        // Let's remove the default 
+        process.exit(0);
+      }
+
 
       await core.group(`Proxy configuration`, async () => {
         let dockerConfig: ConfigFile | undefined;
@@ -224,12 +258,6 @@ actionsToolkit.run(
       });
 
       stateHelper.setTmpDir(Context.tmpDir());
-
-      let builder: BuilderInfo;
-      await core.group(`Builder info`, async () => {
-        builder = await toolkit.builder.inspect();
-        core.info(JSON.stringify(builder, null, 2));
-      });
 
       const args: string[] = await context.getArgs(inputs, toolkit);
       args.push('--debug');
@@ -396,7 +424,7 @@ actionsToolkit.run(
       } finally {
         if (buildError) {
           try {
-            const buildkitdLog = fs.readFileSync('buildkitd.log', 'utf8');
+            const buildkitdLog = fs.readFileSync('/tmp/buildkitd.log', 'utf8');
             core.info('buildkitd.log contents:');
             core.info(buildkitdLog);
           } catch (error) {
@@ -413,64 +441,66 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.tmpDir.length > 0) {
-      await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
-        fs.rmSync(stateHelper.tmpDir, {recursive: true});
-      });
-    }
-
-    // Ensure we've left the tailnet.
-    await leaveTailnet();
-
-    // Check for any lingering buildkitd processes and try to clean up mounts
-    try {
-      // Check for buildkitd processes first
+    await core.group('Final cleanup', async () => {
       try {
-        const {stdout} = await execAsync('pgrep buildkitd');
-        if (stdout) {
-          core.info('Found lingering buildkitd processes, cleaning up...');
-          await shutdownBuildkitd();
-          core.info('Shutdown buildkitd');
-        }
-      } catch (error) {
-        if (error.code === 1) {
-          // pgrep returns non-zero if no processes found, which is fine
-          core.debug('No lingering buildkitd processes found');
-        } else {
-          core.warning(`Error checking for buildkitd processes: ${error.message}`);
-        }
-      }
+        await leaveTailnet();
 
-      try {
-        const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
-        if (mountOutput) {
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-              await execAsync(`sudo umount ${mountPoint}`);
-              core.debug(`${mountPoint} has been unmounted`);
-              break;
-            } catch (error) {
-              if (attempt === 3) {
-                throw error;
-              }
-              core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
+        try {
+          const {stdout} = await execAsync('pgrep buildkitd');
+          if (stdout.trim()) {
+            await shutdownBuildkitd();
+            core.info('Shutdown buildkitd');
           }
-          core.info('Unmounted device');
+        } catch (error) {
+          if (error.code === 1) {
+            core.debug('No buildkitd process found running');
+          } else {
+            core.warning(`Error checking for buildkitd processes: ${error.message}`);
+          }
         }
+
+        try {
+          // Run sync to flush any pending writes before unmounting.
+          await execAsync('sync');
+          const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+          if (mountOutput) {
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                await execAsync(`sudo umount ${mountPoint}`);
+                core.debug(`${mountPoint} has been unmounted`);
+                break;
+              } catch (error) {
+                if (attempt === 3) {
+                  throw error;
+                }
+                core.warning(`Unmount failed, retrying (${attempt}/3)...`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }
+            core.info('Unmounted device');
+          }
+        } catch (error) {
+          if (error.code === 1) {
+            core.debug('No dangling mounts found to clean up');
+          } else {
+            core.warning(`Error during cleanup: ${error.message}`);
+          }
+        }
+
+        // 4. Clean up temp directory if it exists.
+        if (stateHelper.tmpDir.length > 0) {
+          fs.rmSync(stateHelper.tmpDir, {recursive: true});
+          core.debug(`Removed temp folder ${stateHelper.tmpDir}`);
+        }
+
+        // 5. Commit sticky disk if it exists.
+        core.info('Committing sticky disk');
+        await reporter.commitStickyDisk(stateHelper.getExposeId());
       } catch (error) {
-        // grep returns exit code 1 when no matches are found.
-        if (error.code === 1) {
-          core.debug('No dangling mounts found to clean up');
-        } else {
-          // Only warn for actual errors, not for the expected case where grep finds nothing.
-          core.warning(`Error during cleanup: ${error.message}`);
-        }
+        core.warning(`Error during final cleanup: ${error.message}`);
+        await reporter.reportBuildPushActionFailure(error, 'final cleanup');
       }
-    } catch (error) {
-      core.warning(`Error during final cleanup: ${error.message}`);
-    }
+    });
   }
 );
 

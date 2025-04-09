@@ -58,6 +58,7 @@ export interface Inputs {
   ulimit: string[];
   'github-token': string;
   nofallback: boolean;
+  setupOnly: boolean;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -95,7 +96,8 @@ export async function getInputs(): Promise<Inputs> {
     target: core.getInput('target'),
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
     'github-token': core.getInput('github-token'),
-    nofallback: core.getBooleanInput('nofallback')
+    nofallback: core.getBooleanInput('nofallback'),
+    setupOnly: core.getBooleanInput('setup-only'),
   };
 }
 
@@ -343,4 +345,8 @@ export async function getRemoteBuilderArgs(name: string, builderUrl: string): Pr
   // Use the provided builder URL
   args.push(builderUrl);
   return args;
+}
+
+export async function getUseBuilderArgs(name: string): Promise<Array<string>> {
+  return ['use', name, '--global'];
 }

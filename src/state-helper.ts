@@ -58,3 +58,11 @@ export function setDockerBuildStatus(dockerBuildStatus: string) {
 export function setDockerBuildDurationSeconds(dockerBuildDurationSeconds: string) {
   core.saveState('dockerBuildDurationSeconds', dockerBuildDurationSeconds);
 }
+
+export function setExposeId(exposeId: string) {
+  core.saveState('exposeId', exposeId);
+}
+
+export function getExposeId(): string {
+  return core.getState('exposeId');
+}

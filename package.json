@@ -33,14 +33,15 @@
     "@docker/actions-toolkit": "0.37.1",
     "@iarna/toml": "^2.2.5",
     "axios-retry": "^4.5.0",
+    "execa": "^9.5.2",
     "form-data": "^4.0.1",
     "handlebars": "^4.7.7",
     "portfinder": "^1.0.32"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/preset-env": "^7.26.0",
-    "@babel/preset-typescript": "^7.26.0",
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-typescript": "^7.27.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.12.12",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
