@@ -24,8 +24,8 @@ actionsToolkit.run(
   async () => {
     const startedTime = new Date();
     const inputs: context.Inputs = await context.getInputs();
+    stateHelper.setSummaryInputs(inputs);
     core.debug(`inputs: ${JSON.stringify(inputs)}`);
-    stateHelper.setInputs(inputs);
 
     const toolkit = new Toolkit();
 
@@ -216,7 +216,7 @@ actionsToolkit.run(
           await GitHub.writeBuildSummary({
             exportRes: exportRes,
             uploadRes: uploadRes,
-            inputs: stateHelper.inputs
+            inputs: stateHelper.summaryInputs
           });
         } catch (e) {
           core.warning(e.message);
