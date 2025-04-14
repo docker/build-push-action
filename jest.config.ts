@@ -6,10 +6,13 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
-    '^.+\\.js$': 'babel-jest'
+    '^.+\\.(ts|js)$': 'babel-jest'
   },
-  transformIgnorePatterns: ['/node_modules/(?!(@buf|@connectrpc)/)'],
+  moduleNameMapper: {
+    '^execa$': '<rootDir>/src/__mocks__/execa.ts',
+    '^@buf/blacksmith_vm-agent.connectrpc_es/(.*)$': '<rootDir>/src/__mocks__/@buf/blacksmith_vm-agent.connectrpc_es/$1',
+    '^@buf/blacksmith_vm-agent.bufbuild_es/(.*)$': '<rootDir>/src/__mocks__/@buf/blacksmith_vm-agent.bufbuild_es/$1'
+  },
   verbose: true,
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/__tests__/**']

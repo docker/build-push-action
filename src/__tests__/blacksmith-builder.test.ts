@@ -44,7 +44,11 @@ describe('startBlacksmithBuilder', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockInputs = {nofallback: false, platforms: []};
+    mockInputs = {
+      nofallback: false,
+      setupOnly: false,
+      platforms: []
+    };
   });
 
   test('should handle missing dockerfile path with nofallback=false', async () => {
@@ -112,7 +116,7 @@ describe('startBlacksmithBuilder', () => {
       buildId: mockBuildId,
       exposeId: mockExposeId
     });
-    expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism, []);
+    expect(setupBuilder.startAndConfigureBuildkitd).toHaveBeenCalledWith(mockParallelism, false, []);
     expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 

@@ -195,3 +195,20 @@ export async function reportMetric(metricType: Metric_MetricType, value: number)
     // core.warning('Error reporting metric to BlacksmithAgent:', error);
   }
 }
+
+export async function commitStickyDisk(exposeId?: string, shouldCommit: boolean = true): Promise<void> {
+  try {
+    const agentClient = createBlacksmithAgentClient();
+
+    await agentClient.commitStickyDisk({
+      exposeId: exposeId || '',
+      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
+      vmId: process.env.VM_ID || '',
+      shouldCommit,
+      repoName: process.env.GITHUB_REPO_NAME || '',
+      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+    });
+  } catch (error) {
+    core.warning('Error committing sticky disk:', error);
+  }
+}
