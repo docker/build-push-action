@@ -27,7 +27,7 @@
   "packageManager": "yarn@3.6.3",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@docker/actions-toolkit": "0.59.0",
+    "@docker/actions-toolkit": "https://github.com/crazy-max/docker-actions-toolkit#buildx-history-cmd-test",
     "handlebars": "^4.7.7"
   },
   "devDependencies": {

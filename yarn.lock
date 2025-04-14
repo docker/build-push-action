@@ -1072,9 +1072,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.59.0":
-  version: 0.59.0
-  resolution: "@docker/actions-toolkit@npm:0.59.0"
+"@docker/actions-toolkit@https://github.com/crazy-max/docker-actions-toolkit#buildx-history-cmd-test":
+  version: 0.0.0+unknown
+  resolution: "@docker/actions-toolkit@https://github.com/crazy-max/docker-actions-toolkit.git#commit=f59849371dd29da343a66eb077755917fdd3d451"
   dependencies:
     "@actions/artifact": ^2.3.2
     "@actions/cache": ^4.0.3
@@ -1097,7 +1097,7 @@ __metadata:
     semver: ^7.7.1
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 0956071aa04e04132b789d47ba57813c566115bea9fdedf3c648d0a0da8ce12350de9cd2a796ce1da7b64b995ae073bfe344b0f63c6f331a45e60195e15680a6
+  checksum: 8932c3a913c1d593bd88df0fbc471dbfba91ac53880f7bb1baf48f9a61128fbd15983f9bb77d2ac792a75edc64543fb94a5dc6921b20a65174a85173cd8db0fc
   languageName: node
   linkType: hard
 
@@ -3143,7 +3143,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": ^1.11.1
-    "@docker/actions-toolkit": 0.59.0
+    "@docker/actions-toolkit": "https://github.com/crazy-max/docker-actions-toolkit#buildx-history-cmd-test"
     "@types/node": ^20.12.12
     "@typescript-eslint/eslint-plugin": ^7.9.0
     "@typescript-eslint/parser": ^7.9.0
