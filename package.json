@@ -22,7 +22,7 @@
     "build",
     "push"
   ],
-  "author": "Docker Inc.",
+  "author": "WarpBuilds",
   "license": "Apache-2.0",
   "packageManager": "yarn@3.6.3",
   "dependencies": {

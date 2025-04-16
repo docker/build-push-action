@@ -3,16 +3,18 @@ name: Debug WarpBuild Docker Configure Action
 on:
   push:
     branches:
-      - prajjwal-warp-540
+      - fix-error-messages
 
+env:
+  WARPBUILD_API_DOMAIN: "https://api.dev.warpbuild.dev"
 
 jobs:
   test-multi-warp:
     name: Debug Run ${{ matrix.run_number }}
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: warpdev-ubuntu-latest-x64-2x
     strategy:
       matrix:
-        run_number: [1]
+        run_number: [1,2]
       fail-fast: false
     steps:
       - name: Checkout repository
@@ -25,7 +27,8 @@ jobs:
           file: __tests__/Dockerfile
           tags: test-image-run-${{ matrix.run_number }}
           push: false
-          platforms: linux/amd64,linux/arm64
-          profile-name: test-multi-builder
+          # platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+          profile-name: test-dev
 
 
