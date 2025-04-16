@@ -11,7 +11,7 @@ env:
 jobs:
   test-multi-warp:
     name: Debug Run ${{ matrix.run_number }}
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: warpdev-ubuntu-latest-x64-2x
     strategy:
       matrix:
         run_number: [1,2]
