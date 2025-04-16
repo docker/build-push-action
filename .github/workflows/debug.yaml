@@ -27,7 +27,8 @@ jobs:
           file: __tests__/Dockerfile
           tags: test-image-run-${{ matrix.run_number }}
           push: false
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           profile-name: test-dev
 
 
