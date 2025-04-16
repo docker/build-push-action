@@ -114,15 +114,7 @@ export async function startBuildkitd(parallelism: number, addr: string, setupOnl
     const logStream = fs.createWriteStream('/tmp/buildkitd.log', {flags: 'a'});
     let buildkitd: ChildProcess;
     if (!setupOnly) {
-      buildkitd = spawn('sudo', [
-        'buildkitd',
-        '--debug',
-        '--config=buildkitd.toml',
-        '--allow-insecure-entitlement',
-        'security.insecure',
-        '--allow-insecure-entitlement',
-        'network.host'
-      ], {
+      buildkitd = spawn('sudo', ['buildkitd', '--debug', '--config=buildkitd.toml', '--allow-insecure-entitlement', 'security.insecure', '--allow-insecure-entitlement', 'network.host'], {
         stdio: ['ignore', 'pipe', 'pipe']
       });
     } else {
@@ -181,7 +173,7 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
   }
   core.debug(`Getting sticky disk for ${stickyDiskKey}`);
 
-  const response = await client.getStickyDisk(
+  const response = (await client.getStickyDisk(
     {
       stickyDiskKey: stickyDiskKey,
       region: process.env.BLACKSMITH_REGION || 'eu-central',
@@ -194,7 +186,7 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
     {
       signal: options?.signal
     }
-  );
+  )) as {exposeId?: string; diskIdentifier?: string};
   return {
     expose_id: response.exposeId || '',
     device: response.diskIdentifier || ''
