@@ -152,18 +152,19 @@ export class WarpBuildRemoteBuilders {
           if (!response.ok) {
             const statusCode = response.status;
 
+            const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
+
             // Determine if we should retry based on status code
             if (statusCode >= 500 || statusCode === 409 || statusCode === 429) {
-              core.warning(`Assign builder failed: HTTP Status ${statusCode}`);
+              core.warning(`${errorData.description || errorData.message || 'Assign builder failed'}`);
               core.info(`Waiting ${staticWait / 1000} seconds before next attempt...`);
               await new Promise(resolve => setTimeout(resolve, staticWait));
               continue;
             }
 
             // Not a retriable error
-            const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
             core.debug(`Error data: ${JSON.stringify(errorData)}`);
-            throw new Error(`API Error: HTTP Status ${statusCode} - ${errorData.description || errorData.message || 'Unknown error'}`);
+            throw new Error(`HTTP ${statusCode}: ${errorData.description || errorData.message || 'Unknown error'}`);
           }
 
           const data = (await response.json()) as AssignBuilderResponse;
@@ -273,7 +274,8 @@ export class WarpBuildRemoteBuilders {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to get builder details: ${response.status}`);
+          const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
+          throw new Error(`${errorData.description || errorData.message || 'Unknown error'}`);
         }
 
         const details = (await response.json()) as BuilderDetailsResponse;
