@@ -35,7 +35,7 @@ const createBlacksmithAPIClient = () => {
 
 export function createBlacksmithAgentClient() {
   const transport = createGrpcTransport({
-    baseUrl: 'http://192.168.127.1:5557',
+    baseUrl: `http://192.168.127.1:${process.env.BLACKSMITH_STICKY_DISK_GRPC_PORT || '5557'}`,
     httpVersion: '2'
   });
 
