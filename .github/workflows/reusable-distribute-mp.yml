@@ -1,0 +1,636 @@
+# Reusable workflow to distribute multi-platform builds efficiently
+# https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
+name: reusable-distribute-mp
+
+on:
+  workflow_call:
+    inputs:
+      # inputs specific to this reusable worklow
+      runner:
+        type: string
+        description: "Runner instance"
+        required: false
+        default: 'auto'
+      push:
+        type: boolean
+        description: "Push image to registry"
+        required: false
+        default: false
+      cache:
+        type: boolean
+        description: "Enable cache to GitHub Actions cache backend"
+        required: false
+        default: false
+      cache-scope:
+        type: string
+        description: "Which scope cache object belongs to if cache enabled (default is target name)"
+        required: false
+      cache-mode:
+        type: string
+        description: "Cache layers to export if cache enabled (min or max)"
+        required: false
+        default: 'min'
+      set-meta-annotations:
+        type: boolean
+        description: "Set metadata-action annotations"
+        required: false
+        default: false
+      set-meta-labels:
+        type: boolean
+        description: "Set metadata-action labels"
+        required: false
+        default: false
+      setup-qemu:
+        type: boolean
+        description: "Install QEMU static binaries"
+        required: false
+        default: true
+      # same as docker/metadata-action inputs (minus sep-tags, sep-labels, sep-annotations, bake-target)
+      meta-image:
+        type: string
+        description: "Image to use as base name for tags"
+        required: true
+      meta-tags:
+        type: string
+        description: "List of tags as key-value pair attributes"
+        required: false
+      meta-flavor:
+        type: string
+        description: "Flavors to apply"
+        required: false
+      meta-labels:
+        type: string
+        description: "List of custom labels"
+        required: false
+      meta-annotations:
+        type: string
+        description: "List of custom annotations"
+        required: false
+      # same as docker/setup-buildx-action inputs (minus driver, install, use, endpoint, append, cleanup)
+      buildx-version:
+        type: string
+        description: "Buildx version. (eg. v0.3.0)"
+        required: false
+      buildx-cache-binary:
+        type: boolean
+        description: "Cache buildx binary to GitHub Actions cache backend"
+        default: true
+        required: false
+      buildx-driver-opts:
+        type: string
+        description: "List of additional docker-container options. (eg. image=moby/buildkit:master)"
+        required: false
+      buildkitd-flags:
+        type: string
+        description: "BuildKit daemon flags"
+        required: false
+      buildkitd-config:
+        type: string
+        description: "BuildKit daemon config file"
+        required: false
+      buildkitd-config-inline:
+        type: string
+        description: "Inline BuildKit daemon config"
+        required: false
+      # same as docker/login-action inputs (minus logout)
+      login-registry:
+        type: string
+        description: "Server address of Docker registry. If not set then will default to Docker Hub"
+        required: false
+      login-username:
+        type: string
+        description: "Username used to log against the Docker registry"
+        required: false
+      login-ecr:
+        type: string
+        description: "Specifies whether the given registry is ECR (auto, true or false)"
+        default: 'auto'
+        required: false
+      # same as docker/setup-qemu-action inputs (minus platforms, cache-image)
+      qemu-image:
+        type: string
+        description: "QEMU static binaries Docker image (e.g. tonistiigi/binfmt:latest)"
+        required: false
+      # same as docker/build-push-action inputs (minus builder, cache-from, cache-to, call, load, no-cache, no-cache-filters, outputs, platforms, push, tags)
+      build-add-hosts:
+        type: string
+        description: "List of a customs host-to-IP mapping (e.g., docker:10.180.0.1)"
+        required: false
+      build-allow:
+        type: string
+        description: "List of extra privileged entitlement (e.g., network.host,security.insecure)"
+        required: false
+      build-annotations:
+        type: string
+        description: "List of annotation to set to the image"
+        required: false
+      build-attests:
+        type: string
+        description: "List of attestation parameters (e.g., type=sbom,generator=image)"
+        required: false
+      build-args:
+        type: string
+        description: "List of build-time variables"
+        required: false
+      build-cgroup-parent:
+        type: string
+        description: "Optional parent cgroup for the container used in the build"
+        required: false
+      build-context:
+        type: string
+        description: "Build's context is the set of files located in the specified PATH or URL"
+        required: false
+      build-contexts:
+        type: string
+        description: "List of additional build contexts (e.g., name=path)"
+        required: false
+      build-file:
+        type: string
+        description: "Path to the Dockerfile"
+        required: false
+      build-labels:
+        type: string
+        description: "List of metadata for an image"
+        required: false
+      build-network:
+        type: string
+        description: "Set the networking mode for the RUN instructions during build"
+        required: false
+      build-platforms:
+        type: string
+        description: "List of target platforms for build"
+        required: true
+      build-provenance:
+        type: string
+        description: "Generate provenance attestation for the build (shorthand for --attest=type=provenance)"
+        required: false
+      build-pull:
+        type: boolean
+        description: "Always attempt to pull all referenced images"
+        required: false
+        default: false
+      build-sbom:
+        type: string
+        description: "Generate SBOM attestation for the build (shorthand for --attest=type=sbom)"
+        required: false
+      build-secrets:
+        type: string
+        description: "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)"
+        required: false
+      build-secret-envs:
+        type: string
+        description: "List of secret env vars to expose to the build (e.g., key=envname, MY_SECRET=MY_ENV_VAR)"
+        required: false
+      build-secret-files:
+        type: string
+        description: "List of secret files to expose to the build (e.g., key=filename, MY_SECRET=./secret.txt)"
+        required: false
+      build-shm-size:
+        type: string
+        description: "Size of /dev/shm (e.g., 2g)"
+        required: false
+      build-ssh:
+        type: string
+        description: "List of SSH agent socket or keys to expose to the build"
+        required: false
+      build-target:
+        type: string
+        description: "Sets the target stage to build"
+        required: false
+      build-ulimit:
+        type: string
+        description: "Ulimit options (e.g., nofile=1024:1024)"
+        required: false
+    secrets:
+      login-username:
+        description: 'Username used to log against the Docker registry'
+        required: false
+      login-password:
+        description: "Password or personal access token used to log against the Docker registry"
+        required: false
+      github-token:
+        description: "GitHub Token used to authenticate against a repository for Git context"
+        required: false
+
+env:
+  ACTIONS_TOOLKIT_VERSION: "0.56.0"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      includes: ${{ steps.set.outputs.includes }}
+    steps:
+      -
+        name: Install npm dependencies
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await exec.exec('npm', ['install',
+              '@docker/actions-toolkit@${{ env.ACTIONS_TOOLKIT_VERSION }}'
+            ]);
+      -
+        name: Set includes
+        id: set
+        uses: actions/github-script@v7
+        env:
+          INPUT_RUNNER: ${{ inputs.runner }}
+          INPUT_META-IMAGE: ${{ inputs.meta-image }}
+          INPUT_BUILD-PLATFORMS: ${{ inputs.build-platforms }}
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+        with:
+          script: |
+            const { Util } = require('@docker/actions-toolkit/lib/util');
+
+            if (Util.getInputList('meta-image').length > 1) {
+              throw new Error('Only one meta-image is allowed');
+            }
+
+            const inpRunner = core.getInput('runner');
+            const inpBuildPlatforms = Util.getInputList('build-platforms');
+            if (inpBuildPlatforms.length > 100) {
+              throw new Error('Too many platforms');
+            } else if (inpBuildPlatforms.length <= 1) {
+              throw new Error('At least 2 platforms are required');
+            }
+
+            await core.group(`Set includes`, async () => {
+              let includes = [];
+              inpBuildPlatforms.forEach((platform, index) => {
+                let runner = inpRunner;
+                if (runner === 'auto') {
+                  runner = platform.startsWith('linux/arm') ? 'ubuntu-24.04-arm' : 'ubuntu-latest';
+                }
+                includes.push({
+                  index: index,
+                  platform: platform,
+                  runner: runner
+                });
+              });
+              core.info(JSON.stringify(includes, null, 2));
+              core.setOutput('includes', JSON.stringify(includes));
+            });
+
+  warmup:
+    runs-on: ${{ inputs.runner == 'auto' && 'ubuntu-latest' || inputs.runner }}
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        if: ${{ inputs.setup-qemu }}
+        with:
+          image: ${{ inputs.qemu-image }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version }}
+          driver-opts: ${{ inputs.buildx-driver-opts }}
+          buildkitd-flags: ${{ inputs.buildkitd-flags }}
+          buildkitd-config: ${{ inputs.buildkitd-config }}
+          buildkitd-config-inline: ${{ inputs.buildkitd-config-inline }}
+          cache-binary: ${{ inputs.buildx-cache-binary }}
+      -
+        name: Warm up cache
+        uses: docker/build-push-action@v6
+        if: ${{ inputs.cache }}
+        with:
+          add-hosts: ${{ inputs.build-add-hosts }}
+          allow: ${{ inputs.build-allow }}
+          build-args: ${{ inputs.build-build-args }}
+          build-contexts: ${{ inputs.build-contexts }}
+          cache-from: type=gha,scope=${{ inputs.cache-scope || inputs.target || 'buildkit' }}-warmup
+          cache-to: type=gha,scope=${{ inputs.cache-scope || inputs.target || 'buildkit' }}-warmup,mode=${{ inputs.cache-mode }}
+          cgroup-parent: ${{ inputs.build-cgroup-parent }}
+          context: ${{ inputs.build-context }}
+          file: ${{ inputs.build-file }}
+          labels: ${{ steps.build-inputs.outputs.labels }}
+          network: ${{ inputs.build-network }}
+          outputs: type=cacheonly
+          pull: ${{ inputs.build-pull }}
+          secrets: ${{ inputs.build-secrets }}
+          secret-envs: ${{ inputs.build-secret-envs }}
+          secret-files: ${{ inputs.build-secret-files }}
+          shm-size: ${{ inputs.build-shm-size }}
+          ssh: ${{ inputs.build-ssh }}
+          target: ${{ inputs.build-target }}
+          ulimit: ${{ inputs.build-ulimit }}
+          github-token: ${{ secrets.github-token || github.token }}
+
+  build:
+    runs-on: ${{ matrix.runner }}
+    needs:
+      - prepare
+      - warmup
+    outputs:
+      # needs predefined outputs as we can't use dynamic ones atm: https://github.com/actions/runner/pull/2477
+      # 100 is the maximum number of platforms supported by the matrix strategy
+      digest_0: ${{ steps.digest.outputs.digest_0 }}
+      digest_1: ${{ steps.digest.outputs.digest_1 }}
+      digest_2: ${{ steps.digest.outputs.digest_2 }}
+      digest_3: ${{ steps.digest.outputs.digest_3 }}
+      digest_4: ${{ steps.digest.outputs.digest_4 }}
+      digest_5: ${{ steps.digest.outputs.digest_5 }}
+      digest_6: ${{ steps.digest.outputs.digest_6 }}
+      digest_7: ${{ steps.digest.outputs.digest_7 }}
+      digest_8: ${{ steps.digest.outputs.digest_8 }}
+      digest_9: ${{ steps.digest.outputs.digest_9 }}
+      digest_10: ${{ steps.digest.outputs.digest_10 }}
+      digest_11: ${{ steps.digest.outputs.digest_11 }}
+      digest_12: ${{ steps.digest.outputs.digest_12 }}
+      digest_13: ${{ steps.digest.outputs.digest_13 }}
+      digest_14: ${{ steps.digest.outputs.digest_14 }}
+      digest_15: ${{ steps.digest.outputs.digest_15 }}
+      digest_16: ${{ steps.digest.outputs.digest_16 }}
+      digest_17: ${{ steps.digest.outputs.digest_17 }}
+      digest_18: ${{ steps.digest.outputs.digest_18 }}
+      digest_19: ${{ steps.digest.outputs.digest_19 }}
+      digest_20: ${{ steps.digest.outputs.digest_20 }}
+      digest_21: ${{ steps.digest.outputs.digest_21 }}
+      digest_22: ${{ steps.digest.outputs.digest_22 }}
+      digest_23: ${{ steps.digest.outputs.digest_23 }}
+      digest_24: ${{ steps.digest.outputs.digest_24 }}
+      digest_25: ${{ steps.digest.outputs.digest_25 }}
+      digest_26: ${{ steps.digest.outputs.digest_26 }}
+      digest_27: ${{ steps.digest.outputs.digest_27 }}
+      digest_28: ${{ steps.digest.outputs.digest_28 }}
+      digest_29: ${{ steps.digest.outputs.digest_29 }}
+      digest_30: ${{ steps.digest.outputs.digest_30 }}
+      digest_31: ${{ steps.digest.outputs.digest_31 }}
+      digest_32: ${{ steps.digest.outputs.digest_32 }}
+      digest_33: ${{ steps.digest.outputs.digest_33 }}
+      digest_34: ${{ steps.digest.outputs.digest_34 }}
+      digest_35: ${{ steps.digest.outputs.digest_35 }}
+      digest_36: ${{ steps.digest.outputs.digest_36 }}
+      digest_37: ${{ steps.digest.outputs.digest_37 }}
+      digest_38: ${{ steps.digest.outputs.digest_38 }}
+      digest_39: ${{ steps.digest.outputs.digest_39 }}
+      digest_40: ${{ steps.digest.outputs.digest_40 }}
+      digest_41: ${{ steps.digest.outputs.digest_41 }}
+      digest_42: ${{ steps.digest.outputs.digest_42 }}
+      digest_43: ${{ steps.digest.outputs.digest_43 }}
+      digest_44: ${{ steps.digest.outputs.digest_44 }}
+      digest_45: ${{ steps.digest.outputs.digest_45 }}
+      digest_46: ${{ steps.digest.outputs.digest_46 }}
+      digest_47: ${{ steps.digest.outputs.digest_47 }}
+      digest_48: ${{ steps.digest.outputs.digest_48 }}
+      digest_49: ${{ steps.digest.outputs.digest_49 }}
+      digest_50: ${{ steps.digest.outputs.digest_50 }}
+      digest_51: ${{ steps.digest.outputs.digest_51 }}
+      digest_52: ${{ steps.digest.outputs.digest_52 }}
+      digest_53: ${{ steps.digest.outputs.digest_53 }}
+      digest_54: ${{ steps.digest.outputs.digest_54 }}
+      digest_55: ${{ steps.digest.outputs.digest_55 }}
+      digest_56: ${{ steps.digest.outputs.digest_56 }}
+      digest_57: ${{ steps.digest.outputs.digest_57 }}
+      digest_58: ${{ steps.digest.outputs.digest_58 }}
+      digest_59: ${{ steps.digest.outputs.digest_59 }}
+      digest_60: ${{ steps.digest.outputs.digest_60 }}
+      digest_61: ${{ steps.digest.outputs.digest_61 }}
+      digest_62: ${{ steps.digest.outputs.digest_62 }}
+      digest_63: ${{ steps.digest.outputs.digest_63 }}
+      digest_64: ${{ steps.digest.outputs.digest_64 }}
+      digest_65: ${{ steps.digest.outputs.digest_65 }}
+      digest_66: ${{ steps.digest.outputs.digest_66 }}
+      digest_67: ${{ steps.digest.outputs.digest_67 }}
+      digest_68: ${{ steps.digest.outputs.digest_68 }}
+      digest_69: ${{ steps.digest.outputs.digest_69 }}
+      digest_70: ${{ steps.digest.outputs.digest_70 }}
+      digest_71: ${{ steps.digest.outputs.digest_71 }}
+      digest_72: ${{ steps.digest.outputs.digest_72 }}
+      digest_73: ${{ steps.digest.outputs.digest_73 }}
+      digest_74: ${{ steps.digest.outputs.digest_74 }}
+      digest_75: ${{ steps.digest.outputs.digest_75 }}
+      digest_76: ${{ steps.digest.outputs.digest_76 }}
+      digest_77: ${{ steps.digest.outputs.digest_77 }}
+      digest_78: ${{ steps.digest.outputs.digest_78 }}
+      digest_79: ${{ steps.digest.outputs.digest_79 }}
+      digest_80: ${{ steps.digest.outputs.digest_80 }}
+      digest_81: ${{ steps.digest.outputs.digest_81 }}
+      digest_82: ${{ steps.digest.outputs.digest_82 }}
+      digest_83: ${{ steps.digest.outputs.digest_83 }}
+      digest_84: ${{ steps.digest.outputs.digest_84 }}
+      digest_85: ${{ steps.digest.outputs.digest_85 }}
+      digest_86: ${{ steps.digest.outputs.digest_86 }}
+      digest_87: ${{ steps.digest.outputs.digest_87 }}
+      digest_88: ${{ steps.digest.outputs.digest_88 }}
+      digest_89: ${{ steps.digest.outputs.digest_89 }}
+      digest_90: ${{ steps.digest.outputs.digest_90 }}
+      digest_91: ${{ steps.digest.outputs.digest_91 }}
+      digest_92: ${{ steps.digest.outputs.digest_92 }}
+      digest_93: ${{ steps.digest.outputs.digest_93 }}
+      digest_94: ${{ steps.digest.outputs.digest_94 }}
+      digest_95: ${{ steps.digest.outputs.digest_95 }}
+      digest_96: ${{ steps.digest.outputs.digest_96 }}
+      digest_97: ${{ steps.digest.outputs.digest_97 }}
+      digest_98: ${{ steps.digest.outputs.digest_98 }}
+      digest_99: ${{ steps.digest.outputs.digest_99 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.includes) }}
+    steps:
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.meta-image }}
+          tags: ${{ inputs.meta-tags }}
+          flavor: ${{ inputs.meta-flavor }}
+          labels: ${{ inputs.meta-labels }}
+          annotations: ${{ inputs.meta-annotations }}
+      -
+        name: Login to registry
+        uses: docker/login-action@v3
+        if: ${{ inputs.push }}
+        with:
+          registry: ${{ inputs.login-registry }}
+          username: ${{ inputs.login-username || secrets.login-username }}
+          password: ${{ secrets.login-password }}
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        if: ${{ inputs.setup-qemu }}
+        with:
+          image: ${{ inputs.qemu-image }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version }}
+          driver-opts: ${{ inputs.buildx-driver-opts }}
+          buildkitd-flags: ${{ inputs.buildkitd-flags }}
+          buildkitd-config: ${{ inputs.buildkitd-config }}
+          buildkitd-config-inline: ${{ inputs.buildkitd-config-inline }}
+          cache-binary: ${{ inputs.buildx-cache-binary }}
+      -
+        name: Set build inputs
+        id: build-inputs
+        uses: actions/github-script@v7
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          INPUT_CACHE: ${{ inputs.cache }}
+          INPUT_CACHE-SCOPE: ${{ inputs.cache-scope }}
+          INPUT_CACHE-MODE: ${{ inputs.cache-mode }}
+          INPUT_SET-META-ANNOTATIONS: ${{ inputs.set-meta-annotations }}
+          INPUT_SET-META-LABELS: ${{ inputs.set-meta-labels }}
+          INPUT_BUILD-ANNOTATIONS: ${{ inputs.build-annotations }}
+          INPUT_BUILD-LABELS: ${{ inputs.build-labels }}
+          INPUT_BUILD-TARGET: ${{ inputs.build-target }}
+        with:
+          script: |
+            const platformPair = process.env.PLATFORM.replace(/\//g, '-');
+            const inpCache = core.getBooleanInput('cache');
+            const inpCacheScope = core.getInput('cache-scope');
+            const inpCacheMode = core.getInput('cache-mode');
+            const inpSetMetaAnnotations = core.getBooleanInput('set-meta-annotations');
+            const inpSetMetaLabels = core.getBooleanInput('set-meta-labels');
+            let inpBuildAnnotations = core.getInput('build-annotations');
+            let inpBuildLabels = core.getInput('build-labels');
+            const inpBuildTarget = core.getInput('build-target');
+
+            if (inpCache) {
+              core.setOutput('cache-from', `type=gha,scope=${inpCacheScope || inpTarget || 'buildkit'}-warmup\ntype=gha,scope=${inpCacheScope || inpTarget}-${platformPair}`);
+              core.setOutput('cache-to', `type=gha,scope=${inpCacheScope || inpTarget || 'buildkit'}-${platformPair},mode=${inpCacheMode}`);
+            }
+            if (inpSetMetaAnnotations) {
+              inpBuildAnnotations += `\n${{ steps.meta.outputs.annotations }}`;
+            }
+            core.setOutput('annotations', inpBuildAnnotations);
+            if (inpSetMetaLabels) {
+              inpBuildLabels += `\n${{ steps.meta.outputs.labels }}`;
+            }
+            core.setOutput('labels', inpBuildLabels);
+      -
+        name: Build
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          add-hosts: ${{ inputs.build-add-hosts }}
+          allow: ${{ inputs.build-allow }}
+          annotations: ${{ steps.build-inputs.outputs.annotations }}
+          attests: ${{ inputs.build-attests }}
+          build-args: ${{ inputs.build-build-args }}
+          build-contexts: ${{ inputs.build-contexts }}
+          cache-from: ${{ steps.build-inputs.outputs.cache-from }}
+          cache-to: ${{ steps.build-inputs.outputs.cache-to }}
+          cgroup-parent: ${{ inputs.build-cgroup-parent }}
+          context: ${{ inputs.build-context }}
+          file: ${{ inputs.build-file }}
+          labels: ${{ steps.build-inputs.outputs.labels }}
+          network: ${{ inputs.build-network }}
+          outputs: |
+            type=image,"name=${{ inputs.meta-image }}",push-by-digest=true,name-canonical=true,push=${{ inputs.push }}
+          platforms: ${{ matrix.platform }}
+          provenance: ${{ inputs.build-provenance }}
+          pull: ${{ inputs.build-pull }}
+          sbom: ${{ inputs.build-sbom }}
+          secrets: ${{ inputs.build-secrets }}
+          secret-envs: ${{ inputs.build-secret-envs }}
+          secret-files: ${{ inputs.build-secret-files }}
+          shm-size: ${{ inputs.build-shm-size }}
+          ssh: ${{ inputs.build-ssh }}
+          target: ${{ inputs.build-target }}
+          ulimit: ${{ inputs.build-ulimit }}
+          github-token: ${{ secrets.github-token || github.token }}
+      -
+        name: Set digest output
+        id: digest
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const metadata = JSON.parse(`${{ steps.build.outputs.metadata }}`);
+            const digest = metadata['containerimage.digest'];
+            const outputKey = `digest_${{ matrix.index }}`;
+            core.info(`Setting digest output: ${outputKey}=${digest}`);
+            core.setOutput(outputKey, digest);
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.meta-image }}
+          tags: ${{ inputs.meta-tags }}
+          flavor: ${{ inputs.meta-flavor }}
+      -
+        name: Login to registry
+        uses: docker/login-action@v3
+        if: ${{ inputs.push }}
+        with:
+          registry: ${{ inputs.login-registry }}
+          username: ${{ inputs.login-username || secrets.login-username }}
+          password: ${{ secrets.login-password }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ inputs.buildx-version }}
+          driver-opts: ${{ inputs.buildx-driver-opts }}
+          buildkitd-flags: ${{ inputs.buildkitd-flags }}
+          buildkitd-config: ${{ inputs.buildkitd-config }}
+          buildkitd-config-inline: ${{ inputs.buildkitd-config-inline }}
+          cache-binary: ${{ inputs.buildx-cache-binary }}
+      -
+        name: Create manifest list
+        uses: actions/github-script@v7
+        env:
+          INPUT_PUSH: ${{ inputs.push }}
+          INPUT_META-IMAGE: ${{ inputs.meta-image }}
+        with:
+          script: |
+            const inpPush = core.getBooleanInput('push');
+            const inpMetaImage = core.getInput('meta-image');
+
+            let digests = [];
+            await core.group(`Digests`, async () => {
+              digests = Object.values(JSON.parse(`${{ toJSON(needs.build.outputs) }}`));
+              core.info(JSON.stringify(digests, null, 2));
+            });
+
+            let tags = [];
+            await core.group(`Tags`, async () => {
+              tags = `${{ steps.meta.outputs.tags }}`.split('\n').filter(Boolean);
+              core.info(JSON.stringify(tags, null, 2));
+            });
+
+            let createArgs = ['buildx', 'imagetools', 'create'];
+            for (const tag of tags) {
+              createArgs.push(`-t`, tag);
+            }
+            for (const digest of digests) {
+              createArgs.push(`${inpMetaImage}@${digest}`);
+            }
+
+            if (inpPush) {
+              if (tags.length === 0) {
+                throw new Error('No tags to create manifest list');
+              }
+              await exec.getExecOutput('docker', createArgs, {
+                ignoreReturnCode: true
+              }).then(res => {
+                if (res.stderr.length > 0 && res.exitCode != 0) {
+                  throw new Error(res.stderr);
+                }
+              });
+              await core.group(`Inspect image`, async () => {
+                await exec.getExecOutput('docker', ['buildx', 'imagetools', 'inspect', `${inpMetaImage}:${tags[0]}`], {
+                  ignoreReturnCode: true
+                }).then(res => {
+                  if (res.stderr.length > 0 && res.exitCode != 0) {
+                    throw new Error(res.stderr);
+                  }
+                });
+              });
+            } else {
+              await core.group(`Generated imagetools create command`, async () => {
+                core.info(`docker ${createArgs.join(' ')}`);
+              });
+              core.info(`Push is disabled, skipping manifest list creation`);
+            }
