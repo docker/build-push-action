@@ -162,6 +162,7 @@ jobs:
 * [Cache management](https://docs.docker.com/build/ci/github-actions/cache/)
 * [Export to Docker](https://docs.docker.com/build/ci/github-actions/export-docker/)
 * [Test before push](https://docs.docker.com/build/ci/github-actions/test-before-push/)
+* [Validating build configuration](https://docs.docker.com/build/ci/github-actions/checks/)
 * [Local registry](https://docs.docker.com/build/ci/github-actions/local-registry/)
 * [Share built image between jobs](https://docs.docker.com/build/ci/github-actions/share-image-jobs/)
 * [Named contexts](https://docs.docker.com/build/ci/github-actions/named-contexts/)
