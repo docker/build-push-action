@@ -20,7 +20,7 @@ import * as context from './context';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet} from './setup_builder';
+import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet, pruneBuildkitCache} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const buildxVersion = 'v0.17.0';
@@ -74,9 +74,9 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     // If setup-only is true, we don't want to report the build to our control plane
     // since we are only setting up the builder and therefore cannot expose any analytics
     // about the build.
-    const dockerfilePath = inputs.setupOnly ? "" : context.getDockerfilePath(inputs);
+    const dockerfilePath = inputs.setupOnly ? '' : context.getDockerfilePath(inputs);
     if (!inputs.setupOnly && !dockerfilePath) {
-        throw new Error('Failed to resolve dockerfile path');
+      throw new Error('Failed to resolve dockerfile path');
     }
     const stickyDiskStartTime = Date.now();
     const stickyDiskSetup = await setupStickyDisk(dockerfilePath || '', inputs.setupOnly);
@@ -217,7 +217,6 @@ actionsToolkit.run(
         core.warning(`Failed to create builder setup sentinel file: ${error.message}`);
       }
 
-
       let builder: BuilderInfo;
       await core.group(`Builder info`, async () => {
         builder = await toolkit.builder.inspect();
@@ -227,10 +226,9 @@ actionsToolkit.run(
       // If setup-only is true, we don't want to continue configuring and running the build.
       if (inputs.setupOnly) {
         core.info('setup-only mode enabled, builder is ready for use by Docker');
-        // Let's remove the default 
+        // Let's remove the default
         process.exit(0);
       }
-
 
       await core.group(`Proxy configuration`, async () => {
         let dockerConfig: ConfigFile | undefined;
@@ -362,6 +360,16 @@ actionsToolkit.run(
           });
         }
 
+        // Prune buildkit cache to clean up unused layers before shutting down buildkitd.
+        try {
+          core.info('Pruning BuildKit cache');
+          await pruneBuildkitCache();
+          core.info('BuildKit cache pruned');
+        } catch (error) {
+          // Log warning but don't fail the cleanup
+          core.warning(`Error pruning BuildKit cache: ${error.message}`);
+        }
+
         await leaveTailnet();
 
         try {
@@ -448,6 +456,16 @@ actionsToolkit.run(
         try {
           const {stdout} = await execAsync('pgrep buildkitd');
           if (stdout.trim()) {
+            // Prune buildkit cache to clean up unused layers before shutting down buildkitd.
+            try {
+              core.info('Pruning BuildKit cache');
+              await pruneBuildkitCache();
+              core.info('BuildKit cache pruned');
+            } catch (error) {
+              // Log warning but don't fail the cleanup
+              core.warning(`Error pruning BuildKit cache: ${error.message}`);
+            }
+
             await shutdownBuildkitd();
             core.info('Shutdown buildkitd');
           }
