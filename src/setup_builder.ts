@@ -300,16 +300,11 @@ export async function startAndConfigureBuildkitd(parallelism: number, setupOnly:
     throw error;
   }
 
-  // Start cache pruning in the background without blocking.
-  pruneBuildkitCache().catch(error => {
-    core.warning(`Background cache pruning failed: ${error.message}`);
-  });
-
   return addr;
 }
 
 /**
- * Prunes buildkit cache data older than 14 days.
+ * Prunes buildkit cache data older than 7 days.
  * We don't specify any keep bytes here since we are
  * handling the ceph volume size limits ourselves in
  * the VM Agent.
@@ -317,8 +312,8 @@ export async function startAndConfigureBuildkitd(parallelism: number, setupOnly:
  */
 export async function pruneBuildkitCache(): Promise<void> {
   try {
-    const fourteenDaysInHours = 14 * 24;
-    await execAsync(`sudo buildctl --addr ${BUILDKIT_DAEMON_ADDR} prune --keep-duration ${fourteenDaysInHours}h --all`);
+    const sevenDaysInHours = 7 * 24;
+    await execAsync(`sudo buildctl --addr ${BUILDKIT_DAEMON_ADDR} prune --keep-duration ${sevenDaysInHours}h --all`);
     core.debug('Successfully pruned buildkit cache');
   } catch (error) {
     core.warning(`Error pruning buildkit cache: ${error.message}`);
