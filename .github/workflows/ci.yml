@@ -1542,3 +1542,23 @@ jobs:
             echo "::error::Should have failed"
             exit 1
           fi
+
+  distribute:
+    uses: ./.github/workflows/reusable-distribute-mp.yml
+    with:
+      push: false
+      meta-image: user/app
+      build-context: "{{defaultContext}}:test"
+      build-file: multi.Dockerfile
+      build-platforms: linux/amd64,linux/arm64
+
+  distribute-cache:
+    uses: ./.github/workflows/reusable-distribute-mp.yml
+    with:
+      push: false
+      cache: true
+      cache-scope: multi
+      meta-image: user/app
+      build-context: "{{defaultContext}}:test"
+      build-file: multi.Dockerfile
+      build-platforms: linux/amd64,linux/arm64
