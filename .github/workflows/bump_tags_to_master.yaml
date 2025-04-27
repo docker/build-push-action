@@ -16,6 +16,7 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
+          git tag -fa v1.1 -m "Update v1.1 tag to latest commit on master"
           git tag -fa v1 -m "Update v1 tag to latest commit on master"
           git tag -fa v1.0.0-beta -m "Update v1.0.0-beta tag to latest commit on master"
-          git push origin v1 v1.0.0-beta --force
+          git push origin v1.1 v1 v1.0.0-beta --force
