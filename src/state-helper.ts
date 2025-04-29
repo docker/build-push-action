@@ -66,3 +66,11 @@ export function setExposeId(exposeId: string) {
 export function getExposeId(): string {
   return core.getState('exposeId');
 }
+
+export function setSetupOnly(setupOnly: boolean) {
+  core.saveState('setupOnly', setupOnly.toString());
+}
+
+export function getSetupOnly(): boolean {
+  return core.getState('setupOnly') === 'true';
+}
