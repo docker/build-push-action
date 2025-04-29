@@ -226,6 +226,7 @@ actionsToolkit.run(
       // If setup-only is true, we don't want to continue configuring and running the build.
       if (inputs.setupOnly) {
         core.info('setup-only mode enabled, builder is ready for use by Docker');
+        stateHelper.setSetupOnly(true);
         // Let's remove the default
         process.exit(0);
       }
@@ -511,9 +512,17 @@ actionsToolkit.run(
           core.debug(`Removed temp folder ${stateHelper.tmpDir}`);
         }
 
-        // 5. Commit sticky disk if it exists.
-        core.info('Committing sticky disk');
-        await reporter.commitStickyDisk(stateHelper.getExposeId());
+        // 5. Commit sticky disk if the builder was booted in setup-only mode.
+        // If the builder was not booted in setup-only mode, the sticky disk was committed as part
+        // of the main routine.
+        if (stateHelper.getSetupOnly()) {
+          core.info('Committing sticky disk in post cleanup as setup-only mode was enabled');
+          if (stateHelper.getExposeId() !== '') {
+            await reporter.commitStickyDisk(stateHelper.getExposeId());
+          } else {
+            core.warning('Expose ID not found in state, skipping sticky disk commit');
+          }
+        }
       } catch (error) {
         core.warning(`Error during final cleanup: ${error.message}`);
         await reporter.reportBuildPushActionFailure(error, 'final cleanup');
