@@ -50,7 +50,7 @@ actionsToolkit.run(
       let dockerConfig: ConfigFile | undefined;
       let dockerConfigMalformed = false;
       try {
-        dockerConfig = await Docker.configFile();
+        dockerConfig = Docker.configFile();
       } catch (e) {
         dockerConfigMalformed = true;
         core.warning(`Unable to parse config file ${path.join(Docker.configDir, 'config.json')}: ${e}`);
@@ -174,12 +174,13 @@ actionsToolkit.run(
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
         core.info('Build summary requires Buildx >= 0.13.0');
       } else if (builder && builder.driver === 'cloud') {
-        core.info('Build summary is not yet supported with Docker Build Cloud');
+        core.info('Build summary supported for cloud driver!');
+        stateHelper.setSummaryType('cloud');
       } else if (!ref) {
         core.info('Build summary requires a build reference');
       } else {
         core.info('Build summary supported!');
-        stateHelper.setSummarySupported();
+        stateHelper.setSummaryType('buildx');
       }
     });
 
@@ -189,7 +190,7 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.isSummarySupported) {
+    if (stateHelper.summaryType === 'buildx') {
       await core.group(`Generating build summary`, async () => {
         try {
           const recordUploadEnabled = buildRecordUploadEnabled();
@@ -222,6 +223,18 @@ actionsToolkit.run(
           core.warning(e.message);
         }
       });
+    } else if (stateHelper.summaryType === 'cloud' && stateHelper.buildRef) {
+      const [, platform, refId] = stateHelper.buildRef.split('/');
+      if (platform && refId) {
+        const buildUrl = `https://app.docker.com/build/accounts/docker/builds/${platform}/${refId}`;
+
+        core.info(`View build details: ${buildUrl}`);
+
+        const sum = core.summary.addHeading('Docker Build Cloud summary', 2);
+        sum.addRaw('<p>').addRaw('Your build was executed using Docker Build Cloud. ').addRaw('You can view detailed build information, logs, and results here: ').addLink(buildUrl, buildUrl).addRaw('</p>');
+        sum.addRaw('<p>').addRaw('For more information about Docker Build Cloud, see ').addLink('the documentation', 'https://docs.docker.com/build/cloud/').addRaw('.').addRaw('</p>');
+        await sum.addSeparator().write();
+      }
     }
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
