@@ -50,7 +50,7 @@ actionsToolkit.run(
       let dockerConfig: ConfigFile | undefined;
       let dockerConfigMalformed = false;
       try {
-        dockerConfig = await Docker.configFile();
+        dockerConfig = Docker.configFile();
       } catch (e) {
         dockerConfigMalformed = true;
         core.warning(`Unable to parse config file ${path.join(Docker.configDir, 'config.json')}: ${e}`);
@@ -86,6 +86,9 @@ actionsToolkit.run(
     await core.group(`Builder info`, async () => {
       builder = await toolkit.builder.inspect(inputs.builder);
       core.info(JSON.stringify(builder, null, 2));
+      if (builder && builder.driver) {
+        stateHelper.setBuilderDriver(builder.driver);
+      }
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
@@ -173,8 +176,6 @@ actionsToolkit.run(
         core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
         core.info('Build summary requires Buildx >= 0.13.0');
-      } else if (builder && builder.driver === 'cloud') {
-        core.info('Build summary is not yet supported with Docker Build Cloud');
       } else if (!ref) {
         core.info('Build summary requires a build reference');
       } else {
@@ -189,7 +190,7 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.isSummarySupported) {
+    if (stateHelper.isSummarySupported && stateHelper.builderDriver !== 'cloud') {
       await core.group(`Generating build summary`, async () => {
         try {
           const recordUploadEnabled = buildRecordUploadEnabled();
@@ -222,7 +223,16 @@ actionsToolkit.run(
           core.warning(e.message);
         }
       });
+    } else if (stateHelper.isSummarySupported && stateHelper.builderDriver === 'cloud') {
+      const [, platform, refId] = stateHelper.buildRef.split('/');
+      await GitHub.writeCloudSummary([
+        {
+          platform: platform,
+          refId: refId
+        }
+      ]);
     }
+
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
         try {
