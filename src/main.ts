@@ -86,6 +86,9 @@ actionsToolkit.run(
     await core.group(`Builder info`, async () => {
       builder = await toolkit.builder.inspect(inputs.builder);
       core.info(JSON.stringify(builder, null, 2));
+      if (builder && builder.driver) {
+        stateHelper.setBuilderDriver(builder.driver);
+      }
     });
 
     const args: string[] = await context.getArgs(inputs, toolkit);
@@ -173,14 +176,11 @@ actionsToolkit.run(
         core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
         core.info('Build summary requires Buildx >= 0.13.0');
-      } else if (builder && builder.driver === 'cloud') {
-        core.info('Build summary supported for cloud driver!');
-        stateHelper.setSummaryType('cloud');
       } else if (!ref) {
         core.info('Build summary requires a build reference');
       } else {
         core.info('Build summary supported!');
-        stateHelper.setSummaryType('buildx');
+        stateHelper.setSummarySupported();
       }
     });
 
@@ -190,7 +190,7 @@ actionsToolkit.run(
   },
   // post
   async () => {
-    if (stateHelper.summaryType === 'buildx') {
+    if (stateHelper.isSummarySupported && stateHelper.builderDriver !== 'cloud') {
       await core.group(`Generating build summary`, async () => {
         try {
           const recordUploadEnabled = buildRecordUploadEnabled();
@@ -223,19 +223,16 @@ actionsToolkit.run(
           core.warning(e.message);
         }
       });
-    } else if (stateHelper.summaryType === 'cloud' && stateHelper.buildRef) {
+    } else if (stateHelper.isSummarySupported && stateHelper.builderDriver === 'cloud') {
       const [, platform, refId] = stateHelper.buildRef.split('/');
-      if (platform && refId) {
-        const buildUrl = `https://app.docker.com/build/accounts/docker/builds/${platform}/${refId}`;
-
-        core.info(`View build details: ${buildUrl}`);
-
-        const sum = core.summary.addHeading('Docker Build Cloud summary', 2);
-        sum.addRaw('<p>').addRaw('Your build was executed using Docker Build Cloud. ').addRaw('You can view detailed build information, logs, and results here: ').addLink(buildUrl, buildUrl).addRaw('</p>');
-        sum.addRaw('<p>').addRaw('For more information about Docker Build Cloud, see ').addLink('the documentation', 'https://docs.docker.com/build/cloud/').addRaw('.').addRaw('</p>');
-        await sum.addSeparator().write();
-      }
+      await GitHub.writeCloudSummary([
+        {
+          platform: platform,
+          refId: refId
+        }
+      ]);
     }
+
     if (stateHelper.tmpDir.length > 0) {
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
         try {

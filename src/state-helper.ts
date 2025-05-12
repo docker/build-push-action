@@ -6,7 +6,8 @@ import {Inputs} from './context';
 
 export const tmpDir = process.env['STATE_tmpDir'] || '';
 export const buildRef = process.env['STATE_buildRef'] || '';
-export const summaryType = process.env['STATE_summaryType'] || undefined;
+export const isSummarySupported = !!process.env['STATE_isSummarySupported'];
+export const builderDriver = process.env['STATE_builderDriver'] || '';
 export const summaryInputs = process.env['STATE_summaryInputs'] ? JSON.parse(process.env['STATE_summaryInputs']) : undefined;
 
 export function setTmpDir(tmpDir: string) {
@@ -17,8 +18,12 @@ export function setBuildRef(buildRef: string) {
   core.saveState('buildRef', buildRef);
 }
 
-export function setSummaryType(summaryType: string) {
-  core.saveState('summaryType', summaryType);
+export function setSummarySupported() {
+  core.saveState('isSummarySupported', 'true');
+}
+
+export function setBuilderDriver(driver: string) {
+  core.saveState('builderDriver', driver);
 }
 
 export function setSummaryInputs(inputs: Inputs) {
