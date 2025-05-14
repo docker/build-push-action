@@ -114,15 +114,7 @@ export async function startBuildkitd(parallelism: number, addr: string, setupOnl
     const logStream = fs.createWriteStream('/tmp/buildkitd.log', {flags: 'a'});
     let buildkitd: ChildProcess;
     if (!setupOnly) {
-      buildkitd = spawn('sudo', [
-        'buildkitd',
-        '--debug',
-        '--config=buildkitd.toml',
-        '--allow-insecure-entitlement',
-        'security.insecure',
-        '--allow-insecure-entitlement',
-        'network.host'
-      ], {
+      buildkitd = spawn('sudo', ['buildkitd', '--debug', '--config=buildkitd.toml', '--allow-insecure-entitlement', 'security.insecure', '--allow-insecure-entitlement', 'network.host'], {
         stdio: ['ignore', 'pipe', 'pipe']
       });
     } else {
@@ -174,12 +166,13 @@ export async function startBuildkitd(parallelism: number, addr: string, setupOnl
 
 export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{expose_id: string; device: string}> {
   const client = await reporter.createBlacksmithAgentClient();
+  core.info(`Created Blacksmith agent client`);
 
   const stickyDiskKey = process.env.GITHUB_REPO_NAME || '';
   if (stickyDiskKey === '') {
     throw new Error('GITHUB_REPO_NAME is not set');
   }
-  core.debug(`Getting sticky disk for ${stickyDiskKey}`);
+  core.info(`Getting sticky disk for ${stickyDiskKey}`);
 
   const response = await client.getStickyDisk(
     {
