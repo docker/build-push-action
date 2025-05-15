@@ -68,13 +68,6 @@ jobs:
             password_secret: GAR_JSON_KEY
             type: remote
           -
-            name: Google Container Registry
-            registry: gcr.io
-            slug: gcr.io/sandbox-298914/test-docker-action
-            username_secret: GCR_USERNAME
-            password_secret: GCR_JSON_KEY
-            type: remote
-          -
             name: Azure Container Registry
             registry: officialgithubactions.azurecr.io
             slug: officialgithubactions.azurecr.io/test-docker-action
