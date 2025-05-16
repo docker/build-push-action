@@ -168,6 +168,14 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
   const client = await reporter.createBlacksmithAgentClient();
   core.info(`Created Blacksmith agent client`);
 
+  // Test connection using up endpoint
+  try {
+    await client.up({}, {signal: options?.signal});
+    core.info('Successfully connected to Blacksmith agent');
+  } catch (error) {
+    throw new Error(`grpc connection test failed: ${error.message}`);
+  }
+
   const stickyDiskKey = process.env.GITHUB_REPO_NAME || '';
   if (stickyDiskKey === '') {
     throw new Error('GITHUB_REPO_NAME is not set');
