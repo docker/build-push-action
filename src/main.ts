@@ -27,13 +27,34 @@ const buildxVersion = 'v0.17.0';
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
 
+async function retryWithBackoff<T>(operation: () => Promise<T>, maxRetries: number = 5, initialBackoffMs: number = 200): Promise<T> {
+  let lastError: Error = new Error('No error occurred');
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (error.message?.includes('429') || error.status === 429) {
+        if (attempt < maxRetries - 1) {
+          const backoffMs = initialBackoffMs * Math.pow(2, attempt);
+          core.info(`Rate limited (429). Retrying in ${backoffMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          continue;
+        }
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
   let toolPath;
   const standalone = await toolkit.buildx.isStandalone();
 
   if (!(await toolkit.buildx.isAvailable()) || version) {
     await core.group(`Download buildx from GitHub Releases`, async () => {
-      toolPath = await toolkit.buildxInstall.download(version || 'latest', true);
+      toolPath = await retryWithBackoff(() => toolkit.buildxInstall.download(version || 'latest', true));
     });
   }
 
