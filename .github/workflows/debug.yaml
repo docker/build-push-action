@@ -3,7 +3,8 @@ name: Debug WarpBuild Docker Configure Action
 on:
   push:
     branches:
-      - fix-error-messages
+      - feat/teardown_post_hook
+  workflow_dispatch:
 
 env:
   WARPBUILD_API_DOMAIN: "https://api.dev.warpbuild.dev"
@@ -14,7 +15,7 @@ jobs:
     runs-on: warpdev-ubuntu-latest-x64-2x
     strategy:
       matrix:
-        run_number: [1,2]
+        run_number: [1]
       fail-fast: false
     steps:
       - name: Checkout repository
@@ -29,6 +30,6 @@ jobs:
           push: false
           # platforms: linux/amd64,linux/arm64
           platforms: linux/amd64
-          profile-name: test-dev
+          profile-name: dev-eph
 
 

@@ -34,6 +34,7 @@ interface BuilderDetailsResponse extends BuilderInstance {}
 
 interface CleanupState {
   builderName: string;
+  builderInstances: BuilderInstance[];
   certDirs: string[];
 }
 
@@ -44,7 +45,7 @@ export class WarpBuildRemoteBuilders {
   private readonly isWarpBuildRunner: boolean;
   private readonly scriptStartTime: number;
   private readonly apiDomain: string;
-  private readonly builderName: string;
+  private builderName: string;
   private builderInstances: BuilderInstance[] = [];
   private certDirs: string[] = [];
   private assignmentPromise: Promise<void> | null = null;
@@ -82,14 +83,28 @@ export class WarpBuildRemoteBuilders {
   /**
    * Save cleanup state to GitHub Actions state
    */
-  public saveCleanupState(): void {
+  public saveState(): void {
     const state: CleanupState = {
       builderName: this.builderName,
+      builderInstances: this.builderInstances,
       certDirs: this.certDirs
     };
 
-    core.saveState('warpbuild-cleanup-state', JSON.stringify(state));
+    core.saveState('warpbuild-state', JSON.stringify(state));
     core.debug(`Saved cleanup state: ${JSON.stringify(state)}`);
+  }
+
+  public loadState(): void {
+    const stateStr = core.getState('warpbuild-state');
+    if (stateStr) {
+      const state = JSON.parse(stateStr) as CleanupState;
+      this.builderName = state.builderName;
+      this.builderInstances = state.builderInstances;
+      this.certDirs = state.certDirs;
+      core.debug(`Loaded cleanup state: ${JSON.stringify(state)}`);
+    } else {
+      core.debug('No cleanup state found');
+    }
   }
 
   /**
@@ -175,6 +190,7 @@ export class WarpBuildRemoteBuilders {
 
           core.info(`✓ Successfully assigned ${data.builder_instances.length} builder(s) after ${retryCount} attempts`);
           this.builderInstances = data.builder_instances;
+          this.saveState();
           return;
         } catch (error) {
           if (error instanceof Error && error.message.startsWith('API Error:')) {
@@ -452,42 +468,46 @@ export class WarpBuildRemoteBuilders {
   private determineRunnerType(): boolean {
     return Boolean(process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN);
   }
-}
 
-/**
- * Static cleanup function that can be called from post step
- * without needing the class instance
- */
-export async function performCleanup(): Promise<void> {
-  const stateJson = core.getState('warpbuild-cleanup-state');
-  if (!stateJson) {
-    core.info('No cleanup state found');
-    return;
+  public async removeBuilderConfiguration(): Promise<void> {
+    await execAsync(`docker buildx rm ${this.builderName} --force`).catch(error => {
+      core.warning(`Failed to remove Docker buildx builder: ${error.message}`);
+    });
   }
 
-  try {
-    const state: CleanupState = JSON.parse(stateJson);
+  public async removeBuilderInstances(): Promise<void> {
+    for (const builderInstance of this.builderInstances) {
+      try {
+        const removeBuilderEndpoint = `${this.apiDomain}/api/v1/builders/${builderInstance.id}/teardown`;
+        const authHeader = this.isWarpBuildRunner ? `Bearer ${process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN}` : `Bearer ${this.apiKey}`;
 
-    await core.group(`Cleaning up WarpBuild resources from state`, async () => {
-      // Remove Docker buildx builder
-      if (state.builderName) {
-        core.info(`Removing Docker buildx builder: ${state.builderName}`);
-        await execAsync(`docker buildx rm ${state.builderName} --force`).catch(error => {
-          core.warning(`Failed to remove Docker buildx builder: ${error.message}`);
+        const response = await fetch(removeBuilderEndpoint, {
+          method: 'DELETE',
+          headers: {Authorization: authHeader}
         });
-      }
 
-      // Remove certificate directories
-      for (const certDir of state.certDirs) {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
+          throw new Error(`Failed to remove builder instance: ${errorData.description || errorData.message || 'Unknown error'}`);
+        }
+
+        core.info(`Builder instance ${builderInstance.id} removed successfully`);
+      } catch (error) {
+        core.warning(`Failed to remove builder instance: ${error.message}`);
+      }
+    }
+  }
+
+  public async removeCertDirs(): Promise<void> {
+    for (const certDir of this.certDirs) {
+      try {
         if (fs.existsSync(certDir)) {
           core.info(`Removing certificate directory: ${certDir}`);
           fs.rmSync(certDir, {recursive: true, force: true});
         }
+      } catch (error) {
+        core.warning(`Failed to remove certificate directory: ${error.message}`);
       }
-
-      core.info('Cleanup completed successfully');
-    });
-  } catch (error) {
-    core.warning(`Error during cleanup from state: ${error.message}`);
+    }
   }
 }

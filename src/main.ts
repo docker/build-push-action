@@ -17,7 +17,7 @@ import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
 
-import {WarpBuildRemoteBuilders, performCleanup} from './warpbuild';
+import {WarpBuildRemoteBuilders} from './warpbuild';
 
 import * as context from './context';
 
@@ -205,7 +205,7 @@ actionsToolkit.run(
     }
 
     if (remoteBuilders) {
-      remoteBuilders.saveCleanupState();
+      remoteBuilders.saveState();
     }
   },
   // post
@@ -250,7 +250,19 @@ actionsToolkit.run(
       });
     }
 
-    await performCleanup();
+    const inputs: context.Inputs = await context.getInputs();
+    const parsedTimeout = parseInt(inputs.timeout);
+
+    remoteBuilders = new WarpBuildRemoteBuilders({
+      apiKey: inputs.apiKey,
+      profileName: inputs.profileName,
+      timeout: parsedTimeout
+    });
+
+    remoteBuilders.loadState();
+    await remoteBuilders.removeBuilderInstances();
+    await remoteBuilders.removeBuilderConfiguration();
+    await remoteBuilders.removeCertDirs();
   }
 );
 
