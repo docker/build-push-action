@@ -42,7 +42,7 @@ export interface Inputs {
   ulimit: string[];
   'github-token': string;
   apiKey: string;
-  profileName: string;
+  profileNames: string;
   timeout: string;
 }
 
@@ -82,7 +82,7 @@ export async function getInputs(): Promise<Inputs> {
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
     'github-token': core.getInput('github-token'),
     apiKey: core.getInput('api-key'),
-    profileName: core.getInput('profile-name'),
+    profileNames: core.getInput('profile-name'),
     timeout: core.getInput('timeout')
   };
 }

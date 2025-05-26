@@ -9,7 +9,7 @@ import * as core from '@actions/core';
 const execAsync = promisify(exec);
 
 interface BuilderConfig {
-  profileName: string;
+  profileNames: string;
   apiKey?: string;
   timeout?: number;
 }
@@ -39,19 +39,19 @@ interface CleanupState {
 }
 
 export class WarpBuildRemoteBuilders {
-  private readonly profileName: string;
+  private readonly profileNames: string[];
   private readonly apiKey?: string;
   private readonly timeout: number;
   private readonly isWarpBuildRunner: boolean;
-  private readonly scriptStartTime: number;
   private readonly apiDomain: string;
+  private scriptStartTime: number;
   private builderName: string;
   private builderInstances: BuilderInstance[] = [];
   private certDirs: string[] = [];
   private assignmentPromise: Promise<void> | null = null;
 
   constructor(config: BuilderConfig) {
-    this.profileName = config.profileName;
+    this.profileNames = config.profileNames.split(',');
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || 600000; // Default timeout 600 seconds
     this.scriptStartTime = Date.now();
@@ -146,64 +146,71 @@ export class WarpBuildRemoteBuilders {
     let retryCount = 0;
     const staticWait = 10000; // 10 seconds
 
-    await core.group(`Assigning WarpBuild builders for profile ${this.profileName}`, async () => {
-      while (this.checkGlobalTimeoutNotExceeded()) {
-        retryCount++;
+    await core.group(`Assigning WarpBuild builders for profile ${this.profileNames}`, async () => {
+      for (const profileName of this.profileNames) {
+        core.info(`Assigning builder for profile ${profileName}`);
+        while (this.checkGlobalTimeoutNotExceeded()) {
+          retryCount++;
 
-        try {
-          core.info(`Making API request to assign builder (attempt ${retryCount})...`);
+          try {
+            core.info(`Making API request to assign builder (attempt ${retryCount})...`);
 
-          const authHeader = this.isWarpBuildRunner ? `Bearer ${process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN}` : `Bearer ${this.apiKey}`;
+            const authHeader = this.isWarpBuildRunner ? `Bearer ${process.env.WARPBUILD_RUNNER_VERIFICATION_TOKEN}` : `Bearer ${this.apiKey}`;
 
-          const response = await fetch(assignBuilderEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: authHeader
-            },
-            body: JSON.stringify({profile_name: this.profileName})
-          });
+            const response = await fetch(assignBuilderEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: authHeader
+              },
+              body: JSON.stringify({profile_name: profileName.trim()})
+            });
 
-          if (!response.ok) {
-            const statusCode = response.status;
+            if (!response.ok) {
+              const statusCode = response.status;
 
-            const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
+              const errorData = await response.json().catch(() => ({message: 'Unknown error'}));
 
-            // Determine if we should retry based on status code
-            if (statusCode >= 500 || statusCode === 409 || statusCode === 429) {
-              core.warning(`${errorData.description || errorData.message || 'Assign builder failed'}`);
-              core.info(`Waiting ${staticWait / 1000} seconds before next attempt...`);
-              await new Promise(resolve => setTimeout(resolve, staticWait));
-              continue;
+              // Determine if we should retry based on status code
+              if (statusCode >= 500 || statusCode === 409 || statusCode === 429) {
+                core.warning(`${errorData.description || errorData.message || 'Assign builder failed'}`);
+                core.info(`Waiting ${staticWait / 1000} seconds before next attempt...`);
+                await new Promise(resolve => setTimeout(resolve, staticWait));
+                continue;
+              }
+
+              // Not a retriable error
+              core.debug(`Error data: ${JSON.stringify(errorData)}`);
+              throw new Error(`HTTP ${statusCode}: ${errorData.description || errorData.message || 'Unknown error'}`);
             }
 
-            // Not a retriable error
-            core.debug(`Error data: ${JSON.stringify(errorData)}`);
-            throw new Error(`HTTP ${statusCode}: ${errorData.description || errorData.message || 'Unknown error'}`);
+            const data = (await response.json()) as AssignBuilderResponse;
+
+            if (!data.builder_instances || data.builder_instances.length === 0) {
+              throw new Error('No builder instances assigned');
+            }
+
+            core.info(`✓ Successfully assigned ${data.builder_instances.length} builder(s) after ${retryCount} attempts`);
+            this.builderInstances = data.builder_instances;
+            this.saveState();
+            return;
+          } catch (error) {
+            if (error instanceof Error && error.message.startsWith('API Error:')) {
+              throw error; // Re-throw non-retriable errors
+            }
+
+            core.warning(`Request error: ${error}`);
+            core.info(`Waiting ${staticWait / 1000} seconds before next attempt...`);
+            await new Promise(resolve => setTimeout(resolve, staticWait));
           }
-
-          const data = (await response.json()) as AssignBuilderResponse;
-
-          if (!data.builder_instances || data.builder_instances.length === 0) {
-            throw new Error('No builder instances assigned');
-          }
-
-          core.info(`✓ Successfully assigned ${data.builder_instances.length} builder(s) after ${retryCount} attempts`);
-          this.builderInstances = data.builder_instances;
-          this.saveState();
-          return;
-        } catch (error) {
-          if (error instanceof Error && error.message.startsWith('API Error:')) {
-            throw error; // Re-throw non-retriable errors
-          }
-
-          core.warning(`Request error: ${error}`);
-          core.info(`Waiting ${staticWait / 1000} seconds before next attempt...`);
-          await new Promise(resolve => setTimeout(resolve, staticWait));
         }
+
+        //Reset script start time after each profile
+        this.scriptStartTime = Date.now();
+        core.info(`Timeout reached for profile ${profileName}`);
       }
 
-      throw new Error('Exceeded global timeout waiting for builder assignment');
+      throw new Error('Exceeded global timeout waiting for builder assignment for all profiles');
     });
   }
 
@@ -267,7 +274,7 @@ export class WarpBuildRemoteBuilders {
    * Validate required inputs
    */
   private validateInputs(): void {
-    if (!this.profileName) {
+    if (!this.profileNames) {
       throw new Error('Profile name is required');
     }
 

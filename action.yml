@@ -115,7 +115,7 @@ inputs:
     description: "The API key for the WarpBuild API. This is not required in case of using WarpBuild runners"
     required: false
   profile-name:
-    description: "The profile name to use for the WarpBuild Docker Builders"
+    description: "The profile names to use for the WarpBuild Docker Builders, comma separated list of profile names to be attempted in order"
     required: true
   timeout:
     description: "The timeout(in ms) to wait for the Docker Builders to be ready. By default, it is 10 minutes"

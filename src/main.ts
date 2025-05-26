@@ -36,7 +36,7 @@ actionsToolkit.run(
 
     remoteBuilders = new WarpBuildRemoteBuilders({
       apiKey: inputs.apiKey,
-      profileName: inputs.profileName,
+      profileNames: inputs.profileNames,
       timeout: parsedTimeout
     });
 
@@ -255,7 +255,7 @@ actionsToolkit.run(
 
     remoteBuilders = new WarpBuildRemoteBuilders({
       apiKey: inputs.apiKey,
-      profileName: inputs.profileName,
+      profileNames: inputs.profileNames,
       timeout: parsedTimeout
     });
 
