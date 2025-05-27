@@ -5,12 +5,24 @@ import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Inputs} from './context';
 
 export const tmpDir = process.env['STATE_tmpDir'] || '';
+
+export const builderDriver = process.env['STATE_builderDriver'] || '';
+export const builderEndpoint = process.env['STATE_builderEndpoint'] || '';
+export const summaryInputs = process.env['STATE_summaryInputs'] ? JSON.parse(process.env['STATE_summaryInputs']) : undefined;
+
 export const buildRef = process.env['STATE_buildRef'] || '';
 export const isSummarySupported = !!process.env['STATE_isSummarySupported'];
-export const summaryInputs = process.env['STATE_summaryInputs'] ? JSON.parse(process.env['STATE_summaryInputs']) : undefined;
 
 export function setTmpDir(tmpDir: string) {
   core.saveState('tmpDir', tmpDir);
+}
+
+export function setBuilderDriver(builderDriver: string) {
+  core.saveState('builderDriver', builderDriver);
+}
+
+export function setBuilderEndpoint(builderEndpoint: string) {
+  core.saveState('builderEndpoint', builderEndpoint);
 }
 
 export function setBuildRef(buildRef: string) {

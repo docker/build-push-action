@@ -85,6 +85,8 @@ actionsToolkit.run(
     let builder: BuilderInfo;
     await core.group(`Builder info`, async () => {
       builder = await toolkit.builder.inspect(inputs.builder);
+      stateHelper.setBuilderDriver(builder.driver ?? '');
+      stateHelper.setBuilderEndpoint(builder.nodes?.[0]?.endpoint ?? '');
       core.info(JSON.stringify(builder, null, 2));
     });
 
@@ -173,8 +175,6 @@ actionsToolkit.run(
         core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
         core.info('Build summary requires Buildx >= 0.13.0');
-      } else if (builder && builder.driver === 'cloud') {
-        core.info('Build summary is not yet supported with Docker Build Cloud');
       } else if (!ref) {
         core.info('Build summary requires a build reference');
       } else {
@@ -217,7 +217,9 @@ actionsToolkit.run(
           await GitHub.writeBuildSummary({
             exportRes: exportRes,
             uploadRes: uploadRes,
-            inputs: stateHelper.summaryInputs
+            inputs: stateHelper.summaryInputs,
+            driver: stateHelper.builderDriver,
+            endpoint: stateHelper.builderEndpoint
           });
         } catch (e) {
           core.warning(e.message);
