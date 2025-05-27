@@ -1129,7 +1129,7 @@ __metadata:
 
 "@docker/actions-toolkit@https://github.com/crazy-max/docker-actions-toolkit#fix-dbc-summary":
   version: 0.0.0+unknown
-  resolution: "@docker/actions-toolkit@https://github.com/crazy-max/docker-actions-toolkit.git#commit=d6bec4c8a9fa8c9786f722403c1862ccbb89777e"
+  resolution: "@docker/actions-toolkit@https://github.com/crazy-max/docker-actions-toolkit.git#commit=2ea6fb21a553dfae7d7593d6da30c6a6ce6b9fad"
   dependencies:
     "@actions/artifact": ^2.3.2
     "@actions/cache": ^4.0.3
@@ -1152,7 +1152,7 @@ __metadata:
     semver: ^7.7.2
     tar-stream: ^3.1.7
     tmp: ^0.2.3
-  checksum: 829fb2bab499c8a7ec070dcaf9633a9ec97e96871f515b0e2bd9acf40389b50047ccc80d432284287a2f9521505eeb8385830614510b49c2bc7e70917ee57367
+  checksum: 7201c44dcd871a837e4a0db0cc247cc00afdad07e57e9d7f1dc499e9868bcc5b5dd196c4e947e1e2568b67c26a2f2a30fba73d0b90410781d26274148987e524
   languageName: node
   linkType: hard
 
