@@ -214,13 +214,16 @@ actionsToolkit.run(
             });
           }
 
-          await GitHub.writeBuildSummary({
+          const summaryOpts = {
             exportRes: exportRes,
             uploadRes: uploadRes,
             inputs: stateHelper.summaryInputs,
             driver: stateHelper.builderDriver,
             endpoint: stateHelper.builderEndpoint
-          });
+          };
+          core.debug(`summaryOpts: ${JSON.stringify(summaryOpts, null, 2)}`);
+
+          await GitHub.writeBuildSummary(summaryOpts);
         } catch (e) {
           core.warning(e.message);
         }
