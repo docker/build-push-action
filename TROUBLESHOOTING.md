@@ -135,3 +135,11 @@ Or a dedicated step to sanitize the slug:
     push: true
     tags: ${{ steps.repo_slug.outputs.result }}:latest
 ```
+
+## can't push tagged ref docker.io/user/image:latest by digest
+
+By tagged ref, it means the image tag :latest conflicts with the push-by-digest=true output option. So it's either push by tag or push by digest, and, if the latter, the tags input must then be a CSV of repo names only, like:
+
+```yaml
+tags: docker.io/${{ github.repository }},ghcr.io/${{ github.repository }}
+```
