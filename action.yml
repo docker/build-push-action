@@ -36,6 +36,10 @@ inputs:
   builder:
     description: "Builder instance"
     required: false
+  buildx-version:
+    description: "Version of Buildx to install"
+    required: false
+    default: 'v0.23.0'
   cache-from:
     description: "List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)"
     required: false
