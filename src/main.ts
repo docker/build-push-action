@@ -23,7 +23,8 @@ import * as reporter from './reporter';
 import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet, pruneBuildkitCache} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
-const buildxVersion = 'v0.17.0';
+const DEFAULT_BUILDX_VERSION = 'v0.23.0';
+
 const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
 
@@ -71,6 +72,12 @@ async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
   await core.group(`Buildx version`, async () => {
     await toolkit.buildx.printVersion();
   });
+}
+
+// Validates the version string to ensure it matches a basic expected pattern.
+// Accepts versions of the form `v<MAJOR>.<MINOR>.<PATCH>` (e.g., v0.20.0) or the literal string `latest`.
+function isValidBuildxVersion(version: string): boolean {
+  return version === 'latest' || /^v\d+\.\d+\.\d+$/.test(version);
 }
 
 /**
@@ -158,6 +165,17 @@ actionsToolkit.run(
         core.info(e.message);
       }
     });
+
+    // Determine which Buildx version to install. If the user provided an input, validate it;
+    // otherwise, fall back to the default.
+    let buildxVersion = DEFAULT_BUILDX_VERSION;
+    if (inputs['buildx-version'] && inputs['buildx-version'].trim() !== '') {
+      if (isValidBuildxVersion(inputs['buildx-version'])) {
+        buildxVersion = inputs['buildx-version'];
+      } else {
+        core.warning(`Invalid buildx-version '${inputs['buildx-version']}'. ` + `Expected 'latest' or a version in the form v<MAJOR>.<MINOR>.<PATCH>. ` + `Falling back to default ${DEFAULT_BUILDX_VERSION}.`);
+      }
+    }
 
     await core.group(`Setup buildx`, async () => {
       await setupBuildx(buildxVersion, toolkit);
