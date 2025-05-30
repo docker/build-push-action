@@ -59,6 +59,7 @@ export interface Inputs {
   'github-token': string;
   nofallback: boolean;
   setupOnly: boolean;
+  'buildx-version': string;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -98,6 +99,7 @@ export async function getInputs(): Promise<Inputs> {
     'github-token': core.getInput('github-token'),
     nofallback: core.getBooleanInput('nofallback'),
     setupOnly: core.getBooleanInput('setup-only'),
+    'buildx-version': core.getInput('buildx-version')
   };
 }
 
