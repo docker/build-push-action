@@ -1,0 +1,99 @@
+name: Builder platform matrix tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  # 1) Build AMD image on default (amd64) runner
+  amd_on_amd:
+    name: linux/amd64 build on blacksmith runner
+    runs-on: blacksmith
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Write sample Dockerfile
+        run: |
+          cat <<'EOF' > Dockerfile
+          FROM alpine:3.20
+          # Install something non-trivial so that layer caching is observable
+          RUN apk add --no-cache curl git
+          EOF
+
+      - name: Build image (linux/amd64)
+        uses: useblacksmith/build-push-action@builder-misconfig
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          tags: test/amd_on_amd:${{ github.sha }}
+
+  # 2) Build ARM image on default (amd64) runner
+  arm_on_amd:
+    name: linux/arm64 build on blacksmith runner
+    runs-on: blacksmith
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Write sample Dockerfile
+        run: |
+          cat <<'EOF' > Dockerfile
+          FROM alpine:3.20
+          RUN apk add --no-cache curl git
+          EOF
+
+      - name: Build image (linux/arm64)
+        uses: useblacksmith/build-push-action@builder-misconfig
+        with:
+          context: .
+          platforms: linux/arm64
+          push: false
+          tags: test/arm_on_amd:${{ github.sha }}
+
+  # 3) Build AMD image on ARM runner
+  amd_on_arm:
+    name: linux/amd64 build on blacksmith-arm runner
+    runs-on: blacksmith-arm
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Write sample Dockerfile
+        run: |
+          cat <<'EOF' > Dockerfile
+          FROM alpine:3.20
+          RUN apk add --no-cache curl git
+          EOF
+
+      - name: Build image (linux/amd64)
+        uses: useblacksmith/build-push-action@builder-misconfig
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          tags: test/amd_on_arm:${{ github.sha }}
+
+  # 4) Build ARM image on ARM runner
+  arm_on_arm:
+    name: linux/arm64 build on blacksmith-arm runner
+    runs-on: blacksmith-arm
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Write sample Dockerfile
+        run: |
+          cat <<'EOF' > Dockerfile
+          FROM alpine:3.20
+          RUN apk add --no-cache curl git
+          EOF
+
+      - name: Build image (linux/arm64)
+        uses: useblacksmith/build-push-action@builder-misconfig
+        with:
+          context: .
+          platforms: linux/arm64
+          push: false
+          tags: test/arm_on_arm:${{ github.sha }} 
