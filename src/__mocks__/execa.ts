@@ -4,4 +4,4 @@ export const execa = jest.fn().mockImplementation(() => {
     stderr: '',
     exitCode: 0
   };
-}); 
+});
