@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as handlebars from 'handlebars';
-import * as fs from 'fs';
+import * as os from 'os';
 
 import {Build} from '@docker/actions-toolkit/lib/buildx/build';
 import {Context} from '@docker/actions-toolkit/lib/context';
@@ -336,12 +336,39 @@ export const tlsClientKeyPath = '/tmp/blacksmith_client_key.pem';
 export const tlsClientCaCertificatePath = '/tmp/blacksmith_client_ca_certificate.pem';
 export const tlsRootCaCertificatePath = '/tmp/blacksmith_root_ca_certificate.pem';
 
-export async function getRemoteBuilderArgs(name: string, builderUrl: string): Promise<Array<string>> {
+/**
+ * Resolve the platform list that should be passed to `docker buildx create`.
+ *
+ * Priority:
+ *   1. Use the user-supplied platforms list (comma-joined) if provided.
+ *   2. Fallback to the architecture of the host runner.
+ *
+ * The function is exported to allow isolated unit testing.
+ */
+export function resolveRemoteBuilderPlatforms(platforms?: string[]): string {
+  // If user explicitly provided platforms, honour them verbatim.
+  if (platforms && platforms.length > 0) {
+    return platforms.join(',');
+  }
+
+  // Otherwise derive from host architecture.
+  const nodeArch = os.arch(); // e.g. 'x64', 'arm64', 'arm'
+  const archMap: {[key: string]: string} = {
+    x64: 'amd64',
+    arm64: 'arm64',
+    arm: 'arm'
+  };
+  const mappedArch = archMap[nodeArch] || nodeArch;
+  return `linux/${mappedArch}`;
+}
+
+export async function getRemoteBuilderArgs(name: string, builderUrl: string, platforms?: string[]): Promise<Array<string>> {
   const args: Array<string> = ['create', '--name', name, '--driver', 'remote'];
 
-  // TODO(aayush): Instead of hardcoding the platform, we should fail the build if the platform is
-  // unsupported.
-  args.push('--platform', 'linux/amd64');
+  const platformFlag = resolveRemoteBuilderPlatforms(platforms);
+  core.info(`Determined remote builder platform(s): ${platformFlag}`);
+  args.push('--platform', platformFlag);
+
   // Always use the remote builder, overriding whatever has been configured so far.
   args.push('--use');
   // Use the provided builder URL

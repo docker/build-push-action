@@ -9,4 +9,4 @@ export class Metric {
   type: Metric_MetricType = Metric_MetricType.UNSPECIFIED;
   value: number = 0;
   labels: Record<string, string> = {};
-} 
+}
