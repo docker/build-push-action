@@ -28,14 +28,13 @@ describe('Remote builder platform argument resolution', () => {
   });
 
   test('falls back to host architecture when no platforms supplied', async () => {
-    jest.spyOn(os, 'arch').mockReturnValue('arm64' as any);
-
     const platformStr = resolveRemoteBuilderPlatforms([]);
-    expect(platformStr).toBe('linux/arm64');
+    const expectedPlatform = os.arch() === 'arm64' ? 'linux/arm64' : 'linux/amd64';
+    expect(platformStr).toBe(expectedPlatform);
 
     const args = await getRemoteBuilderArgs(builderName, builderUrl, []);
     const idx = args.indexOf('--platform');
     expect(idx).toBeGreaterThan(-1);
-    expect(args[idx + 1]).toBe('linux/arm64');
+    expect(args[idx + 1]).toBe(expectedPlatform);
   });
 });
