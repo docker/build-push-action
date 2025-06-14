@@ -400,26 +400,25 @@ actionsToolkit.run(
           });
         }
 
-        // Prune buildkit cache to clean up unused layers before shutting down buildkitd.
-        try {
-          core.info('Pruning BuildKit cache');
-          await pruneBuildkitCache();
-          core.info('BuildKit cache pruned');
-        } catch (error) {
-          // Log warning but don't fail the cleanup
-          core.warning(`Error pruning BuildKit cache: ${error.message}`);
-        }
-
-        await leaveTailnet();
-
         try {
           const {stdout} = await execAsync('pgrep buildkitd');
           if (stdout.trim()) {
+            try {
+              core.info('Pruning BuildKit cache');
+              await pruneBuildkitCache();
+              core.info('BuildKit cache pruned');
+            } catch (error) {
+              // Log warning but don't fail the cleanup
+              core.warning(`Error pruning BuildKit cache: ${error.message}`);
+            }
+
             const buildkitdShutdownStartTime = Date.now();
             await shutdownBuildkitd();
             const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
             await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
             core.info('Shutdown buildkitd');
+          } else {
+            core.debug('No buildkitd process found running');
           }
         } catch (error) {
           if (error.code === 1) {
@@ -429,6 +428,8 @@ actionsToolkit.run(
             core.warning(`Error checking for buildkitd processes: ${error.message}`);
           }
         }
+
+        await leaveTailnet();
         try {
           // Run sync to flush any pending writes before unmounting.
           await execAsync('sync');
@@ -476,7 +477,13 @@ actionsToolkit.run(
             core.info('buildkitd.log contents:');
             core.info(buildkitdLog);
           } catch (error) {
-            core.warning(`Failed to read buildkitd.log: ${error.message}`);
+            // Only log warning if the file was expected to exist (builder setup completed)
+            const sentinelPath = path.join('/tmp', 'builder-setup-complete');
+            if (fs.existsSync(sentinelPath)) {
+              core.warning(`Failed to read buildkitd.log: ${error.message}`);
+            } else {
+              core.debug(`buildkitd.log not found (builder setup incomplete): ${error.message}`);
+            }
           }
         }
       }
@@ -496,7 +503,6 @@ actionsToolkit.run(
         try {
           const {stdout} = await execAsync('pgrep buildkitd');
           if (stdout.trim()) {
-            // Prune buildkit cache to clean up unused layers before shutting down buildkitd.
             try {
               core.info('Pruning BuildKit cache');
               await pruneBuildkitCache();
