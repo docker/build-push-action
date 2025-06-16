@@ -49,7 +49,7 @@ export async function reportBuildPushActionFailure(error?: Error, event?: string
     repo_name: process.env.GITHUB_REPO_NAME || '',
     region: process.env.BLACKSMITH_REGION || 'eu-central',
     arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
-    vm_id: process.env.VM_ID || '',
+    vm_id: process.env.BLACKSMITH_VM_ID || '',
     petname: process.env.PETNAME || '',
     message: event ? `${event}: ${error?.message || ''}` : error?.message || '',
     warning: isWarning || false
@@ -72,7 +72,7 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
     await agentClient.commitStickyDisk({
       exposeId: exposeId || '',
       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.VM_ID || '',
+      vmId: process.env.BLACKSMITH_VM_ID || '',
       shouldCommit: true,
       repoName: process.env.GITHUB_REPO_NAME || '',
       stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
@@ -122,7 +122,7 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
     await blacksmithAgentClient.commitStickyDisk({
       exposeId: exposeId || '',
       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.VM_ID || '',
+      vmId: process.env.BLACKSMITH_VM_ID || '',
       shouldCommit: false,
       repoName: process.env.GITHUB_REPO_NAME || '',
       stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
@@ -152,7 +152,7 @@ export async function reportBuild(dockerfilePath: string) {
       region: process.env.BLACKSMITH_REGION || 'eu-central',
       arch: process.env.BLACKSMITH_ENV?.includes('arm') ? 'arm64' : 'amd64',
       git_sha: process.env.GITHUB_SHA || '',
-      vm_id: process.env.VM_ID || '',
+      vm_id: process.env.BLACKSMITH_VM_ID || '',
       git_branch: process.env.GITHUB_REF_NAME || ''
     };
     core.debug(`Reporting build with options: ${JSON.stringify(requestBody, null, 2)}`);
@@ -204,7 +204,7 @@ export async function commitStickyDisk(exposeId?: string, shouldCommit: boolean 
     await agentClient.commitStickyDisk({
       exposeId: exposeId || '',
       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.VM_ID || '',
+      vmId: process.env.BLACKSMITH_VM_ID || '',
       shouldCommit,
       repoName: process.env.GITHUB_REPO_NAME || '',
       stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''

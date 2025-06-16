@@ -187,7 +187,7 @@ export async function getStickyDisk(options?: {signal?: AbortSignal}): Promise<{
       stickyDiskKey: stickyDiskKey,
       region: process.env.BLACKSMITH_REGION || 'eu-central',
       installationModelId: process.env.BLACKSMITH_INSTALLATION_MODEL_ID || '',
-      vmId: process.env.VM_ID || '',
+      vmId: process.env.BLACKSMITH_VM_ID || '',
       stickyDiskType: 'dockerfile',
       repoName: process.env.GITHUB_REPO_NAME || '',
       stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
@@ -210,7 +210,7 @@ export async function joinTailnet(): Promise<void> {
   }
 
   try {
-    await execAsync(`sudo tailscale up --authkey=${token} --hostname=${process.env.VM_ID}`);
+    await execAsync(`sudo tailscale up --authkey=${token} --hostname=${process.env.BLACKSMITH_VM_ID}`);
 
     core.info('Successfully joined tailnet');
   } catch (error) {
