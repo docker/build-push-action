@@ -1,0 +1,204 @@
+diff --git a/src/main.ts b/src/main.ts
+index abc123..def456 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -615,16 +615,20 @@ export async function shutdownBuildkitd(): Promise<void> {
+   const startTime = Date.now();
+   const timeout = 10000; // 10 seconds
+   const backoff = 300; // 300ms
++  let gracefulShutdown = false;
+ 
+   try {
+     await execAsync(`sudo pkill -TERM buildkitd`);
+ 
+     // Wait for buildkitd to shutdown with backoff retry
+     while (Date.now() - startTime < timeout) {
+       try {
+         const {stdout} = await execAsync('pgrep buildkitd');
+         core.debug(`buildkitd process still running with PID: ${stdout.trim()}`);
+         await new Promise(resolve => setTimeout(resolve, backoff));
+       } catch (error) {
+         if (error.code === 1) {
+           // pgrep returns exit code 1 when no process is found, which means shutdown successful
++          gracefulShutdown = true;
+           core.debug('buildkitd successfully shutdown');
+           return;
+         }
+@@ -633,7 +637,17 @@ export async function shutdownBuildkitd(): Promise<void> {
+       }
+     }
+ 
+-    throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
++    if (!gracefulShutdown) {
++      // CRITICAL: Do not continue if buildkitd didn't shutdown cleanly
++      // This prevents committing a potentially corrupted device
++      throw new Error('buildkitd failed to shutdown gracefully within timeout - device may be corrupted');
++    }
++    
++    // CRITICAL: Sync after buildkitd exits to flush all database writes
++    await execAsync('sync');
++    // Give kernel time to complete the sync
++    await new Promise(resolve => setTimeout(resolve, 500));
++    
+   } catch (error) {
+     core.error('error shutting down buildkitd process:', error);
+     throw error;
+@@ -413,9 +427,15 @@ actionsToolkit.run(
+             }
+ 
+             const buildkitdShutdownStartTime = Date.now();
+-            await shutdownBuildkitd();
+-            const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
+-            await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
+-            core.info('Shutdown buildkitd');
++            try {
++              await shutdownBuildkitd();
++              const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
++              await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
++              core.info('Shutdown buildkitd gracefully');
++            } catch (shutdownError) {
++              // If buildkitd didn't shutdown gracefully, we should NOT commit the sticky disk
++              core.error(`Buildkitd shutdown failed: ${shutdownError.message}`);
++              throw new Error('Cannot commit sticky disk - buildkitd did not shutdown cleanly');
++            }
+           } else {
+             core.debug('No buildkitd process found running');
+           }
+@@ -431,8 +451,11 @@ actionsToolkit.run(
+ 
+         await leaveTailnet();
+         try {
+-          // Run sync to flush any pending writes before unmounting.
++          // Multiple syncs to ensure all writes are flushed before unmounting
++          await execAsync('sync');
++          await new Promise(resolve => setTimeout(resolve, 200));
+           await execAsync('sync');
++          
+           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+           if (mountOutput) {
+             for (let attempt = 1; attempt <= 3; attempt++) {
+@@ -462,10 +485,16 @@ actionsToolkit.run(
+ 
+         if (builderInfo.addr) {
+           if (!buildError) {
+-            await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
++            try {
++              await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
++            } catch (commitError) {
++              core.error(`Failed to commit sticky disk: ${commitError.message}`);
++              throw commitError;
++            }
+           } else {
+-            await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, builderInfo.exposeId);
++            // Don't commit the sticky disk if the build failed
++            core.warning('Build failed - not committing sticky disk to prevent corruption');
+           }
+         }
+       } catch (error) {
+         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
+@@ -511,7 +540,11 @@ actionsToolkit.run(
+               core.warning(`Error pruning BuildKit cache: ${error.message}`);
+             }
+ 
+-            await shutdownBuildkitd();
++            try {
++              await shutdownBuildkitd();
++            } catch (shutdownError) {
++              core.error(`Critical: buildkitd did not shutdown cleanly in post: ${shutdownError.message}`);
++            }
+             core.info('Shutdown buildkitd');
+           }
+         } catch (error) {
+@@ -523,8 +556,10 @@ actionsToolkit.run(
+         }
+ 
+         try {
+-          // Run sync to flush any pending writes before unmounting.
++          // Multiple syncs before final unmount
++          await execAsync('sync');
++          await new Promise(resolve => setTimeout(resolve, 200));
+           await execAsync('sync');
++          
+           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+           if (mountOutput) {
+             for (let attempt = 1; attempt <= 3; attempt++) {
+diff --git a/src/reporter.ts b/src/reporter.ts
+index abc123..def456 100644
+--- a/src/reporter.ts
++++ b/src/reporter.ts
+@@ -63,6 +63,11 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
+     return;
+   }
+ 
++  // Add a final sync before committing to ensure all writes are persisted
++  try {
++    await execAsync('sync');
++  } catch (e) {}
++
+   try {
+     const agentClient = createBlacksmithAgentClient();
+ 
+@@ -114,6 +119,11 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
+     return;
+   }
+ 
++  // For failed builds, we should be extra careful about committing
++  // Add shouldCommit: false to prevent committing corrupted state
++  const shouldCommit = false;
++  core.warning('Build failed - not committing sticky disk to prevent potential corruption');
++
+   try {
+     const blacksmithAgentClient = createBlacksmithAgentClient();
+ 
+@@ -121,7 +131,7 @@ export async function reportBuildFailed(dockerBuildId: string | null, dockerBuil
+       exposeId: exposeId || '',
+       stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
+       vmId: process.env.BLACKSMITH_VM_ID || '',
+-      shouldCommit: true,
++      shouldCommit: shouldCommit,
+       repoName: process.env.GITHUB_REPO_NAME || '',
+       stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
+     });
+diff --git a/src/setup_builder.ts b/src/setup_builder.ts
+index abc123..def456 100644
+--- a/src/setup_builder.ts
++++ b/src/setup_builder.ts
+@@ -84,11 +84,13 @@ async function writeBuildkitdTomlFile(parallelism: number, addr: string): Promis
+       oci: {
+         enabled: true,
+         // Disable automatic garbage collection, since we will prune manually. Automatic GC
+         // has been seen to negatively affect startup times of the daemon.
+         gc: false,
+         'max-parallelism': parallelism,
+-        snapshotter: 'overlayfs'
++        snapshotter: 'overlayfs',
++        // Add explicit sync settings for better data integrity
++        'sync-target': 'disk'
+       },
+       containerd: {
+         enabled: false
+       }
+@@ -354,6 +356,25 @@ export async function setupStickyDisk(dockerfilePath: string, setupOnly: boolean
+       buildId = buildResponse?.docker_build_id;
+     }
+     await execAsync(`sudo mkdir -p ${mountPoint}`);
++    
++    // Check if there are any corrupted database files from previous runs
++    const dbFiles = ['history.db', 'cache.db', 'snapshots.db', 'metadata_v2.db', 'containerdmeta.db'];
++    for (const db of dbFiles) {
++      const dbPath = `${device}/${db}`;
++      try {
++        // If we can detect corruption, remove the file before mounting
++        const {stdout} = await execAsync(`sudo debugfs -R "stat ${db}" ${device} 2>&1 | grep -E "Size:|Inode:"`);
++        if (stdout && stdout.includes('Size: 0')) {
++          core.warning(`Detected potentially corrupted ${db}, will be recreated`);
++          // Note: We can't easily delete from unmounted ext4, buildkit will recreate on start
++        }
++      } catch (e) {
++        // debugfs might not be available or file might not exist, which is fine
++      }
++    }
++    
+     await execAsync(`sudo mount ${device} ${mountPoint}`);
+     core.debug(`${device} has been mounted to ${mountPoint}`);
+     core.info('Successfully obtained sticky disk');

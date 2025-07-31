@@ -1,0 +1,125 @@
+diff --git a/src/main.ts b/src/main.ts
+index abc123..def456 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -613,18 +613,44 @@ function buildSummaryEnabled(): boolean {
+ 
+ export async function shutdownBuildkitd(): Promise<void> {
+   const startTime = Date.now();
+-  const timeout = 10000; // 10 seconds
++  const timeout = 30000; // 30 seconds
+   const backoff = 300; // 300ms
+ 
+   try {
++    // First, try graceful shutdown with SIGTERM
+     await execAsync(`sudo pkill -TERM buildkitd`);
++    core.info('Sent SIGTERM to buildkitd, waiting for graceful shutdown...');
+ 
+-    // Wait for buildkitd to shutdown with backoff retry
+-    while (Date.now() - startTime < timeout) {
++    // Wait for graceful shutdown (10 seconds max)
++    let gracefulShutdown = false;
++    const gracefulTimeout = 10000;
++    while (Date.now() - startTime < gracefulTimeout) {
+       try {
+         const {stdout} = await execAsync('pgrep buildkitd');
+-        core.debug(`buildkitd process still running with PID: ${stdout.trim()}`);
++        if (stdout.trim()) {
++          core.debug(`buildkitd still running with PID: ${stdout.trim()}`);
++        }
+         await new Promise(resolve => setTimeout(resolve, backoff));
++      } catch (error) {
++        if (error.code === 1) {
++          gracefulShutdown = true;
++          core.info('buildkitd shutdown gracefully');
++          break;
++        }
++        throw error;
++      }
++    }
++
++    // If still running after graceful period, force kill
++    if (!gracefulShutdown) {
++      core.warning('buildkitd did not shutdown gracefully, sending SIGKILL');
++      await execAsync(`sudo pkill -KILL buildkitd`);
++      
++      // Wait for force kill to complete
++      while (Date.now() - startTime < timeout) {
++        try {
++          await execAsync('pgrep buildkitd');
++          await new Promise(resolve => setTimeout(resolve, backoff));
+         } catch (error) {
+         if (error.code === 1) {
+           // pgrep returns exit code 1 when no process is found, which means shutdown successful
+@@ -636,7 +662,25 @@ export async function shutdownBuildkitd(): Promise<void> {
+         throw error;
+       }
+     }
++    }
++
++    // CRITICAL: Sync filesystem to ensure all buildkit writes are flushed
++    core.info('Syncing filesystem to flush buildkit writes...');
++    await execAsync('sync');
++    
++    // Wait a bit for sync to complete
++    await new Promise(resolve => setTimeout(resolve, 2000));
++    
++    // Double-check no buildkit processes remain
++    try {
++      const {stdout} = await execAsync('pgrep -f buildkit');
++      if (stdout.trim()) {
++        throw new Error(`Buildkit processes still running after shutdown: ${stdout.trim()}`);
++      }
++    } catch (error) {
++      if (error.code !== 1) throw error;
++    }
+ 
++    core.info('buildkitd shutdown complete');
+     throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
+   } catch (error) {
+     core.error('error shutting down buildkitd process:', error);
+@@ -392,6 +436,25 @@ actionsToolkit.run(
+ 
+     await core.group('Cleaning up Blacksmith builder', async () => {
+       try {
++        // Capture debug info before cleanup
++        if (builderInfo.addr) {
++          try {
++            core.debug('Capturing buildkit state before cleanup...');
++            await execAsync(`sudo buildctl --addr ${builderInfo.addr} debug workers > /tmp/buildkit-workers-final.log || true`);
++            await execAsync(`ps aux | grep buildkit > /tmp/buildkit-processes-final.log || true`);
++            await execAsync(`ls -la /var/lib/buildkit/ > /tmp/buildkit-files-final.log || true`);
++            
++            // Check database files
++            const dbFiles = ['history.db', 'cache.db', 'snapshots.db'];
++            for (const db of dbFiles) {
++              await execAsync(`sudo file /var/lib/buildkit/${db} >> /tmp/buildkit-files-final.log 2>&1 || true`);
++            }
++          } catch (debugError) {
++            core.debug(`Error capturing debug info: ${debugError.message}`);
++          }
++        }
++
+         let exportRes;
+         if (!buildError) {
+           const buildxHistory = new BuildxHistory();
+@@ -431,8 +494,17 @@ actionsToolkit.run(
+ 
+         await leaveTailnet();
+         try {
+-          // Run sync to flush any pending writes before unmounting.
++          // Multiple syncs to ensure all writes are flushed
++          core.debug('Running filesystem sync before unmount...');
++          await execAsync('sync');
++          await new Promise(resolve => setTimeout(resolve, 1000));
+           await execAsync('sync');
++          
++          // Force sync of specific mount point
++          try {
++            await execAsync(`sudo sync -f ${mountPoint}`);
++          } catch (e) {
++            core.debug(`Mount point sync failed: ${e.message}`);
++          }
+           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
+           if (mountOutput) {
+             for (let attempt = 1; attempt <= 3; attempt++) {

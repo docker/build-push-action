@@ -22,6 +22,7 @@ import {exec} from 'child_process';
 import * as reporter from './reporter';
 import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet, pruneBuildkitCache} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
+import {validateBuildkitState} from './buildkit_validation';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
 
@@ -413,10 +414,16 @@ actionsToolkit.run(
             }
 
             const buildkitdShutdownStartTime = Date.now();
-            await shutdownBuildkitd();
-            const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
-            await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
-            core.info('Shutdown buildkitd');
+            try {
+              await shutdownBuildkitd();
+              const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
+              await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
+              core.info('Shutdown buildkitd gracefully');
+            } catch (shutdownError) {
+              // If buildkitd didn't shutdown gracefully, we should NOT commit the sticky disk
+              core.error(`Buildkitd shutdown failed: ${shutdownError.message}`);
+              throw new Error('Cannot commit sticky disk - buildkitd did not shutdown cleanly');
+            }
           } else {
             core.debug('No buildkitd process found running');
           }
@@ -431,8 +438,11 @@ actionsToolkit.run(
 
         await leaveTailnet();
         try {
-          // Run sync to flush any pending writes before unmounting.
+          // Multiple syncs to ensure all writes are flushed before unmounting
           await execAsync('sync');
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await execAsync('sync');
+          
           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
           if (mountOutput) {
             for (let attempt = 1; attempt <= 3; attempt++) {
@@ -462,8 +472,22 @@ actionsToolkit.run(
 
         if (builderInfo.addr) {
           if (!buildError) {
-            await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
+            // Validate buildkit state before committing
+            const isStateValid = await validateBuildkitState();
+            if (!isStateValid) {
+              core.error('Buildkit state validation failed - not committing sticky disk');
+              throw new Error('Buildkit state validation failed - potential corruption detected');
+            }
+            
+            try {
+              await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
+            } catch (commitError) {
+              core.error(`Failed to commit sticky disk: ${commitError.message}`);
+              throw commitError;
+            }
           } else {
+            // Don't commit the sticky disk if the build failed
+            core.warning('Build failed - not committing sticky disk to prevent corruption');
             await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, builderInfo.exposeId);
           }
         }
@@ -524,8 +548,11 @@ actionsToolkit.run(
         }
 
         try {
-          // Run sync to flush any pending writes before unmounting.
+          // Multiple syncs to ensure all writes are flushed before unmounting
           await execAsync('sync');
+          await new Promise(resolve => setTimeout(resolve, 200));
+          await execAsync('sync');
+          
           const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
           if (mountOutput) {
             for (let attempt = 1; attempt <= 3; attempt++) {
@@ -616,6 +643,7 @@ export async function shutdownBuildkitd(): Promise<void> {
   const startTime = Date.now();
   const timeout = 10000; // 10 seconds
   const backoff = 300; // 300ms
+  let gracefulShutdown = false;
 
   try {
     await execAsync(`sudo pkill -TERM buildkitd`);
@@ -629,15 +657,27 @@ export async function shutdownBuildkitd(): Promise<void> {
       } catch (error) {
         if (error.code === 1) {
           // pgrep returns exit code 1 when no process is found, which means shutdown successful
+          gracefulShutdown = true;
           core.debug('buildkitd successfully shutdown');
-          return;
+          break;
         }
         // Some other error occurred
         throw error;
       }
     }
 
-    throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
+    if (!gracefulShutdown) {
+      // CRITICAL: Do not continue if buildkitd didn't shutdown cleanly
+      // This prevents committing a potentially corrupted device
+      throw new Error('buildkitd failed to shutdown gracefully within timeout - device may be corrupted');
+    }
+    
+    // CRITICAL: Sync after buildkitd exits to flush all database writes
+    core.debug('Syncing filesystem after buildkitd shutdown...');
+    await execAsync('sync');
+    // Give kernel time to complete the sync
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
   } catch (error) {
     core.error('error shutting down buildkitd process:', error);
     throw error;
