@@ -18,7 +18,6 @@ import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 
 import * as context from './context';
 import * as reporter from './reporter';
-import {reportBuildStart} from './build-reporter';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
@@ -90,8 +89,13 @@ export async function reportBuildMetrics(inputs: context.Inputs): Promise<string
     }
     
     // Report build start to get a build ID for tracking
-    const buildInfo = await reportBuildStart(dockerfilePath);
-    return buildInfo?.docker_build_id || null;
+    try {
+      const buildInfo = await reporter.reportBuild(dockerfilePath);
+      return buildInfo?.docker_build_id || null;
+    } catch (error) {
+      core.warning(`Error reporting build start: ${(error as Error).message}`);
+      return null;
+    }
   } catch (error) {
     await reporter.reportBuildPushActionFailure(error, 'reporting build metrics');
     core.warning(`Error during build metrics reporting: ${error.message}`);
