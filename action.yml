@@ -7,14 +7,6 @@ branding:
   color: 'blue'
 
 inputs:
-  nofallback:
-    description: "Fail the build if the remote builder is not available; defaults to false"
-    required: false
-    default: 'false'
-  setup-only:
-    description: "Only setup the Blacksmith builder without running a Docker build; defaults to false"
-    required: false
-    default: 'false'
   add-hosts:
     description: "List of a customs host-to-IP mapping (e.g., docker:10.180.0.1)"
     required: false
@@ -36,10 +28,6 @@ inputs:
   builder:
     description: "Builder instance"
     required: false
-  buildx-version:
-    description: "Version of Buildx to install"
-    required: false
-    default: 'v0.23.0'
   cache-from:
     description: "List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)"
     required: false

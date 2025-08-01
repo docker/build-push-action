@@ -21,10 +21,10 @@ import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk
 
 async function assertBuildxAvailable(toolkit: Toolkit): Promise<void> {
   if (!(await toolkit.buildx.isAvailable())) {
-    core.setFailed(`Docker buildx is required. Please use setup-docker-builder action or setup-buildx-action to configure buildx.`);
+    core.setFailed(`Docker buildx is required. Please use setup-docker-builder action to configure buildx.`);
     throw new Error('Docker buildx is not available');
   }
-  
+
   await core.group(`Buildx version`, async () => {
     await toolkit.buildx.printVersion();
   });
@@ -144,7 +144,6 @@ actionsToolkit.run(
           core.info('No proxy configuration found');
         }
       });
-
 
       const args: string[] = await context.getArgs(inputs, toolkit);
       args.push('--debug');

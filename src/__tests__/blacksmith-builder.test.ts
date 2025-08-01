@@ -34,7 +34,6 @@ describe('reportBuildMetrics', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockInputs = {
-      nofallback: false,
       setupOnly: false,
       platforms: []
     };
