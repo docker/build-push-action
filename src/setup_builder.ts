@@ -329,6 +329,16 @@ const stickyDiskTimeoutMs = 45000;
 
 // setupStickyDisk mounts a sticky disk for the entity and returns the device information.
 // throws an error if it is unable to do so because of a timeout or an error
+export async function reportBuildStart(dockerfilePath: string): Promise<{docker_build_id: string} | null> {
+  try {
+    const buildResponse = await reporter.reportBuild(dockerfilePath);
+    return buildResponse;
+  } catch (error) {
+    core.warning(`Error reporting build start: ${(error as Error).message}`);
+    return null;
+  }
+}
+
 export async function setupStickyDisk(dockerfilePath: string, setupOnly: boolean): Promise<{device: string; buildId?: string | null; exposeId: string}> {
   try {
     const controller = new AbortController();

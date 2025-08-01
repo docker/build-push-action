@@ -20,12 +20,11 @@ import * as context from './context';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {setupStickyDisk, leaveTailnet} from './setup_builder';
+import {reportBuildStart, leaveTailnet} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
 
-const mountPoint = '/var/lib/buildkit';
 const execAsync = promisify(exec);
 
 async function retryWithBackoff<T>(operation: () => Promise<T>, maxRetries: number = 5, initialBackoffMs: number = 200): Promise<T> {
@@ -106,10 +105,13 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     if (!inputs.setupOnly && !dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
     }
-    const stickyDiskStartTime = Date.now();
-    const stickyDiskSetup = await setupStickyDisk(dockerfilePath || '', inputs.setupOnly);
-    const stickyDiskDurationMs = Date.now() - stickyDiskStartTime;
-    await reporter.reportMetric(Metric_MetricType.BPA_HOTLOAD_DURATION_MS, stickyDiskDurationMs);
+    
+    // Report build start to get a build ID for tracking
+    let buildId: string | null = null;
+    if (!inputs.setupOnly && dockerfilePath) {
+      const buildInfo = await reportBuildStart(dockerfilePath);
+      buildId = buildInfo?.docker_build_id || null;
+    }
     
     // For now, we'll check if a builder is already available from setup-docker-builder
     // by looking for the sentinel file
@@ -120,9 +122,8 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
       throw new Error('Docker builder not available. Please use setup-docker-builder action first.');
     }
     
-    stateHelper.setExposeId(stickyDiskSetup.exposeId);
-    // Return null for addr since we're not managing the builder anymore
-    return {addr: null, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
+    // We no longer manage expose IDs since sticky disk is handled by setup-docker-builder
+    return {addr: null, buildId: buildId, exposeId: ''};
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
     // If we should not fallback, we rethrow the error and fail the build.
@@ -364,41 +365,13 @@ actionsToolkit.run(
         // Buildkitd is now managed by setup-docker-builder, not here
 
         await leaveTailnet();
-        try {
-          // Run sync to flush any pending writes before unmounting.
-          await execAsync('sync');
-          const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
-          if (mountOutput) {
-            for (let attempt = 1; attempt <= 3; attempt++) {
-              try {
-                await execAsync(`sudo umount ${mountPoint}`);
-                core.debug(`${mountPoint} has been unmounted`);
-                break;
-              } catch (error) {
-                if (attempt === 3) {
-                  throw error;
-                }
-                core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }
-            core.info('Unmounted device');
-          }
-        } catch (error) {
-          // grep returns exit code 1 when no matches are found.
-          if (error.code === 1) {
-            core.debug('No dangling mounts found to clean up');
-          } else {
-            // Only warn for actual errors, not for the expected case where grep finds nothing.
-            core.warning(`Error during cleanup: ${error.message}`);
-          }
-        }
+        // Sticky disk is now managed by setup-docker-builder, not here
 
-        if (builderInfo.addr) {
+        if (builderInfo.buildId) {
           if (!buildError) {
-            await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, builderInfo.exposeId);
+            await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, '');
           } else {
-            await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, builderInfo.exposeId);
+            await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, '');
           }
         }
       } catch (error) {
@@ -421,51 +394,12 @@ actionsToolkit.run(
         await leaveTailnet();
 
         // Buildkitd is now managed by setup-docker-builder, not here
+        // Sticky disk is also managed by setup-docker-builder, not here
 
-        try {
-          // Run sync to flush any pending writes before unmounting.
-          await execAsync('sync');
-          const {stdout: mountOutput} = await execAsync(`mount | grep ${mountPoint}`);
-          if (mountOutput) {
-            for (let attempt = 1; attempt <= 3; attempt++) {
-              try {
-                await execAsync(`sudo umount ${mountPoint}`);
-                core.debug(`${mountPoint} has been unmounted`);
-                break;
-              } catch (error) {
-                if (attempt === 3) {
-                  throw error;
-                }
-                core.warning(`Unmount failed, retrying (${attempt}/3)...`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }
-            core.info('Unmounted device');
-          }
-        } catch (error) {
-          if (error.code === 1) {
-            core.debug('No dangling mounts found to clean up');
-          } else {
-            core.warning(`Error during cleanup: ${error.message}`);
-          }
-        }
-
-        // 4. Clean up temp directory if it exists.
+        // Clean up temp directory if it exists.
         if (stateHelper.tmpDir.length > 0) {
           fs.rmSync(stateHelper.tmpDir, {recursive: true});
           core.debug(`Removed temp folder ${stateHelper.tmpDir}`);
-        }
-
-        // 5. Commit sticky disk if the builder was booted in setup-only mode.
-        // If the builder was not booted in setup-only mode, the sticky disk was committed as part
-        // of the main routine.
-        if (stateHelper.getSetupOnly()) {
-          core.info('Committing sticky disk in post cleanup as setup-only mode was enabled');
-          if (stateHelper.getExposeId() !== '') {
-            await reporter.commitStickyDisk(stateHelper.getExposeId());
-          } else {
-            core.warning('Expose ID not found in state, skipping sticky disk commit');
-          }
         }
       } catch (error) {
         core.warning(`Error during final cleanup: ${error.message}`);
