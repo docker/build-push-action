@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as main from '../main';
 import * as reporter from '../reporter';
 import {getDockerfilePath} from '../context';
-import * as setupBuilder from '../setup_builder';
+import * as buildReporter from '../build-reporter';
 
 jest.mock('@actions/core', () => ({
   debug: jest.fn(),
@@ -28,7 +28,7 @@ jest.mock('../reporter', () => {
   };
 });
 
-jest.mock('../setup_builder', () => ({
+jest.mock('../build-reporter', () => ({
   reportBuildStart: jest.fn()
 }));
 
@@ -57,29 +57,29 @@ describe('reportBuildMetrics', () => {
   test('should successfully report build start', async () => {
     const mockBuildId = 'test-build-id';
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
-    (setupBuilder.reportBuildStart as jest.Mock).mockResolvedValue({ docker_build_id: mockBuildId });
+    (buildReporter.reportBuildStart as jest.Mock).mockResolvedValue({ docker_build_id: mockBuildId });
 
     const result = await main.reportBuildMetrics(mockInputs);
 
     expect(result).toBe(mockBuildId);
-    expect(setupBuilder.reportBuildStart).toHaveBeenCalledWith('/path/to/Dockerfile');
+    expect(buildReporter.reportBuildStart).toHaveBeenCalledWith('/path/to/Dockerfile');
     expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 
   test('should handle reportBuildStart returning null', async () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
-    (setupBuilder.reportBuildStart as jest.Mock).mockResolvedValue(null);
+    (buildReporter.reportBuildStart as jest.Mock).mockResolvedValue(null);
 
     const result = await main.reportBuildMetrics(mockInputs);
 
     expect(result).toBeNull();
-    expect(setupBuilder.reportBuildStart).toHaveBeenCalledWith('/path/to/Dockerfile');
+    expect(buildReporter.reportBuildStart).toHaveBeenCalledWith('/path/to/Dockerfile');
     expect(reporter.reportBuildPushActionFailure).not.toHaveBeenCalled();
   });
 
   test('should handle error in reportBuildStart', async () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
-    (setupBuilder.reportBuildStart as jest.Mock).mockRejectedValue(new Error('API error'));
+    (buildReporter.reportBuildStart as jest.Mock).mockRejectedValue(new Error('API error'));
 
     const result = await main.reportBuildMetrics(mockInputs);
 

@@ -18,7 +18,7 @@ import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 
 import * as context from './context';
 import * as reporter from './reporter';
-import {reportBuildStart} from './setup_builder';
+import {reportBuildStart} from './build-reporter';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
