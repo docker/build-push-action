@@ -58,7 +58,6 @@ export interface Inputs {
   ulimit: string[];
   'github-token': string;
   nofallback: boolean;
-  setupOnly: boolean;
   'buildx-version': string;
 }
 
@@ -98,7 +97,6 @@ export async function getInputs(): Promise<Inputs> {
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
     'github-token': core.getInput('github-token'),
     nofallback: core.getBooleanInput('nofallback'),
-    setupOnly: core.getBooleanInput('setup-only'),
     'buildx-version': core.getInput('buildx-version')
   };
 }

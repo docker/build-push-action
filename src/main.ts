@@ -17,15 +17,11 @@ import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 
 import * as context from './context';
-import {promisify} from 'util';
-import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {reportBuildStart, leaveTailnet} from './setup_builder';
+import {reportBuildStart} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
-
-const execAsync = promisify(exec);
 
 async function retryWithBackoff<T>(operation: () => Promise<T>, maxRetries: number = 5, initialBackoffMs: number = 200): Promise<T> {
   let lastError: Error = new Error('No error occurred');
@@ -80,65 +76,26 @@ function isValidBuildxVersion(version: string): boolean {
 }
 
 /**
- * Attempts to set up a Blacksmith builder for Docker builds.
+ * Reports the build start to the backend and gets a build ID for tracking.
  *
- * @param inputs - Configuration inputs including the nofallback flag
- * @returns {Object} Builder configuration
- * @returns {string|null} addr - The buildkit socket address if setup succeeded, null if using local build
+ * @param inputs - Configuration inputs
  * @returns {string|null} buildId - ID used to track build progress and report metrics
- * @returns {string} exposeId - ID used to track and cleanup sticky disk resources
- *
- * The addr is used to configure the Docker buildx builder instance.
- * The buildId is used for build progress tracking and metrics reporting.
- * The exposeId is used during cleanup to ensure proper resource cleanup of sticky disks.
- *
- * Throws an error if setup fails and nofallback is false.
- * Returns null values if setup fails and nofallback is true.
  */
-export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{addr: string | null; buildId: string | null; exposeId: string}> {
+export async function reportBuildMetrics(inputs: context.Inputs): Promise<string | null> {
   try {
-    // We only use the dockerfile path to report the build to our control plane.
-    // If setup-only is true, we don't want to report the build to our control plane
-    // since we are only setting up the builder and therefore cannot expose any analytics
-    // about the build.
-    const dockerfilePath = inputs.setupOnly ? '' : context.getDockerfilePath(inputs);
-    if (!inputs.setupOnly && !dockerfilePath) {
+    // Get the dockerfile path to report the build to our control plane.
+    const dockerfilePath = context.getDockerfilePath(inputs);
+    if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
     }
     
     // Report build start to get a build ID for tracking
-    let buildId: string | null = null;
-    if (!inputs.setupOnly && dockerfilePath) {
-      const buildInfo = await reportBuildStart(dockerfilePath);
-      buildId = buildInfo?.docker_build_id || null;
-    }
-    
-    // For now, we'll check if a builder is already available from setup-docker-builder
-    // by looking for the sentinel file
-    const sentinelPath = path.join('/tmp', 'builder-setup-complete');
-    const builderAvailable = fs.existsSync(sentinelPath);
-    
-    if (!builderAvailable) {
-      throw new Error('Docker builder not available. Please use setup-docker-builder action first.');
-    }
-    
-    // We no longer manage expose IDs since sticky disk is handled by setup-docker-builder
-    return {addr: null, buildId: buildId, exposeId: ''};
+    const buildInfo = await reportBuildStart(dockerfilePath);
+    return buildInfo?.docker_build_id || null;
   } catch (error) {
-    // If the builder setup fails for any reason, we check if we should fallback to a local build.
-    // If we should not fallback, we rethrow the error and fail the build.
-    await reporter.reportBuildPushActionFailure(error, 'starting blacksmith builder');
-
-    let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
-    if (inputs.nofallback) {
-      core.warning(`${errorMessage}. Failing the build because nofallback is set.`);
-      throw error;
-    }
-
-    core.warning(`${errorMessage}. Falling back to a local build.`);
-    return {addr: null, buildId: null, exposeId: ''};
-  } finally {
-    await leaveTailnet();
+    await reporter.reportBuildPushActionFailure(error, 'reporting build metrics');
+    core.warning(`Error during build metrics reporting: ${error.message}`);
+    return null;
   }
 }
 
@@ -189,17 +146,13 @@ actionsToolkit.run(
       }
     });
 
-    let builderInfo = {
-      addr: null as string | null,
-      buildId: null as string | null,
-      exposeId: '' as string
-    };
+    let buildId: string | null = null;
     let buildError: Error | undefined;
     let buildDurationSeconds: string | undefined;
     let ref: string | undefined;
     try {
-      await core.group(`Setting up Blacksmith build tracking`, async () => {
-        builderInfo = await startBlacksmithBuilder(inputs);
+      await core.group(`Setting up build metrics tracking`, async () => {
+        buildId = await reportBuildMetrics(inputs);
       });
 
       // Check that a builder is available (either from setup-docker-builder or existing)
@@ -224,13 +177,6 @@ actionsToolkit.run(
         core.info(JSON.stringify(builder, null, 2));
       });
 
-      // If setup-only is true, we don't want to continue configuring and running the build.
-      if (inputs.setupOnly) {
-        core.info('setup-only mode enabled, builder is ready for use by Docker');
-        stateHelper.setSetupOnly(true);
-        // Let's remove the default
-        process.exit(0);
-      }
 
       await core.group(`Proxy configuration`, async () => {
         let dockerConfig: ConfigFile | undefined;
@@ -364,14 +310,13 @@ actionsToolkit.run(
 
         // Buildkitd is now managed by setup-docker-builder, not here
 
-        await leaveTailnet();
         // Sticky disk is now managed by setup-docker-builder, not here
 
-        if (builderInfo.buildId) {
+        if (buildId) {
           if (!buildError) {
-            await reporter.reportBuildCompleted(exportRes, builderInfo.buildId, ref, buildDurationSeconds, '');
+            await reporter.reportBuildCompleted(exportRes, buildId, ref, buildDurationSeconds);
           } else {
-            await reporter.reportBuildFailed(builderInfo.buildId, buildDurationSeconds, '');
+            await reporter.reportBuildFailed(buildId, buildDurationSeconds);
           }
         }
       } catch (error) {
@@ -391,7 +336,6 @@ actionsToolkit.run(
   async () => {
     await core.group('Final cleanup', async () => {
       try {
-        await leaveTailnet();
 
         // Buildkitd is now managed by setup-docker-builder, not here
         // Sticky disk is also managed by setup-docker-builder, not here

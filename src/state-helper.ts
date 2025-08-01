@@ -58,19 +58,3 @@ export function setDockerBuildStatus(dockerBuildStatus: string) {
 export function setDockerBuildDurationSeconds(dockerBuildDurationSeconds: string) {
   core.saveState('dockerBuildDurationSeconds', dockerBuildDurationSeconds);
 }
-
-export function setExposeId(exposeId: string) {
-  core.saveState('exposeId', exposeId);
-}
-
-export function getExposeId(): string {
-  return core.getState('exposeId');
-}
-
-export function setSetupOnly(setupOnly: boolean) {
-  core.saveState('setupOnly', setupOnly.toString());
-}
-
-export function getSetupOnly(): boolean {
-  return core.getState('setupOnly') === 'true';
-}

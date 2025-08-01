@@ -60,24 +60,13 @@ export async function reportBuildPushActionFailure(error?: Error, event?: string
   return response.data;
 }
 
-export async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmithDockerBuildId?: string | null, buildRef?: string, dockerBuildDurationSeconds?: string, exposeId?: string): Promise<void> {
+export async function reportBuildCompleted(exportRes?: ExportRecordResponse, blacksmithDockerBuildId?: string | null, buildRef?: string, dockerBuildDurationSeconds?: string): Promise<void> {
   if (!blacksmithDockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
   }
 
   try {
-    const agentClient = createBlacksmithAgentClient();
-
-    await agentClient.commitStickyDisk({
-      exposeId: exposeId || '',
-      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.BLACKSMITH_VM_ID || '',
-      shouldCommit: true,
-      repoName: process.env.GITHUB_REPO_NAME || '',
-      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
-    });
-
     // Report success to Blacksmith API
     const requestOptions = {
       docker_build_id: blacksmithDockerBuildId,
@@ -111,23 +100,13 @@ export async function reportBuildCompleted(exportRes?: ExportRecordResponse, bla
   }
 }
 
-export async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurationSeconds?: string, exposeId?: string | null): Promise<void> {
+export async function reportBuildFailed(dockerBuildId: string | null, dockerBuildDurationSeconds?: string): Promise<void> {
   if (!dockerBuildId) {
     core.warning('No docker build ID found, skipping build completion report');
     return;
   }
 
   try {
-    const blacksmithAgentClient = createBlacksmithAgentClient();
-    await blacksmithAgentClient.commitStickyDisk({
-      exposeId: exposeId || '',
-      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.BLACKSMITH_VM_ID || '',
-      shouldCommit: false,
-      repoName: process.env.GITHUB_REPO_NAME || '',
-      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
-    });
-
     // Report failure to Blacksmith API
     const requestOptions = {
       docker_build_id: dockerBuildId,
@@ -194,22 +173,5 @@ export async function reportMetric(metricType: Metric_MetricType, value: number)
   } catch (error) {
     // We can enable this once all agents are updated to support metrics.
     // core.warning('Error reporting metric to BlacksmithAgent:', error);
-  }
-}
-
-export async function commitStickyDisk(exposeId?: string, shouldCommit: boolean = true): Promise<void> {
-  try {
-    const agentClient = createBlacksmithAgentClient();
-
-    await agentClient.commitStickyDisk({
-      exposeId: exposeId || '',
-      stickyDiskKey: process.env.GITHUB_REPO_NAME || '',
-      vmId: process.env.BLACKSMITH_VM_ID || '',
-      shouldCommit,
-      repoName: process.env.GITHUB_REPO_NAME || '',
-      stickyDiskToken: process.env.BLACKSMITH_STICKYDISK_TOKEN || ''
-    });
-  } catch (error) {
-    core.warning('Error committing sticky disk:', error);
   }
 }
