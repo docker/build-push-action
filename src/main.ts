@@ -20,7 +20,7 @@ import * as context from './context';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import * as reporter from './reporter';
-import {setupStickyDisk, startAndConfigureBuildkitd, getNumCPUs, leaveTailnet, pruneBuildkitCache} from './setup_builder';
+import {setupStickyDisk, leaveTailnet} from './setup_builder';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 const DEFAULT_BUILDX_VERSION = 'v0.23.0';
@@ -110,23 +110,25 @@ export async function startBlacksmithBuilder(inputs: context.Inputs): Promise<{a
     const stickyDiskSetup = await setupStickyDisk(dockerfilePath || '', inputs.setupOnly);
     const stickyDiskDurationMs = Date.now() - stickyDiskStartTime;
     await reporter.reportMetric(Metric_MetricType.BPA_HOTLOAD_DURATION_MS, stickyDiskDurationMs);
-    const parallelism = await getNumCPUs();
-
-    const buildkitdStartTime = Date.now();
-    const buildkitdAddr = await startAndConfigureBuildkitd(parallelism, inputs.setupOnly, inputs.platforms);
-    const buildkitdDurationMs = Date.now() - buildkitdStartTime;
-    await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_READY_DURATION_MS, buildkitdDurationMs);
+    
+    // For now, we'll check if a builder is already available from setup-docker-builder
+    // by looking for the sentinel file
+    const sentinelPath = path.join('/tmp', 'builder-setup-complete');
+    const builderAvailable = fs.existsSync(sentinelPath);
+    
+    if (!builderAvailable) {
+      throw new Error('Docker builder not available. Please use setup-docker-builder action first.');
+    }
+    
     stateHelper.setExposeId(stickyDiskSetup.exposeId);
-    return {addr: buildkitdAddr, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
+    // Return null for addr since we're not managing the builder anymore
+    return {addr: null, buildId: stickyDiskSetup.buildId || null, exposeId: stickyDiskSetup.exposeId};
   } catch (error) {
     // If the builder setup fails for any reason, we check if we should fallback to a local build.
     // If we should not fallback, we rethrow the error and fail the build.
     await reporter.reportBuildPushActionFailure(error, 'starting blacksmith builder');
 
     let errorMessage = `Error during Blacksmith builder setup: ${error.message}`;
-    if (error.message.includes('buildkitd')) {
-      errorMessage = `Error during buildkitd setup: ${error.message}`;
-    }
     if (inputs.nofallback) {
       core.warning(`${errorMessage}. Failing the build because nofallback is set.`);
       throw error;
@@ -195,66 +197,25 @@ actionsToolkit.run(
     let buildDurationSeconds: string | undefined;
     let ref: string | undefined;
     try {
-      await core.group(`Starting Blacksmith builder`, async () => {
+      await core.group(`Setting up Blacksmith build tracking`, async () => {
         builderInfo = await startBlacksmithBuilder(inputs);
       });
 
-      if (builderInfo.addr) {
-        await core.group(`Creating a builder instance`, async () => {
-          const name = `blacksmith-${Date.now().toString(36)}`;
-          const createCmd = await toolkit.buildx.getCommand(await context.getRemoteBuilderArgs(name, builderInfo.addr!, inputs.platforms));
-          core.info(`Creating builder with command: ${createCmd.command}`);
-          await Exec.getExecOutput(createCmd.command, createCmd.args, {
-            ignoreReturnCode: true
-          }).then(res => {
-            if (res.stderr.length > 0 && res.exitCode != 0) {
-              throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
-            }
-          });
-          // Set this builder as the global default since future docker commands will use this builder.
-          if (inputs.setupOnly) {
-            const setDefaultCmd = await toolkit.buildx.getCommand(await context.getUseBuilderArgs(name));
-            core.info('Setting builder as global default');
-            await Exec.getExecOutput(setDefaultCmd.command, setDefaultCmd.args, {
-              ignoreReturnCode: true
-            }).then(res => {
-              if (res.stderr.length > 0 && res.exitCode != 0) {
-                throw new Error(res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error');
-              }
-            });
+      // Check that a builder is available (either from setup-docker-builder or existing)
+      await core.group(`Checking for configured builder`, async () => {
+        try {
+          const builder = await toolkit.builder.inspect();
+          if (builder) {
+            core.info(`Found configured builder: ${builder.name}`);
+          } else {
+            core.setFailed(`No Docker builder found. Please use setup-docker-builder action or configure a builder before using build-push-action.`);
           }
-        });
-      } else {
-        core.warning('Failed to setup Blacksmith builder, falling back to default builder');
-        await core.group(`Checking for configured builder`, async () => {
-          try {
-            const builder = await toolkit.builder.inspect();
-            if (builder) {
-              core.info(`Found configured builder: ${builder.name}`);
-            } else {
-              // Create a local builder using the docker-container driver (which is the default driver in setup-buildx)
-              const createLocalBuilderCmd = 'docker buildx create --name local --driver docker-container --use';
-              try {
-                await Exec.exec(createLocalBuilderCmd);
-                core.info('Created and set a local builder for use');
-              } catch (error) {
-                core.setFailed(`Failed to create local builder: ${error.message}`);
-              }
-            }
-          } catch (error) {
-            core.setFailed(`Error configuring builder: ${error.message}`);
-          }
-        });
-      }
+        } catch (error) {
+          core.setFailed(`Error checking for builder: ${error.message}`);
+        }
+      });
 
-      // Write a sentinel file to indicate builder setup is complete.
-      const sentinelPath = path.join('/tmp', 'builder-setup-complete');
-      try {
-        fs.writeFileSync(sentinelPath, 'Builder setup completed successfully.');
-        core.debug(`Created builder setup sentinel file at ${sentinelPath}`);
-      } catch (error) {
-        core.warning(`Failed to create builder setup sentinel file: ${error.message}`);
-      }
+      // The sentinel file should already exist from setup-docker-builder
 
       let builder: BuilderInfo;
       await core.group(`Builder info`, async () => {
@@ -400,34 +361,7 @@ actionsToolkit.run(
           });
         }
 
-        try {
-          const {stdout} = await execAsync('pgrep buildkitd');
-          if (stdout.trim()) {
-            try {
-              core.info('Pruning BuildKit cache');
-              await pruneBuildkitCache();
-              core.info('BuildKit cache pruned');
-            } catch (error) {
-              // Log warning but don't fail the cleanup
-              core.warning(`Error pruning BuildKit cache: ${error.message}`);
-            }
-
-            const buildkitdShutdownStartTime = Date.now();
-            await shutdownBuildkitd();
-            const buildkitdShutdownDurationMs = Date.now() - buildkitdShutdownStartTime;
-            await reporter.reportMetric(Metric_MetricType.BPA_BUILDKITD_SHUTDOWN_DURATION_MS, buildkitdShutdownDurationMs);
-            core.info('Shutdown buildkitd');
-          } else {
-            core.debug('No buildkitd process found running');
-          }
-        } catch (error) {
-          if (error.code === 1) {
-            // pgrep returns non-zero if no processes found, which is fine
-            core.debug('No buildkitd process found running');
-          } else {
-            core.warning(`Error checking for buildkitd processes: ${error.message}`);
-          }
-        }
+        // Buildkitd is now managed by setup-docker-builder, not here
 
         await leaveTailnet();
         try {
@@ -471,21 +405,7 @@ actionsToolkit.run(
         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
         await reporter.reportBuildPushActionFailure(error, 'shutting down blacksmith builder');
       } finally {
-        if (buildError) {
-          try {
-            const buildkitdLog = fs.readFileSync('/tmp/buildkitd.log', 'utf8');
-            core.info('buildkitd.log contents:');
-            core.info(buildkitdLog);
-          } catch (error) {
-            // Only log warning if the file was expected to exist (builder setup completed)
-            const sentinelPath = path.join('/tmp', 'builder-setup-complete');
-            if (fs.existsSync(sentinelPath)) {
-              core.warning(`Failed to read buildkitd.log: ${error.message}`);
-            } else {
-              core.debug(`buildkitd.log not found (builder setup incomplete): ${error.message}`);
-            }
-          }
-        }
+        // Buildkitd logs are managed by setup-docker-builder
       }
     });
 
@@ -500,28 +420,7 @@ actionsToolkit.run(
       try {
         await leaveTailnet();
 
-        try {
-          const {stdout} = await execAsync('pgrep buildkitd');
-          if (stdout.trim()) {
-            try {
-              core.info('Pruning BuildKit cache');
-              await pruneBuildkitCache();
-              core.info('BuildKit cache pruned');
-            } catch (error) {
-              // Log warning but don't fail the cleanup
-              core.warning(`Error pruning BuildKit cache: ${error.message}`);
-            }
-
-            await shutdownBuildkitd();
-            core.info('Shutdown buildkitd');
-          }
-        } catch (error) {
-          if (error.code === 1) {
-            core.debug('No buildkitd process found running');
-          } else {
-            core.warning(`Error checking for buildkitd processes: ${error.message}`);
-          }
-        }
+        // Buildkitd is now managed by setup-docker-builder, not here
 
         try {
           // Run sync to flush any pending writes before unmounting.
@@ -612,34 +511,3 @@ function buildSummaryEnabled(): boolean {
   return true;
 }
 
-export async function shutdownBuildkitd(): Promise<void> {
-  const startTime = Date.now();
-  const timeout = 10000; // 10 seconds
-  const backoff = 300; // 300ms
-
-  try {
-    await execAsync(`sudo pkill -TERM buildkitd`);
-
-    // Wait for buildkitd to shutdown with backoff retry
-    while (Date.now() - startTime < timeout) {
-      try {
-        const {stdout} = await execAsync('pgrep buildkitd');
-        core.debug(`buildkitd process still running with PID: ${stdout.trim()}`);
-        await new Promise(resolve => setTimeout(resolve, backoff));
-      } catch (error) {
-        if (error.code === 1) {
-          // pgrep returns exit code 1 when no process is found, which means shutdown successful
-          core.debug('buildkitd successfully shutdown');
-          return;
-        }
-        // Some other error occurred
-        throw error;
-      }
-    }
-
-    throw new Error('Timed out waiting for buildkitd to shutdown after 10 seconds');
-  } catch (error) {
-    core.error('error shutting down buildkitd process:', error);
-    throw error;
-  }
-}
