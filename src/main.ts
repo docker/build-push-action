@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
@@ -20,58 +19,15 @@ import * as context from './context';
 import * as reporter from './reporter';
 import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
-const DEFAULT_BUILDX_VERSION = 'v0.23.0';
-
-async function retryWithBackoff<T>(operation: () => Promise<T>, maxRetries: number = 5, initialBackoffMs: number = 200): Promise<T> {
-  let lastError: Error = new Error('No error occurred');
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      if (error.message?.includes('429') || error.status === 429) {
-        if (attempt < maxRetries - 1) {
-          const backoffMs = initialBackoffMs * Math.pow(2, attempt);
-          core.info(`Rate limited (429). Retrying in ${backoffMs}ms...`);
-          await new Promise(resolve => setTimeout(resolve, backoffMs));
-          continue;
-        }
-      }
-      throw error;
-    }
+async function assertBuildxAvailable(toolkit: Toolkit): Promise<void> {
+  if (!(await toolkit.buildx.isAvailable())) {
+    core.setFailed(`Docker buildx is required. Please use setup-docker-builder action or setup-buildx-action to configure buildx.`);
+    throw new Error('Docker buildx is not available');
   }
-  throw lastError;
-}
-
-async function setupBuildx(version: string, toolkit: Toolkit): Promise<void> {
-  let toolPath;
-  const standalone = await toolkit.buildx.isStandalone();
-
-  if (!(await toolkit.buildx.isAvailable()) || version) {
-    await core.group(`Download buildx from GitHub Releases`, async () => {
-      toolPath = await retryWithBackoff(() => toolkit.buildxInstall.download(version || 'latest', true));
-    });
-  }
-
-  if (toolPath) {
-    await core.group(`Install buildx`, async () => {
-      if (standalone) {
-        await toolkit.buildxInstall.installStandalone(toolPath);
-      } else {
-        await toolkit.buildxInstall.installPlugin(toolPath);
-      }
-    });
-  }
-
+  
   await core.group(`Buildx version`, async () => {
     await toolkit.buildx.printVersion();
   });
-}
-
-// Validates the version string to ensure it matches a basic expected pattern.
-// Accepts versions of the form `v<MAJOR>.<MINOR>.<PATCH>` (e.g., v0.20.0) or the literal string `latest`.
-function isValidBuildxVersion(version: string): boolean {
-  return version === 'latest' || /^v\d+\.\d+\.\d+$/.test(version);
 }
 
 /**
@@ -87,7 +43,7 @@ export async function reportBuildMetrics(inputs: context.Inputs): Promise<string
     if (!dockerfilePath) {
       throw new Error('Failed to resolve dockerfile path');
     }
-    
+
     // Report build start to get a build ID for tracking
     try {
       const buildInfo = await reporter.reportBuild(dockerfilePath);
@@ -130,24 +86,9 @@ actionsToolkit.run(
       }
     });
 
-    // Determine which Buildx version to install. If the user provided an input, validate it;
-    // otherwise, fall back to the default.
-    let buildxVersion = DEFAULT_BUILDX_VERSION;
-    if (inputs['buildx-version'] && inputs['buildx-version'].trim() !== '') {
-      if (isValidBuildxVersion(inputs['buildx-version'])) {
-        buildxVersion = inputs['buildx-version'];
-      } else {
-        core.warning(`Invalid buildx-version '${inputs['buildx-version']}'. ` + `Expected 'latest' or a version in the form v<MAJOR>.<MINOR>.<PATCH>. ` + `Falling back to default ${DEFAULT_BUILDX_VERSION}.`);
-      }
-    }
-
-    await core.group(`Setup buildx`, async () => {
-      await setupBuildx(buildxVersion, toolkit);
-
-      if (!(await toolkit.buildx.isAvailable())) {
-        core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
-        return;
-      }
+    // Assert that buildx is available (should be installed by setup-docker-builder)
+    await core.group(`Check buildx availability`, async () => {
+      await assertBuildxAvailable(toolkit);
     });
 
     let buildId: string | null = null;
@@ -173,14 +114,11 @@ actionsToolkit.run(
         }
       });
 
-      // The sentinel file should already exist from setup-docker-builder
-
       let builder: BuilderInfo;
       await core.group(`Builder info`, async () => {
         builder = await toolkit.builder.inspect();
         core.info(JSON.stringify(builder, null, 2));
       });
-
 
       await core.group(`Proxy configuration`, async () => {
         let dockerConfig: ConfigFile | undefined;
@@ -207,7 +145,6 @@ actionsToolkit.run(
         }
       });
 
-      stateHelper.setTmpDir(Context.tmpDir());
 
       const args: string[] = await context.getArgs(inputs, toolkit);
       args.push('--debug');
@@ -302,7 +239,7 @@ actionsToolkit.run(
       buildError = error as Error;
     }
 
-    await core.group('Cleaning up Blacksmith builder', async () => {
+    await core.group('Reporting build completion', async () => {
       try {
         let exportRes;
         if (!buildError) {
@@ -311,10 +248,6 @@ actionsToolkit.run(
             refs: ref ? [ref] : []
           });
         }
-
-        // Buildkitd is now managed by setup-docker-builder, not here
-
-        // Sticky disk is now managed by setup-docker-builder, not here
 
         if (buildId) {
           if (!buildError) {
@@ -326,8 +259,6 @@ actionsToolkit.run(
       } catch (error) {
         core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
         await reporter.reportBuildPushActionFailure(error, 'shutting down blacksmith builder');
-      } finally {
-        // Buildkitd logs are managed by setup-docker-builder
       }
     });
 
@@ -340,15 +271,7 @@ actionsToolkit.run(
   async () => {
     await core.group('Final cleanup', async () => {
       try {
-
-        // Buildkitd is now managed by setup-docker-builder, not here
-        // Sticky disk is also managed by setup-docker-builder, not here
-
-        // Clean up temp directory if it exists.
-        if (stateHelper.tmpDir.length > 0) {
-          fs.rmSync(stateHelper.tmpDir, {recursive: true});
-          core.debug(`Removed temp folder ${stateHelper.tmpDir}`);
-        }
+        // No temp directory cleanup needed - handled by actions toolkit
       } catch (error) {
         core.warning(`Error during final cleanup: ${error.message}`);
         await reporter.reportBuildPushActionFailure(error, 'final cleanup');
@@ -392,4 +315,3 @@ function buildSummaryEnabled(): boolean {
   }
   return true;
 }
-
