@@ -92,10 +92,10 @@ actionsToolkit.run(
     let buildDurationSeconds: string | undefined;
     let ref: string | undefined;
     let isBlacksmithBuilder = false;
+    let builder: BuilderInfo;
 
     try {
       // Check that a builder is available (either from setup-docker-builder or existing)
-      let builder: BuilderInfo;
       await core.group(`Checking for configured builder`, async () => {
         try {
           builder = await toolkit.builder.inspect();
@@ -199,7 +199,7 @@ actionsToolkit.run(
       }
 
       await core.group(`Reference`, async () => {
-        ref = await buildRef(toolkit, startedTime, builder.name);
+        ref = await buildRef(toolkit, startedTime, builder?.name);
         if (ref) {
           core.info(ref);
           stateHelper.setBuildRef(ref);
