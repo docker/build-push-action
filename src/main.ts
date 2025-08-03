@@ -34,7 +34,7 @@ async function assertBuildxAvailable(toolkit: Toolkit): Promise<void> {
  * @param inputs - Configuration inputs
  * @returns {string|null} buildId - ID used to track build progress and report metrics
  */
-export async function reportBuildMetrics(inputs: context.Inputs): Promise<string | null> {
+export async function reportBuildStart(inputs: context.Inputs): Promise<string | null> {
   try {
     // Get the dockerfile path to report the build to our control plane.
     const dockerfilePath = context.getDockerfilePath(inputs);
@@ -91,17 +91,21 @@ actionsToolkit.run(
     let buildError: Error | undefined;
     let buildDurationSeconds: string | undefined;
     let ref: string | undefined;
-    try {
-      await core.group(`Setting up build metrics tracking`, async () => {
-        buildId = await reportBuildMetrics(inputs);
-      });
+    let isBlacksmithBuilder = false;
 
+    try {
       // Check that a builder is available (either from setup-docker-builder or existing)
+      let builder: BuilderInfo;
       await core.group(`Checking for configured builder`, async () => {
         try {
-          const builder = await toolkit.builder.inspect();
+          builder = await toolkit.builder.inspect();
           if (builder) {
             core.info(`Found configured builder: ${builder.name}`);
+            // Check if this is a Blacksmith builder
+            isBlacksmithBuilder = builder.name ? builder.name.toLowerCase().includes('blacksmith') : false;
+            if (!isBlacksmithBuilder) {
+              core.warning(`Not using a Blacksmith builder (current builder: ${builder.name || 'unknown'}). Build metrics will not be reported.`);
+            }
           } else {
             core.setFailed(`No Docker builder found. Please use setup-docker-builder action or configure a builder before using build-push-action.`);
           }
@@ -110,9 +114,14 @@ actionsToolkit.run(
         }
       });
 
-      let builder: BuilderInfo;
+      // Only report build start if using a Blacksmith builder
+      if (isBlacksmithBuilder) {
+        await core.group(`Setting up build metrics tracking`, async () => {
+          buildId = await reportBuildStart(inputs);
+        });
+      }
+
       await core.group(`Builder info`, async () => {
-        builder = await toolkit.builder.inspect();
         core.info(JSON.stringify(builder, null, 2));
       });
 
@@ -244,7 +253,7 @@ actionsToolkit.run(
           });
         }
 
-        if (buildId) {
+        if (buildId && isBlacksmithBuilder) {
           if (!buildError) {
             await reporter.reportBuildCompleted(exportRes, buildId, ref, buildDurationSeconds);
           } else {

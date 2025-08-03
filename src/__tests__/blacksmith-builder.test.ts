@@ -28,7 +28,7 @@ jest.mock('../reporter', () => {
   };
 });
 
-describe('reportBuildMetrics', () => {
+describe('reportBuildStart', () => {
   let mockInputs;
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('reportBuildMetrics', () => {
   test('should handle missing dockerfile path', async () => {
     (getDockerfilePath as jest.Mock).mockReturnValue(null);
 
-    const result = await main.reportBuildMetrics(mockInputs);
+    const result = await main.reportBuildStart(mockInputs);
 
     expect(result).toBeNull();
     expect(core.warning).toHaveBeenCalledWith('Error when reporting build metrics: Failed to resolve dockerfile path');
@@ -54,7 +54,7 @@ describe('reportBuildMetrics', () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
     (reporter.reportBuild as jest.Mock).mockResolvedValue({docker_build_id: mockBuildId});
 
-    const result = await main.reportBuildMetrics(mockInputs);
+    const result = await main.reportBuildStart(mockInputs);
 
     expect(result).toBe(mockBuildId);
     expect(reporter.reportBuild).toHaveBeenCalledWith('/path/to/Dockerfile');
@@ -65,7 +65,7 @@ describe('reportBuildMetrics', () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
     (reporter.reportBuild as jest.Mock).mockResolvedValue(null);
 
-    const result = await main.reportBuildMetrics(mockInputs);
+    const result = await main.reportBuildStart(mockInputs);
 
     expect(result).toBeNull();
     expect(reporter.reportBuild).toHaveBeenCalledWith('/path/to/Dockerfile');
@@ -76,7 +76,7 @@ describe('reportBuildMetrics', () => {
     (getDockerfilePath as jest.Mock).mockReturnValue('/path/to/Dockerfile');
     (reporter.reportBuild as jest.Mock).mockRejectedValue(new Error('API error'));
 
-    const result = await main.reportBuildMetrics(mockInputs);
+    const result = await main.reportBuildStart(mockInputs);
 
     expect(result).toBeNull();
     expect(core.warning).toHaveBeenCalledWith('Error reporting build start: API error');
