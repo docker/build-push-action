@@ -5,7 +5,6 @@ import * as actionsToolkit from '@docker/actions-toolkit';
 
 import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
 import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history';
-import {Context} from '@docker/actions-toolkit/lib/context';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Exec} from '@docker/actions-toolkit/lib/exec';
 import {GitHub} from '@docker/actions-toolkit/lib/github';
@@ -17,7 +16,6 @@ import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
 
 import * as context from './context';
 import * as reporter from './reporter';
-import {Metric_MetricType} from '@buf/blacksmith_vm-agent.bufbuild_es/stickydisk/v1/stickydisk_pb';
 
 async function assertBuildxAvailable(toolkit: Toolkit): Promise<void> {
   if (!(await toolkit.buildx.isAvailable())) {
@@ -53,8 +51,7 @@ export async function reportBuildMetrics(inputs: context.Inputs): Promise<string
       return null;
     }
   } catch (error) {
-    await reporter.reportBuildPushActionFailure(error, 'reporting build metrics');
-    core.warning(`Error during build metrics reporting: ${error.message}`);
+    core.warning(`Error when reporting build metrics: ${error.message}`);
     return null;
   }
 }
@@ -62,7 +59,6 @@ export async function reportBuildMetrics(inputs: context.Inputs): Promise<string
 actionsToolkit.run(
   // main
   async () => {
-    await reporter.reportMetric(Metric_MetricType.BPA_FEATURE_USAGE, 1);
     const startedTime = new Date();
     const inputs: context.Inputs = await context.getInputs();
     stateHelper.setInputs(inputs);
@@ -256,8 +252,7 @@ actionsToolkit.run(
           }
         }
       } catch (error) {
-        core.warning(`Error during Blacksmith builder shutdown: ${error.message}`);
-        await reporter.reportBuildPushActionFailure(error, 'shutting down blacksmith builder');
+        core.warning(`Error when reporting build completion: ${error.message}`);
       }
     });
 
@@ -267,16 +262,7 @@ actionsToolkit.run(
     }
   },
   // post
-  async () => {
-    await core.group('Final cleanup', async () => {
-      try {
-        // No temp directory cleanup needed - handled by actions toolkit
-      } catch (error) {
-        core.warning(`Error during final cleanup: ${error.message}`);
-        await reporter.reportBuildPushActionFailure(error, 'final cleanup');
-      }
-    });
-  }
+  async () => {}
 );
 
 async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promise<string> {

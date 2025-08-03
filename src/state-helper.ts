@@ -13,7 +13,6 @@ export const dockerBuildStatus = process.env['STATE_dockerBuildStatus'] || '';
 export const blacksmithBuilderLaunchTime = process.env['STATE_blacksmithBuilderLaunchTime'] || '';
 export const dockerBuildDurationSeconds = process.env['STATE_dockerBuildDurationSeconds'] || '';
 
-
 export function setInputs(inputs: Inputs) {
   core.saveState('inputs', JSON.stringify(sanitizeInputs(inputs)));
 }
