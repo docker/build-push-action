@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 
 import {Inputs, sanitizeInputs} from './context';
 
-export const tmpDir = process.env['STATE_tmpDir'] || '';
 export const inputs = process.env['STATE_inputs'] ? JSON.parse(process.env['STATE_inputs']) : undefined;
 export const buildRef = process.env['STATE_buildRef'] || '';
 export const isSummarySupported = !!process.env['STATE_isSummarySupported'];
@@ -13,10 +12,6 @@ export const blacksmithRootCaCertificate = process.env['STATE_blacksmithRootCaCe
 export const dockerBuildStatus = process.env['STATE_dockerBuildStatus'] || '';
 export const blacksmithBuilderLaunchTime = process.env['STATE_blacksmithBuilderLaunchTime'] || '';
 export const dockerBuildDurationSeconds = process.env['STATE_dockerBuildDurationSeconds'] || '';
-
-export function setTmpDir(tmpDir: string) {
-  core.saveState('tmpDir', tmpDir);
-}
 
 export function setInputs(inputs: Inputs) {
   core.saveState('inputs', JSON.stringify(sanitizeInputs(inputs)));
@@ -57,20 +52,4 @@ export function setDockerBuildStatus(dockerBuildStatus: string) {
 
 export function setDockerBuildDurationSeconds(dockerBuildDurationSeconds: string) {
   core.saveState('dockerBuildDurationSeconds', dockerBuildDurationSeconds);
-}
-
-export function setExposeId(exposeId: string) {
-  core.saveState('exposeId', exposeId);
-}
-
-export function getExposeId(): string {
-  return core.getState('exposeId');
-}
-
-export function setSetupOnly(setupOnly: boolean) {
-  core.saveState('setupOnly', setupOnly.toString());
-}
-
-export function getSetupOnly(): boolean {
-  return core.getState('setupOnly') === 'true';
 }

@@ -1,23 +1,28 @@
-name: Bump Tags to master
+# IMPORTANT: This workflow is commented out to prevent breaking existing customer workflows.
+# v2 is a breaking version as it relies on setup-docker-builder being called before this action.
+# To avoid bumping older version tags to the head of master and breaking existing customer workflows,
+# we will keep this workflow only as a reference on how to bump tags.
 
-on:
-  workflow_dispatch:
-
-jobs:
-  bump-tags:
-    runs-on: blacksmith
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update v1, v1.0.0-beta tags
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
-          git tag -fa v1.2 -m "Update v1.2 tag to latest commit on master"
-          git tag -fa v1.1 -m "Update v1.1 tag to latest commit on master"
-          git tag -fa v1 -m "Update v1 tag to latest commit on master"
-          git tag -fa v1.0.0-beta -m "Update v1.0.0-beta tag to latest commit on master"
-          git push origin v1.2 v1.1 v1 v1.0.0-beta --force
+# name: Bump Tags to master
+# 
+# on:
+#   workflow_dispatch:
+# 
+# jobs:
+#   bump-tags:
+#     runs-on: blacksmith
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+# 
+#       - name: Update v1, v1.0.0-beta tags
+#         run: |
+#           git config user.name github-actions[bot]
+#           git config user.email github-actions[bot]@users.noreply.github.com
+#           git tag -fa v1.2 -m "Update v1.2 tag to latest commit on master"
+#           git tag -fa v1.1 -m "Update v1.1 tag to latest commit on master"
+#           git tag -fa v1 -m "Update v1 tag to latest commit on master"
+#           git tag -fa v1.0.0-beta -m "Update v1.0.0-beta tag to latest commit on master"
+#           git push origin v1.2 v1.1 v1 v1.0.0-beta --force
