@@ -21,7 +21,6 @@ const createBlacksmithAPIClient = () => {
     }
   });
 
-  // @ts-expect-error Type mismatch between axios and axios-retry
   axiosRetry(client, {
     retries: 5,
     retryDelay: axiosRetry.exponentialDelay,
