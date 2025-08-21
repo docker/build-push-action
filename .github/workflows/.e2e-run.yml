@@ -87,8 +87,6 @@ jobs:
         with:
           images: ${{ env.REGISTRY_SLUG || inputs.slug }}
           tags: |
-            type=ref,event=branch,enable=${{ matrix.buildx_version == 'latest' && matrix.buildkit_image == 'moby/buildkit:buildx-stable-1' }}
-            type=ref,event=tag,enable=${{ matrix.buildx_version == 'latest' && matrix.buildkit_image == 'moby/buildkit:buildx-stable-1' }}
             type=raw,gh-runid-${{ github.run_id }}
       -
         name: Set up QEMU
@@ -118,7 +116,7 @@ jobs:
           context: ./test
           file: ./test/multi.Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
-          push: ${{ github.event_name != 'pull_request' }}
+          outputs: type=image,oci-artifact=true,push=${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY_SLUG || inputs.slug }}:master
