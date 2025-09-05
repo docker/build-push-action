@@ -27,9 +27,9 @@ on:
         type: string
 
 env:
-  HARBOR_VERSION: v2.7.0
+  HARBOR_VERSION: v2.13.2
   NEXUS_VERSION: 3.47.1
-  DISTRIBUTION_VERSION: 2.8.1
+  DISTRIBUTION_VERSION: 3.0.0
 
 jobs:
   run:
