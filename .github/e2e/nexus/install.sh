@@ -76,6 +76,7 @@ until $(curl --output /dev/null --silent --head --fail "http://$NEXUS_HOST:$NEXU
   printf '.'
   sleep 5
 done
+echo "ready!"
 echo "::endgroup::"
 
 echo "::group::Change user's password"
