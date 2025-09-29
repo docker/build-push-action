@@ -175,6 +175,8 @@ actionsToolkit.run(
         core.info('Build summary is not yet supported on GHES');
       } else if (!(await toolkit.buildx.versionSatisfies('>=0.13.0'))) {
         core.info('Build summary requires Buildx >= 0.13.0');
+      } else if (builder && builder.driver === 'kubernetes') {
+        core.info('Build summary is not yet supported by the Kubernetes driver');
       } else if (!ref) {
         core.info('Build summary requires a build reference');
       } else {
