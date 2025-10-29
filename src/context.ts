@@ -31,6 +31,7 @@ export interface Inputs {
   provenance: string;
   pull: boolean;
   push: boolean;
+  quiet: boolean;
   sbom: string;
   secrets: string[];
   'secret-envs': string[];
@@ -68,6 +69,7 @@ export async function getInputs(): Promise<Inputs> {
     provenance: Build.getProvenanceInput('provenance'),
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
+    quiet: core.getBooleanInput('quiet'),
     sbom: core.getInput('sbom'),
     secrets: Util.getInputList('secrets', {ignoreComma: true}),
     'secret-envs': Util.getInputList('secret-envs'),
@@ -225,6 +227,9 @@ async function getCommonArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<st
   }
   if (inputs.push) {
     args.push('--push');
+  }
+  if (inputs.quiet) {
+    args.push('--quiet');
   }
   return args;
 }
