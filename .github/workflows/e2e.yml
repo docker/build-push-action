@@ -26,6 +26,11 @@ jobs:
             id: distribution
             type: local
           -
+            name: Distribution (s3 cache)
+            id: distribution
+            type: local
+            cache: s3
+          -
             name: Docker Hub
             registry: ''
             slug: ghactionstest/ghactionstest
@@ -104,4 +109,5 @@ jobs:
       slug: ${{ matrix.slug }}
       username_secret: ${{ matrix.username_secret }}
       password_secret: ${{ matrix.password_secret }}
+      cache: ${{ matrix.cache || 'registry' }}
     secrets: inherit
