@@ -76,7 +76,7 @@ jobs:
             } else if (inpCache === 's3') {
               const cacheName = inpSlug.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
               core.exportVariable('CACHE_FROM', `type=s3,region=us-east-2,bucket=buildkit-s3-cache-test,name=${cacheName}`);
-              core.exportVariable('CACHE_TO', `type=s3,region=us-east-2,bucket=buildkit-s3-cache-test,name=${cacheName}`);
+              core.exportVariable('CACHE_TO', `type=s3,region=us-east-2,bucket=buildkit-s3-cache-test,name=${cacheName},mode=max`);
             }
       -
         name: Set up BuildKit config
