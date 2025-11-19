@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM --platform=$BUILDPLATFORM golang:alpine AS build
-RUN apk add --no-cache ca-certificates golang nodejs rust cargo
+RUN apk add --no-cache ca-certificates go nodejs rust cargo
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
