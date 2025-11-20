@@ -50,7 +50,7 @@ jobs:
             buildkit_image: moby/buildkit:buildx-stable-1
           -
             buildx_version: https://github.com/docker/buildx.git#master
-            buildkit_image: moby/buildkit:master
+            buildkit_image: crazymax/buildkit:s3patch
     steps:
       -
         name: Checkout
