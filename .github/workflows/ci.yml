@@ -967,7 +967,7 @@ jobs:
           buildkitd-flags: --debug
       -
         name: Cache Build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-local-test-${{ github.sha }}
