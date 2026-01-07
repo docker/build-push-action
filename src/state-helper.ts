@@ -52,7 +52,7 @@ export function setSummaryInputs(inputs: Inputs) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [skey, _] = Build.parseSecretKvp(secret, true);
             secretKeys.push(skey);
-          } catch (err) {
+          } catch {
             // ignore invalid secret
           }
         }

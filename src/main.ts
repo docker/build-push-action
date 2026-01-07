@@ -230,7 +230,7 @@ actionsToolkit.run(
       await core.group(`Removing temp folder ${stateHelper.tmpDir}`, async () => {
         try {
           fs.rmSync(stateHelper.tmpDir, {recursive: true});
-        } catch (e) {
+        } catch {
           core.warning(`Failed to remove temp folder ${stateHelper.tmpDir}`);
         }
       });
