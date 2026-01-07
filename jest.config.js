@@ -1,6 +1,7 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+/* eslint-disable @typescript-eslint/no-require-imports */
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docker-build-push-action-'));
 
@@ -9,9 +10,7 @@ process.env = Object.assign({}, process.env, {
   GITHUB_REPOSITORY: 'docker/build-push-action',
   RUNNER_TEMP: path.join(tmpDir, 'runner-temp'),
   RUNNER_TOOL_CACHE: path.join(tmpDir, 'runner-tool-cache')
-}) as {
-  [key: string]: string;
-};
+});
 
 module.exports = {
   clearMocks: false,
