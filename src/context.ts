@@ -41,6 +41,9 @@ export interface Inputs {
   target: string;
   ulimit: string[];
   'github-token': string;
+  'max-attempts': number;
+  'retry-wait-seconds': number;
+  'timeout-minutes': number;
 }
 
 export async function getInputs(): Promise<Inputs> {
@@ -77,7 +80,10 @@ export async function getInputs(): Promise<Inputs> {
     tags: Util.getInputList('tags'),
     target: core.getInput('target'),
     ulimit: Util.getInputList('ulimit', {ignoreComma: true}),
-    'github-token': core.getInput('github-token')
+    'github-token': core.getInput('github-token'),
+    'max-attempts': Util.getInputNumber('max-attempts') ?? 1,
+    'retry-wait-seconds': Util.getInputNumber('retry-wait-seconds') ?? 5,
+    'timeout-minutes': Util.getInputNumber('timeout-minutes') ?? 0
   };
 }
 

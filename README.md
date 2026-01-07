@@ -153,6 +153,28 @@ jobs:
           tags: user/app:latest
 ```
 
+### Retry on failure
+
+Build can be configured to retry on failure with configurable attempts, wait time, and timeout:
+
+```yaml
+      -
+        name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: user/app:latest
+          max-attempts: 3
+          retry-wait-seconds: 30
+          timeout-minutes: 10
+```
+
+This configuration will:
+- Make up to 3 attempts to build (initial attempt + 2 retries)
+- Wait 30 seconds between each retry attempt
+- Timeout each attempt after 10 minutes
+
 ## Examples
 
 * [Multi-platform image](https://docs.docker.com/build/ci/github-actions/multi-platform/)
@@ -258,6 +280,9 @@ The following inputs can be used as `step.with` keys:
 | `target`           | String      | Sets the target stage to build                                                                                                                                                    |
 | `ulimit`           | List        | [Ulimit](https://docs.docker.com/engine/reference/commandline/buildx_build/#ulimit) options (e.g., `nofile=1024:1024`)                                                            |
 | `github-token`     | String      | GitHub Token used to authenticate against a repository for [Git context](#git-context) (default `${{ github.token }}`)                                                            |
+| `max-attempts`     | Number      | Maximum number of build attempts (including initial attempt) (default `1`)                                                                                                        |
+| `retry-wait-seconds` | Number    | Number of seconds to wait between retry attempts (default `5`)                                                                                                                    |
+| `timeout-minutes`  | Number      | Timeout for each build attempt in minutes, `0` means no timeout (default `0`)                                                                                                     |
 
 ### outputs
 

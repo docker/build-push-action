@@ -97,25 +97,7 @@ actionsToolkit.run(
     core.debug(`buildCmd.command: ${buildCmd.command}`);
     core.debug(`buildCmd.args: ${JSON.stringify(buildCmd.args)}`);
 
-    let err: Error | undefined;
-    await Exec.getExecOutput(buildCmd.command, buildCmd.args, {
-      ignoreReturnCode: true,
-      env: Object.assign({}, process.env, {
-        BUILDX_METADATA_WARNINGS: 'true'
-      }) as {
-        [key: string]: string;
-      }
-    }).then(res => {
-      if (res.exitCode != 0) {
-        if (inputs.call && inputs.call === 'check' && res.stdout.length > 0) {
-          // checks warnings are printed to stdout: https://github.com/docker/buildx/pull/2647
-          // take the first line with the message summaryzing the warnings
-          err = new Error(res.stdout.split('\n')[0]?.trim());
-        } else if (res.stderr.length > 0) {
-          err = new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
-        }
-      }
-    });
+    await executeBuildWithRetry(buildCmd, inputs);
 
     const imageID = toolkit.buildxBuild.resolveImageID();
     const metadata = toolkit.buildxBuild.resolveMetadata();
@@ -182,10 +164,6 @@ actionsToolkit.run(
         stateHelper.setSummarySupported();
       }
     });
-
-    if (err) {
-      throw err;
-    }
   },
   // post
   async () => {
@@ -237,6 +215,89 @@ actionsToolkit.run(
     }
   }
 );
+
+async function executeBuildWithRetry(buildCmd: {command: string; args: string[]}, inputs: context.Inputs): Promise<void> {
+  // Validate and sanitize retry inputs
+  let maxAttempts = inputs['max-attempts'];
+  if (isNaN(maxAttempts) || maxAttempts < 1) {
+    core.warning(`Invalid max-attempts value '${inputs['max-attempts']}'. Using default: 1`);
+    maxAttempts = 1;
+  }
+
+  let retryWaitSeconds = inputs['retry-wait-seconds'];
+  if (isNaN(retryWaitSeconds) || retryWaitSeconds < 0) {
+    core.warning(`Invalid retry-wait-seconds value '${inputs['retry-wait-seconds']}'. Using default: 5`);
+    retryWaitSeconds = 5;
+  }
+
+  let timeoutMinutes = inputs['timeout-minutes'];
+  if (isNaN(timeoutMinutes) || timeoutMinutes < 0) {
+    core.warning(`Invalid timeout-minutes value '${inputs['timeout-minutes']}'. Using default: 0`);
+    timeoutMinutes = 0;
+  }
+
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (maxAttempts > 1) {
+        core.info(`Build attempt ${attempt} of ${maxAttempts}`);
+      }
+
+      await executeBuildWithTimeout(buildCmd, inputs, timeoutMinutes);
+      return;
+    } catch (error) {
+      lastError = error as Error;
+      core.warning(`Build failed on attempt ${attempt}: ${lastError.message}`);
+
+      if (attempt < maxAttempts) {
+        if (retryWaitSeconds > 0) {
+          core.info(`Retrying in ${retryWaitSeconds} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, retryWaitSeconds * 1000));
+        } else {
+          core.info('Retrying immediately...');
+        }
+      }
+    }
+  }
+
+  if (lastError) {
+    core.error(`All ${maxAttempts} attempts failed`);
+    throw lastError;
+  }
+}
+
+async function executeBuildWithTimeout(buildCmd: {command: string; args: string[]}, inputs: context.Inputs, timeoutMinutes: number): Promise<void> {
+  const buildPromise = Exec.getExecOutput(buildCmd.command, buildCmd.args, {
+    ignoreReturnCode: true,
+    env: Object.assign({}, process.env, {
+      BUILDX_METADATA_WARNINGS: 'true'
+    }) as {
+      [key: string]: string;
+    }
+  }).then(res => {
+    if (res.exitCode != 0) {
+      if (inputs.call && inputs.call === 'check' && res.stdout.length > 0) {
+        throw new Error(res.stdout.split('\n')[0]?.trim());
+      } else if (res.stderr.length > 0) {
+        throw new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+      } else {
+        throw new Error('buildx failed with unknown error');
+      }
+    }
+  });
+
+  if (timeoutMinutes <= 0) {
+    return buildPromise;
+  }
+
+  let timeoutHandle: NodeJS.Timeout;
+  const timeoutPromise = new Promise<void>((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error(`Build attempt timed out after ${timeoutMinutes} minutes`)), timeoutMinutes * 60 * 1000);
+  });
+
+  return Promise.race([buildPromise, timeoutPromise]).finally(() => clearTimeout(timeoutHandle));
+}
 
 async function buildRef(toolkit: Toolkit, since: Date, builder?: string): Promise<string> {
   // get ref from metadata file
