@@ -21,6 +21,8 @@ export interface Inputs {
   'cgroup-parent': string;
   context: string;
   file: string;
+  'inherit-annotations': boolean;
+  'inherit-labels': boolean;
   labels: string[];
   load: boolean;
   network: string;
@@ -58,6 +60,8 @@ export async function getInputs(): Promise<Inputs> {
     'cgroup-parent': core.getInput('cgroup-parent'),
     context: core.getInput('context') || Context.gitContext(),
     file: core.getInput('file'),
+    'inherit-annotations': core.getBooleanInput('inherit-annotations'),
+    'inherit-labels': core.getBooleanInput('inherit-labels'),
     labels: Util.getInputList('labels', {ignoreComma: true}),
     load: core.getBooleanInput('load'),
     network: core.getInput('network'),
@@ -150,6 +154,12 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
   }
   if (!Build.hasLocalExporter(inputs.outputs) && !Build.hasTarExporter(inputs.outputs) && (inputs.platforms.length == 0 || (await toolkit.buildx.versionSatisfies('>=0.4.2')))) {
     args.push('--iidfile', toolkit.buildxBuild.getImageIDFilePath());
+  }
+  if (!inputs['inherit-annotations']) {
+    args.push('--inherit-annotations', 'false');
+  }
+  if (!inputs['inherit-labels']) {
+    args.push('--inherit-labels', 'false');
   }
   await Util.asyncForEach(inputs.labels, async label => {
     args.push('--label', label);

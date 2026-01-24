@@ -46,6 +46,14 @@ inputs:
   file:
     description: "Path to the Dockerfile"
     required: false
+  inherit-annotations:
+    description: "Inherit the annotations from the base image or base stages"
+    required: false
+    default: 'true'
+  inherit-labels:
+    description: "Inherit the labels from the base image or base stages"
+    required: false
+    default: 'true'
   labels:
     description: "List of metadata for an image"
     required: false
