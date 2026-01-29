@@ -1,0 +1,49 @@
+name: update-dist
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  update-dist:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: GitHub auth token from GitHub App
+        id: docker-read-app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GHACTIONS_REPO_WRITE_APP_ID }}
+          private-key: ${{ secrets.GHACTIONS_REPO_WRITE_APP_PRIVATE_KEY }}
+          owner: docker
+      -
+        name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ steps.docker-read-app.outputs.token || github.token }}
+      -
+        name: Build
+        uses: docker/bake-action@v6
+        with:
+          source: .
+          targets: build
+      -
+        name: Commit and push dist
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            (
+              set -x
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add dist
+              git commit -m "chore: update generated content"
+              git push
+            )
+          else
+            echo "No changes in dist"
+          fi
