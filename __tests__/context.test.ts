@@ -232,7 +232,7 @@ ccc"`],
       [
         'build',
         '--output', '.',
-        '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
+        '--secret', `id=GIT_AUTH_TOKEN.github.com,src=${tmpName}`,
         'https://github.com/docker/build-push-action.git#refs/heads/master'
       ],
       undefined
@@ -478,7 +478,7 @@ nproc=3`],
       [
         'build',
         '--iidfile', imageIDFilePath,
-        '--secret', `id=GIT_AUTH_TOKEN,src=${tmpName}`,
+        '--secret', `id=GIT_AUTH_TOKEN.github.com,src=${tmpName}`,
         '--metadata-file', metadataJson,
         'https://github.com/docker/build-push-action.git#refs/heads/master:subdir'
       ],
