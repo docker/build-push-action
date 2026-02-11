@@ -183,7 +183,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
     }
   });
   if (inputs['github-token'] && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
-    args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN.github.com=${inputs['github-token']}`));
+    args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN.${new URL(GitHub.serverURL).hostname.trimEnd()}=${inputs['github-token']}`));
   }
   if (inputs['shm-size']) {
     args.push('--shm-size', inputs['shm-size']);
