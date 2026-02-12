@@ -857,6 +857,52 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         ['BUILDX_NO_DEFAULT_ATTESTATIONS', '1']
       ])
     ],
+    [
+      35,
+      '0.13.1',
+      new Map<string, string>([
+        ['github-token', 'abcdefghijklmno0123456789'],
+        ['context', '{{defaultContext}}'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=http://10.0.0.5:22827/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--secret', `id=GIT_AUTH_TOKEN.10.0.0.5:22827,src=${tmpName}`,
+        '--metadata-file', metadataJson,
+        'http://10.0.0.5:22827/docker/build-push-action.git#refs/heads/master'
+      ],
+      new Map<string, string>([
+        ['GITHUB_SERVER_URL', 'http://10.0.0.5:22827'],
+      ])
+    ],
+    [
+      36,
+      '0.13.1',
+      new Map<string, string>([
+        ['github-token', 'abcdefghijklmno0123456789'],
+        ['context', '{{defaultContext}}'],
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.cds.internal.unity3d.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--secret', `id=GIT_AUTH_TOKEN.github.cds.internal.unity3d.com,src=${tmpName}`,
+        '--metadata-file', metadataJson,
+        'https://github.cds.internal.unity3d.com/docker/build-push-action.git#refs/heads/master'
+      ],
+      new Map<string, string>([
+        ['GITHUB_SERVER_URL', 'https://github.cds.internal.unity3d.com'],
+      ])
+    ],
   ])(
     '[%d] given %p with %p as inputs, returns %p',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>, envs: Map<string, string> | undefined) => {
