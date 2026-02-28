@@ -2,26 +2,22 @@ import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import {fileURLToPath} from 'node:url';
 
-import {Builder} from '@docker/actions-toolkit/lib/buildx/builder';
-import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
-import {Build} from '@docker/actions-toolkit/lib/buildx/build';
-import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
-import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
+import {Builder} from '@docker/actions-toolkit/lib/buildx/builder.js';
+import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx.js';
+import {Build} from '@docker/actions-toolkit/lib/buildx/build.js';
+import {Context} from '@docker/actions-toolkit/lib/context.js';
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker.js';
+import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
 
-import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
-import {GitHubRepo} from '@docker/actions-toolkit/lib/types/github';
+import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder.js';
+
+import * as context from '../src/context.js';
 
 const tmpDir = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'context-'));
 const tmpName = path.join(tmpDir, '.tmpname-vi');
-import * as context from '../src/context';
-
-import repoFixture from './fixtures/github-repo.json';
-vi.spyOn(GitHub.prototype, 'repoData').mockImplementation((): Promise<GitHubRepo> => {
-  return <Promise<GitHubRepo>>(repoFixture as unknown);
-});
+const testDir = path.dirname(fileURLToPath(import.meta.url));
 
 vi.spyOn(Context, 'tmpDir').mockImplementation((): string => {
   if (!fs.existsSync(tmpDir)) {
@@ -346,7 +342,7 @@ ccc`],
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
-        ['secret-files', `MY_SECRET=${path.join(__dirname, 'fixtures', 'secret.txt')}`],
+        ['secret-files', `MY_SECRET=${path.join(testDir, 'fixtures', 'secret.txt')}`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
         ['network', 'host'],

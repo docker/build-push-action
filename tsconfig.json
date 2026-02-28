@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "target": "es6",
-    "module": "commonjs",
-    "strict": true,
     "newLine": "lf",
     "outDir": "./lib",
     "rootDir": "./src",
@@ -12,11 +11,7 @@
     "resolveJsonModule": true,
     "useUnknownInCatchVariables": false,
   },
-  "exclude": [
-    "./__mocks__/**/*",
-    "./__tests__/**/*",
-    "./lib/**/*",
-    "node_modules",
-    "jest.config.ts"
+  "include": [
+    "src/**/*.ts"
   ]
 }

@@ -14,6 +14,7 @@ process.env = Object.assign({}, process.env, {
 });
 
 const require = createRequire(import.meta.url);
+type RequireCacheEntry = NonNullable<(typeof require.cache)[string]>;
 
 const githubMock = {
   context: {
@@ -225,7 +226,7 @@ const githubMock = {
 vi.mock('@actions/github', () => githubMock);
 vi.doMock(require.resolve('@docker/actions-toolkit/node_modules/@actions/github'), () => githubMock);
 
-for (const mod of ['@actions/github', '@docker/actions-toolkit/node_modules/@actions/github']) {
+for (const mod of ['@docker/actions-toolkit/node_modules/@actions/github']) {
   try {
     const resolved = require.resolve(mod);
     require.cache[resolved] = {
@@ -235,7 +236,7 @@ for (const mod of ['@actions/github', '@docker/actions-toolkit/node_modules/@act
       exports: githubMock,
       children: [],
       paths: []
-    } as unknown as NodeModule;
+    } as RequireCacheEntry;
   } catch {
     // Ignore unresolved optional paths; vi.mock handles module-level mocking.
   }

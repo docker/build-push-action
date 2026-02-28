@@ -1,15 +1,12 @@
 {
   "name": "docker-build-push",
   "description": "Build and push Docker images",
+  "type": "module",
   "main": "src/main.ts",
   "scripts": {
     "build": "ncc build --source-map --minify --license licenses.txt",
-    "lint": "yarn run prettier && yarn run eslint",
-    "format": "yarn run prettier:fix && yarn run eslint:fix",
-    "eslint": "eslint --max-warnings=0 .",
-    "eslint:fix": "eslint --fix .",
-    "prettier": "prettier --check \"./**/*.ts\"",
-    "prettier:fix": "prettier --write \"./**/*.ts\"",
+    "lint": "eslint --max-warnings=0 .",
+    "format": "eslint --fix .",
     "test": "vitest run"
   },
   "repository": {
@@ -31,8 +28,6 @@
     "handlebars": "^4.7.7"
   },
   "devDependencies": {
-    "@eslint/compat": "^2.0.0",
-    "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
     "@types/node": "^20.19.27",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
@@ -43,8 +38,8 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.3.0",
     "prettier": "^3.7.4",
-    "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
