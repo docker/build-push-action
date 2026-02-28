@@ -1,5 +1,6 @@
-import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import {Builder} from '@docker/actions-toolkit/lib/buildx/builder';
@@ -13,42 +14,41 @@ import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
 import {GitHubRepo} from '@docker/actions-toolkit/lib/types/github';
 
+const tmpDir = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'context-'));
+const tmpName = path.join(tmpDir, '.tmpname-vi');
 import * as context from '../src/context';
 
-const tmpDir = path.join('/tmp', '.docker-build-push-jest');
-const tmpName = path.join(tmpDir, '.tmpname-jest');
-
 import repoFixture from './fixtures/github-repo.json';
-jest.spyOn(GitHub.prototype, 'repoData').mockImplementation((): Promise<GitHubRepo> => {
+vi.spyOn(GitHub.prototype, 'repoData').mockImplementation((): Promise<GitHubRepo> => {
   return <Promise<GitHubRepo>>(repoFixture as unknown);
 });
 
-jest.spyOn(Context, 'tmpDir').mockImplementation((): string => {
+vi.spyOn(Context, 'tmpDir').mockImplementation((): string => {
   if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, {recursive: true});
   }
   return tmpDir;
 });
 
-jest.spyOn(Context, 'tmpName').mockImplementation((): string => {
+vi.spyOn(Context, 'tmpName').mockImplementation((): string => {
   return tmpName;
 });
 
-jest.spyOn(Docker, 'isAvailable').mockImplementation(async (): Promise<boolean> => {
+vi.spyOn(Docker, 'isAvailable').mockImplementation(async (): Promise<boolean> => {
   return true;
 });
 
 const metadataJson = path.join(tmpDir, 'metadata.json');
-jest.spyOn(Build.prototype, 'getMetadataFilePath').mockImplementation((): string => {
+vi.spyOn(Build.prototype, 'getMetadataFilePath').mockImplementation((): string => {
   return metadataJson;
 });
 
 const imageIDFilePath = path.join(tmpDir, 'iidfile.txt');
-jest.spyOn(Build.prototype, 'getImageIDFilePath').mockImplementation((): string => {
+vi.spyOn(Build.prototype, 'getImageIDFilePath').mockImplementation((): string => {
   return imageIDFilePath;
 });
 
-jest.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<BuilderInfo> => {
+vi.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<BuilderInfo> => {
   return {
     name: 'builder2',
     driver: 'docker-container',
@@ -904,7 +904,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       ])
     ],
   ])(
-    '[%d] given %p with %p as inputs, returns %p',
+    '[%d] given %o with %o as inputs, returns %o',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>, envs: Map<string, string> | undefined) => {
       if (envs) {
         envs.forEach((value: string, name: string) => {
@@ -915,7 +915,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         setInput(name, value);
       });
       const toolkit = new Toolkit();
-      jest.spyOn(Buildx.prototype, 'version').mockImplementation(async (): Promise<string> => {
+      vi.spyOn(Buildx.prototype, 'version').mockImplementation(async (): Promise<string> => {
         return buildxVersion;
       });
       const inp = await context.getInputs();

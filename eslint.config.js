@@ -2,7 +2,7 @@
 const {defineConfig, globalIgnores} = require('eslint/config');
 const {fixupConfigRules, fixupPluginRules} = require('@eslint/compat');
 const typescriptEslint = require('@typescript-eslint/eslint-plugin');
-const jestPlugin = require('eslint-plugin-jest');
+const vitestPlugin = require('@vitest/eslint-plugin');
 const prettier = require('eslint-plugin-prettier');
 const globals = require('globals');
 const tsParser = require('@typescript-eslint/parser');
@@ -25,21 +25,21 @@ module.exports = defineConfig([
         'eslint:recommended',
         'plugin:@typescript-eslint/eslint-recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:jest/recommended',
+        'plugin:@vitest/legacy-recommended',
         'plugin:prettier/recommended'
       )
     ),
 
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
-      jest: fixupPluginRules(jestPlugin),
+      '@vitest': fixupPluginRules(vitestPlugin),
       prettier: fixupPluginRules(prettier)
     },
 
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest
+        ...vitestPlugin.environments.env.globals
       },
       parser: tsParser,
       ecmaVersion: 'latest',
