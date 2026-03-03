@@ -8,13 +8,15 @@ import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/histo
 import {Context} from '@docker/actions-toolkit/lib/context.js';
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker.js';
 import {Exec} from '@docker/actions-toolkit/lib/exec.js';
-import {GitHub} from '@docker/actions-toolkit/lib/github.js';
+import {GitHub} from '@docker/actions-toolkit/lib/github/github.js';
+import {GitHubArtifact} from '@docker/actions-toolkit/lib/github/artifact.js';
+import {GitHubSummary} from '@docker/actions-toolkit/lib/github/summary.js';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
 import {Util} from '@docker/actions-toolkit/lib/util.js';
 
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder.js';
 import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker.js';
-import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github.js';
+import {UploadResponse as UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github/artifact.js';
 
 import * as context from './context.js';
 import * as stateHelper from './state-helper.js';
@@ -207,14 +209,13 @@ actionsToolkit.run(
 
           let uploadRes: UploadArtifactResponse | undefined;
           if (recordUploadEnabled) {
-            uploadRes = await GitHub.uploadArtifact({
+            uploadRes = await GitHubArtifact.upload({
               filename: exportRes.dockerbuildFilename,
-              mimeType: 'application/gzip',
               retentionDays: recordRetentionDays
             });
           }
 
-          await GitHub.writeBuildSummary({
+          await GitHubSummary.writeBuildSummary({
             exportRes: exportRes,
             uploadRes: uploadRes,
             inputs: stateHelper.summaryInputs,
