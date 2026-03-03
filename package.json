@@ -1,16 +1,13 @@
 {
   "name": "docker-build-push",
   "description": "Build and push Docker images",
+  "type": "module",
   "main": "src/main.ts",
   "scripts": {
     "build": "ncc build --source-map --minify --license licenses.txt",
-    "lint": "yarn run prettier && yarn run eslint",
-    "format": "yarn run prettier:fix && yarn run eslint:fix",
-    "eslint": "eslint --max-warnings=0 .",
-    "eslint:fix": "eslint --fix .",
-    "prettier": "prettier --check \"./**/*.ts\"",
-    "prettier:fix": "prettier --write \"./**/*.ts\"",
-    "test": "jest"
+    "lint": "eslint --max-warnings=0 .",
+    "format": "eslint --fix .",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -31,21 +28,19 @@
     "handlebars": "^4.7.7"
   },
   "devDependencies": {
-    "@eslint/compat": "^2.0.0",
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^20.19.27",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
+    "@eslint/js": "^9.39.3",
+    "@types/node": "^20.19.35",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vercel/ncc": "^0.38.4",
-    "eslint": "^9.39.2",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/eslint-plugin": "^1.6.9",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-jest": "^29.5.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "jest": "^30.2.0",
-    "prettier": "^3.7.4",
-    "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

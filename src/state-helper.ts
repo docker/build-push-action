@@ -1,8 +1,8 @@
 import * as core from '@actions/core';
 
-import {Build} from '@docker/actions-toolkit/lib/buildx/build';
+import {Build} from '@docker/actions-toolkit/lib/buildx/build.js';
 
-import {Inputs} from './context';
+import {Inputs} from './context.js';
 
 export const tmpDir = process.env['STATE_tmpDir'] || '';
 

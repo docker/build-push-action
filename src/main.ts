@@ -1,23 +1,23 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as stateHelper from './state-helper';
 import * as core from '@actions/core';
 import * as actionsToolkit from '@docker/actions-toolkit';
 
-import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx';
-import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history';
-import {Context} from '@docker/actions-toolkit/lib/context';
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
-import {Exec} from '@docker/actions-toolkit/lib/exec';
-import {GitHub} from '@docker/actions-toolkit/lib/github';
-import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
-import {Util} from '@docker/actions-toolkit/lib/util';
+import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx.js';
+import {History as BuildxHistory} from '@docker/actions-toolkit/lib/buildx/history.js';
+import {Context} from '@docker/actions-toolkit/lib/context.js';
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker.js';
+import {Exec} from '@docker/actions-toolkit/lib/exec.js';
+import {GitHub} from '@docker/actions-toolkit/lib/github.js';
+import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
+import {Util} from '@docker/actions-toolkit/lib/util.js';
 
-import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder';
-import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker';
-import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github';
+import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder.js';
+import {ConfigFile} from '@docker/actions-toolkit/lib/types/docker/docker.js';
+import {UploadArtifactResponse} from '@docker/actions-toolkit/lib/types/github.js';
 
-import * as context from './context';
+import * as context from './context.js';
+import * as stateHelper from './state-helper.js';
 
 actionsToolkit.run(
   // main
