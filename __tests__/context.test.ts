@@ -2,7 +2,6 @@ import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import {fileURLToPath} from 'node:url';
 
 import {Builder} from '@docker/actions-toolkit/lib/buildx/builder.js';
 import {Buildx} from '@docker/actions-toolkit/lib/buildx/buildx.js';
@@ -17,7 +16,7 @@ import * as context from '../src/context.js';
 
 const tmpDir = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'context-'));
 const tmpName = path.join(tmpDir, '.tmpname-vi');
-const testDir = path.dirname(fileURLToPath(import.meta.url));
+const fixturesDir = path.join(__dirname, 'fixtures');
 
 vi.spyOn(Context, 'tmpDir').mockImplementation((): string => {
   if (!fs.existsSync(tmpDir)) {
@@ -44,22 +43,12 @@ vi.spyOn(Build.prototype, 'getImageIDFilePath').mockImplementation((): string =>
   return imageIDFilePath;
 });
 
+type BuilderInfoFixture = Omit<BuilderInfo, 'lastActivity'> & {lastActivity: string};
+const builderInfoFixture = <BuilderInfoFixture>JSON.parse(fs.readFileSync(path.join(fixturesDir, 'builder-info.json'), {encoding: 'utf-8'}).trim());
 vi.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<BuilderInfo> => {
   return {
-    name: 'builder2',
-    driver: 'docker-container',
-    lastActivity: new Date('2023-01-16 09:45:23 +0000 UTC'),
-    nodes: [
-      {
-        buildkit: 'v0.11.0',
-        'buildkitd-flags': '--debug --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host',
-        'driver-opts': ['BUILDKIT_STEP_LOG_MAX_SIZE=10485760', 'BUILDKIT_STEP_LOG_MAX_SPEED=10485760', 'JAEGER_TRACE=localhost:6831', 'image=moby/buildkit:latest', 'network=host'],
-        endpoint: 'unix:///var/run/docker.sock',
-        name: 'builder20',
-        platforms: 'linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/mips64le,linux/mips64,linux/arm/v7,linux/arm/v6',
-        status: 'running'
-      }
-    ]
+    ...builderInfoFixture,
+    lastActivity: new Date(builderInfoFixture.lastActivity)
   };
 });
 
@@ -342,7 +331,7 @@ ccc`],
       new Map<string, string>([
         ['context', 'https://github.com/docker/build-push-action.git#refs/heads/master'],
         ['tag', 'localhost:5000/name/app:latest'],
-        ['secret-files', `MY_SECRET=${path.join(testDir, 'fixtures', 'secret.txt')}`],
+        ['secret-files', `MY_SECRET=${path.join(fixturesDir, 'secret.txt')}`],
         ['file', './test/Dockerfile'],
         ['builder', 'builder-git-context-2'],
         ['network', 'host'],
