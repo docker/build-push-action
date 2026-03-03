@@ -3,7 +3,7 @@ import * as handlebars from 'handlebars';
 
 import {Build} from '@docker/actions-toolkit/lib/buildx/build.js';
 import {Context} from '@docker/actions-toolkit/lib/context.js';
-import {GitHub} from '@docker/actions-toolkit/lib/github.js';
+import {GitHub} from '@docker/actions-toolkit/lib/github/github.js';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
 import {Util} from '@docker/actions-toolkit/lib/util.js';
 
