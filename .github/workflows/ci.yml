@@ -64,7 +64,7 @@ jobs:
           path: action
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         id: buildx
@@ -113,7 +113,7 @@ jobs:
           path: action
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         id: buildx
@@ -170,7 +170,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         id: buildx
@@ -301,7 +301,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -726,7 +726,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         id: buildx
@@ -865,7 +865,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -914,7 +914,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -955,7 +955,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -1268,7 +1268,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -1317,7 +1317,7 @@ jobs:
         uses: actions/checkout@v6
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
