@@ -265,10 +265,7 @@ function buildChecksAnnotationsEnabled(): boolean {
 }
 
 function buildSummaryEnabled(): boolean {
-  if (process.env.DOCKER_BUILD_NO_SUMMARY) {
-    core.warning('DOCKER_BUILD_NO_SUMMARY is deprecated. Set DOCKER_BUILD_SUMMARY to false instead.');
-    return !Util.parseBool(process.env.DOCKER_BUILD_NO_SUMMARY);
-  } else if (process.env.DOCKER_BUILD_SUMMARY) {
+  if (process.env.DOCKER_BUILD_SUMMARY) {
     return Util.parseBool(process.env.DOCKER_BUILD_SUMMARY);
   }
   return true;
@@ -282,13 +279,7 @@ function buildRecordUploadEnabled(): boolean {
 }
 
 function buildRecordRetentionDays(): number | undefined {
-  let val: string | undefined;
-  if (process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS) {
-    core.warning('DOCKER_BUILD_EXPORT_RETENTION_DAYS is deprecated. Use DOCKER_BUILD_RECORD_RETENTION_DAYS instead.');
-    val = process.env.DOCKER_BUILD_EXPORT_RETENTION_DAYS;
-  } else if (process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS) {
-    val = process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS;
-  }
+  const val = process.env.DOCKER_BUILD_RECORD_RETENTION_DAYS;
   if (val) {
     const res = parseInt(val);
     if (isNaN(res)) {
