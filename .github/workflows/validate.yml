@@ -15,15 +15,15 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      targets: ${{ steps.generate.outputs.targets }}
+      matrix: ${{ steps.generate.outputs.matrix }}
     steps:
       -
         name: Checkout
         uses: actions/checkout@v6
       -
-        name: List targets
+        name: Generate matrix
         id: generate
-        uses: docker/bake-action/subaction/list-targets@v7
+        uses: docker/bake-action/subaction/matrix@v7
         with:
           target: validate
 
@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJson(needs.prepare.outputs.targets) }}
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       -
         name: Validate
