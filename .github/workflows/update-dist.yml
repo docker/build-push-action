@@ -28,7 +28,7 @@ jobs:
           token: ${{ steps.docker-read-app.outputs.token || github.token }}
       -
         name: Build
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           source: .
           targets: build
