@@ -14,7 +14,7 @@ jobs:
       -
         name: GitHub auth token from GitHub App
         id: docker-read-app
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.GHACTIONS_REPO_WRITE_APP_ID }}
           private-key: ${{ secrets.GHACTIONS_REPO_WRITE_APP_PRIVATE_KEY }}
