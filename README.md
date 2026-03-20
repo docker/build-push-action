@@ -80,12 +80,13 @@ jobs:
           tags: user/app:latest
 ```
 
-Be careful because **any file mutation in the steps that precede the build step
-will be ignored, including processing of the `.dockerignore` file** since
-the context is based on the Git reference. However, you can use the
-[Path context](#path-context) using the [`context` input](#inputs) alongside
-the [`actions/checkout`](https://github.com/actions/checkout/) action to remove
-this restriction.
+**Important Considerations for Git Context**
+
+* **File Mutations** perfomred during your workflow will **not** be reflected in the final Docker image.
+
+* **.dockerignore** is ignored altogether when using git context.
+
+You can remove these limitations by using the [path context](#path-context) input alongside the [`actions/checkout`](https://github.com/actions/checkout/) action.
 
 Default Git context can also be provided using the [Handlebars template](https://handlebarsjs.com/guide/)
 expression `{{defaultContext}}`. Here we can use it to provide a subdirectory
