@@ -1,6 +1,9 @@
 # reusable workflow
 name: .e2e-run
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
@@ -19,12 +22,11 @@ on:
       slug:
         required: false
         type: string
-      username_secret:
+    secrets:
+      registry_username:
         required: false
-        type: string
-      password_secret:
+      registry_password:
         required: false
-        type: string
 
 env:
   HARBOR_VERSION: v2.13.2
@@ -50,17 +52,21 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       -
         name: Set up env
         if: inputs.type == 'local'
+        env:
+          ID: ${{ inputs.id }}
         run: |
-          cat ./.github/e2e/${{ inputs.id }}/env >> $GITHUB_ENV
+          cat ./.github/e2e/${ID}/env >> $GITHUB_ENV
       -
         name: Set up BuildKit config
+        env:
+          TYPE: ${{ inputs.type }}
         run: |
           touch /tmp/buildkitd.toml
-          if [ "${{ inputs.type }}" = "local" ]; then
+          if [ "${TYPE}" = "local" ]; then
             echo -e "[registry.\"${{ env.REGISTRY_FQDN }}\"]\nhttp = true\ninsecure = true" > /tmp/buildkitd.toml
           fi
       -
@@ -77,13 +83,15 @@ jobs:
       -
         name: Install ${{ inputs.name }}
         if: inputs.type == 'local'
+        env:
+          ID: ${{ inputs.id }}
         run: |
-          sudo -E bash ./.github/e2e/${{ inputs.id }}/install.sh
+          sudo -E bash ./.github/e2e/${ID}/install.sh
           sudo chown $(id -u):$(id -g) -R ~/.docker
       -
         name: Docker meta
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ${{ env.REGISTRY_SLUG || inputs.slug }}
           tags: |
@@ -92,10 +100,10 @@ jobs:
             type=raw,gh-runid-${{ github.run_id }}
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
         with:
           version: ${{ matrix.buildx_version }}
           buildkitd-config: /tmp/buildkitd.toml
@@ -105,12 +113,12 @@ jobs:
             network=host
       -
         name: Login to Registry
-        if: github.event_name != 'pull_request' && (env.REGISTRY_USER || inputs.username_secret) != ''
-        uses: docker/login-action@v4
+        if: github.event_name != 'pull_request' && (inputs.type == 'remote' || env.REGISTRY_USER != '')
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
-          username: ${{ env.REGISTRY_USER || secrets[inputs.username_secret] }}
-          password: ${{ env.REGISTRY_PASSWORD || secrets[inputs.password_secret] }}
+          username: ${{ env.REGISTRY_USER || secrets.registry_username }}
+          password: ${{ env.REGISTRY_PASSWORD || secrets.registry_password }}
       -
         name: Build and push
         uses: ./
@@ -125,10 +133,14 @@ jobs:
           cache-to: type=inline
       -
         name: Inspect image
+        env:
+          SLUG: ${{ env.REGISTRY_SLUG || inputs.slug }}
         run: |
-          docker pull ${{ env.REGISTRY_SLUG || inputs.slug }}:${{ steps.meta.outputs.version }}
-          docker image inspect ${{ env.REGISTRY_SLUG || inputs.slug }}:${{ steps.meta.outputs.version }}
+          docker pull ${SLUG}:${{ steps.meta.outputs.version }}
+          docker image inspect ${SLUG}:${{ steps.meta.outputs.version }}
       -
         name: Check manifest
+        env:
+          SLUG: ${{ env.REGISTRY_SLUG || inputs.slug }}
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_SLUG || inputs.slug }}:${{ steps.meta.outputs.version }} --format '{{json .}}'
+          docker buildx imagetools inspect ${SLUG}:${{ steps.meta.outputs.version }} --format '{{json .}}'
