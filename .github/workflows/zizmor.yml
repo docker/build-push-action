@@ -1,0 +1,29 @@
+name: zizmor
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'master'
+      - 'releases/v*'
+    tags:
+      - 'v*'
+  pull_request:
+
+jobs:
+  zizmor:
+    uses: crazy-max/.github/.github/workflows/zizmor.yml@bb328ea508cd6a89d0865555ddbeb148e5724aed # v1.3.0
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      min-severity: medium
+      min-confidence: medium
+      persona: pedantic

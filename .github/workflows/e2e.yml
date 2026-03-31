@@ -1,5 +1,8 @@
 name: e2e
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,77 +27,71 @@ jobs:
           -
             name: Distribution
             id: distribution
+            auth: none
             type: local
           -
             name: Docker Hub
             registry: ''
             slug: ghactionstest/ghactionstest
-            username_secret: DOCKERHUB_USERNAME
-            password_secret: DOCKERHUB_TOKEN
+            auth: dockerhub
             type: remote
           -
             name: GitHub
             registry: ghcr.io
             slug: ghcr.io/docker-ghactiontest/test
-            username_secret: GHCR_USERNAME
-            password_secret: GHCR_PAT
+            auth: ghcr
             type: remote
           -
             name: GitLab
             registry: registry.gitlab.com
             slug: registry.gitlab.com/test1716/test
-            username_secret: GITLAB_USERNAME
-            password_secret: GITLAB_TOKEN
+            auth: gitlab
             type: remote
           -
             name: AWS ECR
             registry: 175142243308.dkr.ecr.us-east-2.amazonaws.com
             slug: 175142243308.dkr.ecr.us-east-2.amazonaws.com/sandbox/test-docker-action
-            username_secret: AWS_ACCESS_KEY_ID
-            password_secret: AWS_SECRET_ACCESS_KEY
+            auth: aws
             type: remote
           -
             name: AWS ECR Public
             registry: public.ecr.aws
             slug: public.ecr.aws/q3b5f1u4/test-docker-action
-            username_secret: AWS_ACCESS_KEY_ID
-            password_secret: AWS_SECRET_ACCESS_KEY
+            auth: aws
             type: remote
           -
             name: Google Artifact Registry
             registry: us-east4-docker.pkg.dev
             slug: us-east4-docker.pkg.dev/sandbox-298914/docker-official-github-actions/test-docker-action
-            username_secret: GAR_USERNAME
-            password_secret: GAR_JSON_KEY
+            auth: gar
             type: remote
           -
             name: Azure Container Registry
             registry: officialgithubactions.azurecr.io
             slug: officialgithubactions.azurecr.io/test-docker-action
-            username_secret: AZURE_CLIENT_ID
-            password_secret: AZURE_CLIENT_SECRET
+            auth: acr
             type: remote
           -
             name: Quay
             registry: quay.io
             slug: quay.io/docker_build_team/ghactiontest
-            username_secret: QUAY_USERNAME
-            password_secret: QUAY_TOKEN
+            auth: quay
             type: remote
           -
             name: Artifactory
             registry: infradock.jfrog.io
             slug: infradock.jfrog.io/test-ghaction/build-push-action
-            username_secret: ARTIFACTORY_USERNAME
-            password_secret: ARTIFACTORY_TOKEN
+            auth: artifactory
             type: remote
           -
             name: Harbor
             id: harbor
+            auth: none
             type: local
           -
             name: Nexus
             id: nexus
+            auth: none
             type: local
     with:
       id: ${{ matrix.id }}
@@ -102,6 +99,29 @@ jobs:
       name: ${{ matrix.name }}
       registry: ${{ matrix.registry }}
       slug: ${{ matrix.slug }}
-      username_secret: ${{ matrix.username_secret }}
-      password_secret: ${{ matrix.password_secret }}
-    secrets: inherit
+    secrets:
+      # Pass only the two secrets needed by each matrix entry.
+      registry_username: >-
+        ${{
+          matrix.auth == 'dockerhub' && secrets.DOCKERHUB_USERNAME ||
+          matrix.auth == 'ghcr' && secrets.GHCR_USERNAME ||
+          matrix.auth == 'gitlab' && secrets.GITLAB_USERNAME ||
+          matrix.auth == 'aws' && secrets.AWS_ACCESS_KEY_ID ||
+          matrix.auth == 'gar' && secrets.GAR_USERNAME ||
+          matrix.auth == 'acr' && secrets.AZURE_CLIENT_ID ||
+          matrix.auth == 'quay' && secrets.QUAY_USERNAME ||
+          matrix.auth == 'artifactory' && secrets.ARTIFACTORY_USERNAME ||
+          ''
+        }}
+      registry_password: >-
+        ${{
+          matrix.auth == 'dockerhub' && secrets.DOCKERHUB_TOKEN ||
+          matrix.auth == 'ghcr' && secrets.GHCR_PAT ||
+          matrix.auth == 'gitlab' && secrets.GITLAB_TOKEN ||
+          matrix.auth == 'aws' && secrets.AWS_SECRET_ACCESS_KEY ||
+          matrix.auth == 'gar' && secrets.GAR_JSON_KEY ||
+          matrix.auth == 'acr' && secrets.AZURE_CLIENT_SECRET ||
+          matrix.auth == 'quay' && secrets.QUAY_TOKEN ||
+          matrix.auth == 'artifactory' && secrets.ARTIFACTORY_TOKEN ||
+          ''
+        }}
