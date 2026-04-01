@@ -12,8 +12,6 @@ import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
 
 import {BuilderInfo} from '@docker/actions-toolkit/lib/types/buildx/builder.js';
 
-import * as context from '../src/context.js';
-
 const tmpDir = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'context-'));
 const tmpName = path.join(tmpDir, '.tmpname-vi');
 const fixturesDir = path.join(__dirname, 'fixtures');
@@ -50,6 +48,53 @@ vi.spyOn(Builder.prototype, 'inspect').mockImplementation(async (): Promise<Buil
     ...builderInfoFixture,
     lastActivity: new Date(builderInfoFixture.lastActivity)
   };
+});
+
+describe('getInputs', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = Object.keys(process.env).reduce((object, key) => {
+      if (!key.startsWith('INPUT_')) {
+        object[key] = process.env[key];
+      }
+      return object;
+    }, {});
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  function setRequiredBooleanInputs(): void {
+    setInput('load', 'false');
+    setInput('no-cache', 'false');
+    setInput('push', 'false');
+    setInput('pull', 'false');
+  }
+
+  test('uses Build git context when context input is empty', async () => {
+    const gitContext = 'https://github.com/docker/build-push-action.git?ref=refs/heads/master';
+    const gitContextSpy = vi.spyOn(Build.prototype, 'gitContext').mockResolvedValue(gitContext);
+    setRequiredBooleanInputs();
+    const context = await loadContextModule();
+    const inputs = await context.getInputs();
+    expect(inputs.context).toBe(gitContext);
+    expect(gitContextSpy).toHaveBeenCalledTimes(1);
+    gitContextSpy.mockRestore();
+  });
+
+  test('renders defaultContext templates from Build git context', async () => {
+    const gitContext = 'https://github.com/docker/build-push-action.git#refs/heads/master';
+    const gitContextSpy = vi.spyOn(Build.prototype, 'gitContext').mockResolvedValue(gitContext);
+    setRequiredBooleanInputs();
+    setInput('context', '{{defaultContext}}:subdir');
+    const context = await loadContextModule();
+    const inputs = await context.getInputs();
+    expect(inputs.context).toBe(`${gitContext}:subdir`);
+    expect(gitContextSpy).toHaveBeenCalledTimes(1);
+    gitContextSpy.mockRestore();
+  });
 });
 
 describe('getArgs', () => {
@@ -888,6 +933,46 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
         ['GITHUB_SERVER_URL', 'https://github.cds.internal.unity3d.com'],
       ])
     ],
+    [
+      37,
+      '0.29.0',
+      new Map<string, string>([
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--metadata-file', metadataJson,
+        'https://github.com/docker/build-push-action.git?ref=refs/heads/master'
+      ],
+      new Map<string, string>([
+        ['BUILDX_SEND_GIT_QUERY_AS_INPUT', 'true']
+      ])
+    ],
+    [
+      38,
+      '0.28.0',
+      new Map<string, string>([
+        ['load', 'false'],
+        ['no-cache', 'false'],
+        ['push', 'false'],
+        ['pull', 'false'],
+      ]),
+      [
+        'build',
+        '--iidfile', imageIDFilePath,
+        '--attest', `type=provenance,mode=min,inline-only=true,builder-id=https://github.com/docker/build-push-action/actions/runs/123456789/attempts/1`,
+        '--metadata-file', metadataJson,
+        'https://github.com/docker/build-push-action.git#refs/heads/master'
+      ],
+      new Map<string, string>([
+        ['BUILDX_SEND_GIT_QUERY_AS_INPUT', 'true']
+      ])
+    ],
   ])(
     '[%d] given %o with %o as inputs, returns %o',
     async (num: number, buildxVersion: string, inputs: Map<string, string>, expected: Array<string>, envs: Map<string, string> | undefined) => {
@@ -903,6 +988,7 @@ ANOTHER_SECRET=ANOTHER_SECRET_ENV`]
       vi.spyOn(Buildx.prototype, 'version').mockImplementation(async (): Promise<string> => {
         return buildxVersion;
       });
+      const context = await loadContextModule();
       const inp = await context.getInputs();
       const res = await context.getArgs(inp, toolkit);
       expect(res).toEqual(expected);
@@ -917,4 +1003,9 @@ function getInputName(name: string): string {
 
 function setInput(name: string, value: string): void {
   process.env[getInputName(name)] = value;
+}
+
+async function loadContextModule(): Promise<typeof import('../src/context.js')> {
+  vi.resetModules();
+  return await import('../src/context.js');
 }

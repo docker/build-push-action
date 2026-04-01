@@ -2,10 +2,16 @@ import * as core from '@actions/core';
 import * as handlebars from 'handlebars';
 
 import {Build} from '@docker/actions-toolkit/lib/buildx/build.js';
-import {Context} from '@docker/actions-toolkit/lib/context.js';
 import {GitHub} from '@docker/actions-toolkit/lib/github/github.js';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit.js';
 import {Util} from '@docker/actions-toolkit/lib/util.js';
+
+let defaultContextPromise: Promise<string> | undefined;
+
+async function getDefaultContext(): Promise<string> {
+  defaultContextPromise ??= new Build().gitContext();
+  return await defaultContextPromise;
+}
 
 export interface Inputs {
   'add-hosts': string[];
@@ -44,6 +50,7 @@ export interface Inputs {
 }
 
 export async function getInputs(): Promise<Inputs> {
+  const defaultContext = await getDefaultContext();
   return {
     'add-hosts': Util.getInputList('add-hosts'),
     allow: Util.getInputList('allow'),
@@ -56,7 +63,7 @@ export async function getInputs(): Promise<Inputs> {
     'cache-to': Util.getInputList('cache-to', {ignoreComma: true}),
     call: core.getInput('call'),
     'cgroup-parent': core.getInput('cgroup-parent'),
-    context: core.getInput('context') || Context.gitContext(),
+    context: handlebars.compile(core.getInput('context'))({defaultContext}) || defaultContext,
     file: core.getInput('file'),
     labels: Util.getInputList('labels', {ignoreComma: true}),
     load: core.getBooleanInput('load'),
@@ -82,18 +89,17 @@ export async function getInputs(): Promise<Inputs> {
 }
 
 export async function getArgs(inputs: Inputs, toolkit: Toolkit): Promise<Array<string>> {
-  const context = handlebars.compile(inputs.context)({
-    defaultContext: Context.gitContext()
-  });
   // prettier-ignore
   return [
-    ...await getBuildArgs(inputs, context, toolkit),
+    ...await getBuildArgs(inputs, inputs.context, toolkit),
     ...await getCommonArgs(inputs, toolkit),
-    context
+    inputs.context
   ];
 }
 
 async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): Promise<Array<string>> {
+  const defaultContext = await getDefaultContext();
+
   const args: Array<string> = ['build'];
   await Util.asyncForEach(inputs['add-hosts'], async addHost => {
     args.push('--add-host', addHost);
@@ -116,7 +122,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
       args.push(
         '--build-context',
         handlebars.compile(buildContext)({
-          defaultContext: Context.gitContext()
+          defaultContext: defaultContext
         })
       );
     });
@@ -182,7 +188,7 @@ async function getBuildArgs(inputs: Inputs, context: string, toolkit: Toolkit): 
       core.warning(err.message);
     }
   });
-  if (inputs['github-token'] && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(Context.gitContext())) {
+  if (inputs['github-token'] && !Build.hasGitAuthTokenSecret(inputs.secrets) && context.startsWith(defaultContext)) {
     args.push('--secret', Build.resolveSecretString(`GIT_AUTH_TOKEN.${new URL(GitHub.serverURL).host.trimEnd()}=${inputs['github-token']}`));
   }
   if (inputs['shm-size']) {
