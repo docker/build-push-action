@@ -1,3 +1,0 @@
-rules:
-  secrets-outside-env: # FIXME: remove this rule when zizmor 1.24.0 is released, fixing the right persona attached to this rule: https://github.com/zizmorcore/zizmor/pull/1783
-    disable: true
