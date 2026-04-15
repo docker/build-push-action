@@ -19,6 +19,8 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 2
+      exclude:
+        - "@docker/actions-toolkit"
     versioning-strategy: "increase"
     allow:
       - dependency-type: "production"
