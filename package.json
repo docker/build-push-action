@@ -4,10 +4,11 @@
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
-    "build": "ncc build --source-map --minify --license licenses.txt",
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=cjs --outfile=dist/index.cjs --sourcemap --minify && yarn run license",
     "lint": "eslint --max-warnings=0 .",
     "format": "eslint --fix .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "license": "generate-license-file --input package.json --output dist/licenses.txt --overwrite --ci --no-spinner --eol lf"
   },
   "repository": {
     "type": "git",
@@ -32,12 +33,13 @@
     "@types/node": "^24.11.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
-    "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/eslint-plugin": "^1.6.9",
+    "esbuild": "^0.28.0",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
+    "generate-license-file": "^4.1.1",
     "globals": "^17.3.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
