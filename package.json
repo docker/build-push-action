@@ -23,7 +23,7 @@
   "license": "Apache-2.0",
   "packageManager": "yarn@4.9.2",
   "dependencies": {
-    "@actions/core": "^3.0.0",
+    "@actions/core": "^3.0.1",
     "@docker/actions-toolkit": "0.87.0",
     "handlebars": "^4.7.9"
   },
