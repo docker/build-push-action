@@ -3952,7 +3952,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 The following npm package may be included in this product:
 
- - brace-expansion@5.0.4
+ - brace-expansion@5.0.6
 
 This package contains the following license:
 
