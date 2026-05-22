@@ -76,7 +76,7 @@ export async function getInputs(): Promise<Inputs> {
     pull: core.getBooleanInput('pull'),
     push: core.getBooleanInput('push'),
     sbom: core.getInput('sbom'),
-    secrets: Util.getInputList('secrets', {ignoreComma: true}),
+    secrets: Util.getInputList('secrets', {ignoreComma: true, trimWhitespace: false}),
     'secret-envs': Util.getInputList('secret-envs'),
     'secret-files': Util.getInputList('secret-files', {ignoreComma: true}),
     'shm-size': core.getInput('shm-size'),
