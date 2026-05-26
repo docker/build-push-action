@@ -95,6 +95,25 @@ describe('getInputs', () => {
     expect(gitContextSpy).toHaveBeenCalledTimes(1);
     gitContextSpy.mockRestore();
   });
+
+  test('requests untrimmed secrets input explicitly', async () => {
+    const gitContext = 'https://github.com/docker/build-push-action.git#refs/heads/master';
+    const gitContextSpy = vi.spyOn(Build.prototype, 'gitContext').mockResolvedValue(gitContext);
+    const getInputList = vi.fn().mockReturnValue([]);
+    vi.resetModules();
+    vi.doMock('@docker/actions-toolkit/lib/util.js', () => ({
+      Util: {
+        getInputList
+      }
+    }));
+    setRequiredBooleanInputs();
+    setInput('secrets', `"PRIVATE_SSH_KEY=test\n\n"`);
+    const context = await import('../src/context.js');
+    await context.getInputs();
+    expect(getInputList).toHaveBeenCalledWith('secrets', {ignoreComma: true, trimWhitespace: false});
+    vi.doUnmock('@docker/actions-toolkit/lib/util.js');
+    gitContextSpy.mockRestore();
+  });
 });
 
 describe('getArgs', () => {
