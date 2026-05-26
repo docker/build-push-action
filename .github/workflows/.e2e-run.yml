@@ -119,6 +119,7 @@ jobs:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
           username: ${{ env.REGISTRY_USER || secrets.registry_username }}
           password: ${{ env.REGISTRY_PASSWORD || secrets.registry_password }}
+          scope: '@push'
       -
         name: Build and push
         uses: ./
@@ -131,16 +132,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY_SLUG || inputs.slug }}:master
           cache-to: type=inline
-      -
-        name: Inspect image
-        env:
-          SLUG: ${{ env.REGISTRY_SLUG || inputs.slug }}
-        run: |
-          docker pull ${SLUG}:${{ steps.meta.outputs.version }}
-          docker image inspect ${SLUG}:${{ steps.meta.outputs.version }}
-      -
-        name: Check manifest
-        env:
-          SLUG: ${{ env.REGISTRY_SLUG || inputs.slug }}
-        run: |
-          docker buildx imagetools inspect ${SLUG}:${{ steps.meta.outputs.version }} --format '{{json .}}'
