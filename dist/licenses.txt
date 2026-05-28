@@ -4,8 +4,8 @@ https://www.npmjs.com/package/generate-license-file
 The following npm packages may be included in this product:
 
  - @sigstore/bundle@4.0.0
- - @sigstore/core@3.1.0
  - @sigstore/core@3.2.0
+ - @sigstore/core@3.2.1
  - @sigstore/protobuf-specs@0.5.0
  - @sigstore/sign@4.1.1
  - @sigstore/tuf@4.0.2
@@ -218,7 +218,7 @@ Apache License
 
 The following npm package may be included in this product:
 
- - @docker/actions-toolkit@0.90.0
+ - @docker/actions-toolkit@0.91.0
 
 This package contains the following license:
 
@@ -2701,7 +2701,7 @@ END OF TERMS AND CONDITIONS
 
 The following npm package may be included in this product:
 
- - @sigstore/verify@3.1.0
+ - @sigstore/verify@3.1.1
 
 This package contains the following license:
 
@@ -3172,12 +3172,14 @@ The following npm packages may be included in this product:
  - @azure/core-client@1.10.1
  - @azure/core-http-compat@2.3.2
  - @azure/core-rest-pipeline@1.22.2
+ - @azure/core-rest-pipeline@1.23.0
  - @azure/core-tracing@1.3.1
  - @azure/core-util@1.13.1
  - @azure/core-xml@1.5.0
  - @azure/logger@1.3.0
  - @azure/storage-blob@12.31.0
  - @typespec/ts-http-runtime@0.3.3
+ - @typespec/ts-http-runtime@0.3.5
 
 These packages each contain the following license:
 
@@ -4670,7 +4672,7 @@ The following npm packages may be included in this product:
  - once@1.4.0
  - semver@7.6.0
  - semver@7.7.3
- - semver@7.8.0
+ - semver@7.8.1
  - which@2.0.2
  - wrappy@1.0.2
  - yallist@4.0.0
@@ -5553,7 +5555,7 @@ https://github.com/bitinn/node-fetch
 The following npm packages may be included in this product:
 
  - @actions/artifact@6.2.1
- - @actions/cache@6.0.0
+ - @actions/cache@6.0.1
  - @actions/core@3.0.0
  - @actions/core@3.0.1
  - @actions/exec@3.0.0
