@@ -4,6 +4,28 @@
 [![Test workflow](https://img.shields.io/github/actions/workflow/status/docker/build-push-action/test.yml?branch=master&label=test&logo=github&style=flat-square)](https://github.com/docker/build-push-action/actions?workflow=test)
 [![Codecov](https://img.shields.io/codecov/c/github/docker/build-push-action?logo=codecov&style=flat-square)](https://codecov.io/gh/docker/build-push-action)
 
+> [!TIP]
+> **Publishing images or build artifacts?**
+>
+> [Docker GitHub Builder](https://github.com/docker/github-builder#overview)
+> is the recommended way to use Docker's build actions in a secure,
+> Docker-maintained workflow. It runs the same actions internally and accepts
+> similar inputs. For a typical build, keep your Dockerfile or Bake definition
+> and call the reusable workflow at the job level. Use this action directly
+> when you need to compose the steps yourself.
+>
+> GitHub Builder can publish images with signed SLSA provenance and optional
+> SBOMs. It can also sign binaries and other files for upload as GitHub Actions
+> artifacts.
+>
+> Its workflows handle registry authentication, metadata, and builder setup.
+> For multi-platform images, they can distribute builds across native runners
+> and assemble the image manifest. With GitHub OIDC, they sign GitHub Actions
+> cache entries and verify them before reuse.
+>
+> Follow the [setup guide](https://docs.docker.com/build/ci/github-actions/)
+> or explore the [architecture](https://docs.docker.com/build/ci/github-actions/github-builder-architecture/).
+
 ## About
 
 GitHub Action to build and push Docker images with [Buildx](https://github.com/docker/buildx)
