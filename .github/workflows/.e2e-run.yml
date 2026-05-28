@@ -119,7 +119,7 @@ jobs:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
           username: ${{ env.REGISTRY_USER || secrets.registry_username }}
           password: ${{ env.REGISTRY_PASSWORD || secrets.registry_password }}
-          scope: '@push'
+          scope: ${{ inputs.type == 'remote' && inputs.registry == '' && '@push' || '' }}
       -
         name: Build and push
         uses: ./
