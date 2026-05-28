@@ -22,7 +22,7 @@
   ],
   "author": "Docker Inc.",
   "license": "Apache-2.0",
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.15.0",
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@docker/actions-toolkit": "0.91.0",
