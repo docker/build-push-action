@@ -2,6 +2,7 @@ name: e2e
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -99,14 +100,15 @@ jobs:
       name: ${{ matrix.name }}
       registry: ${{ matrix.registry }}
       slug: ${{ matrix.slug }}
+      aws-role-to-assume: arn:aws:iam::175142243308:role/official_gha_cicd
     secrets:
       # Pass only the two secrets needed by each matrix entry.
+      # AWS ECR entries use OIDC via aws-role-to-assume instead of static keys.
       registry_username: >-
         ${{
           matrix.auth == 'dockerhub' && secrets.DOCKERHUB_USERNAME ||
           matrix.auth == 'ghcr' && secrets.GHCR_USERNAME ||
           matrix.auth == 'gitlab' && secrets.GITLAB_USERNAME ||
-          matrix.auth == 'aws' && secrets.AWS_ACCESS_KEY_ID ||
           matrix.auth == 'gar' && secrets.GAR_USERNAME ||
           matrix.auth == 'acr' && secrets.AZURE_CLIENT_ID ||
           matrix.auth == 'quay' && secrets.QUAY_USERNAME ||
@@ -118,7 +120,6 @@ jobs:
           matrix.auth == 'dockerhub' && secrets.DOCKERHUB_TOKEN ||
           matrix.auth == 'ghcr' && secrets.GHCR_PAT ||
           matrix.auth == 'gitlab' && secrets.GITLAB_TOKEN ||
-          matrix.auth == 'aws' && secrets.AWS_SECRET_ACCESS_KEY ||
           matrix.auth == 'gar' && secrets.GAR_JSON_KEY ||
           matrix.auth == 'acr' && secrets.AZURE_CLIENT_SECRET ||
           matrix.auth == 'quay' && secrets.QUAY_TOKEN ||

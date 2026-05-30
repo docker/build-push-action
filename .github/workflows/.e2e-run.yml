@@ -22,6 +22,10 @@ on:
       slug:
         required: false
         type: string
+      aws-role-to-assume:
+        required: false
+        type: string
+        description: "IAM role ARN to assume via OIDC for ECR authentication. When set, configure-aws-credentials runs before registry login."
     secrets:
       registry_username:
         required: false
@@ -36,6 +40,9 @@ env:
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -111,6 +118,14 @@ jobs:
           driver-opts: |
             image=${{ matrix.buildkit_image }}
             network=host
+      -
+        name: Configure AWS credentials
+        if: inputs.aws-role-to-assume != '' && (contains(inputs.registry, '.ecr.') || inputs.registry == 'public.ecr.aws')
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          aws-region: us-east-1
+          role-session-name: gha-build-push-action-e2e-${{ github.run_id }}-${{ github.run_attempt }}
       -
         name: Login to Registry
         if: github.event_name != 'pull_request' && (inputs.type == 'remote' || env.REGISTRY_USER != '')
