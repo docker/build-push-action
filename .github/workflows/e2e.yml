@@ -20,6 +20,9 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/.e2e-run.yml
+    permissions:
+      contents: read
+      packages: write # to push image to GHCR
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +41,7 @@ jobs:
           -
             name: GitHub
             registry: ghcr.io
-            slug: ghcr.io/docker-ghactiontest/test
+            slug: ghcr.io/docker/build-push-action-test
             auth: ghcr
             type: remote
           -
@@ -100,11 +103,11 @@ jobs:
       registry: ${{ matrix.registry }}
       slug: ${{ matrix.slug }}
     secrets:
-      # Pass only the two secrets needed by each matrix entry.
+      # Pass only the registry-specific secrets needed by each matrix entry.
+      # GHCR uses the called workflow's GITHUB_TOKEN fallback.
       registry_username: >-
         ${{
           matrix.auth == 'dockerhub' && secrets.DOCKERHUB_USERNAME ||
-          matrix.auth == 'ghcr' && secrets.GHCR_USERNAME ||
           matrix.auth == 'gitlab' && secrets.GITLAB_USERNAME ||
           matrix.auth == 'aws' && secrets.AWS_ACCESS_KEY_ID ||
           matrix.auth == 'gar' && secrets.GAR_USERNAME ||
@@ -116,7 +119,6 @@ jobs:
       registry_password: >-
         ${{
           matrix.auth == 'dockerhub' && secrets.DOCKERHUB_TOKEN ||
-          matrix.auth == 'ghcr' && secrets.GHCR_PAT ||
           matrix.auth == 'gitlab' && secrets.GITLAB_TOKEN ||
           matrix.auth == 'aws' && secrets.AWS_SECRET_ACCESS_KEY ||
           matrix.auth == 'gar' && secrets.GAR_JSON_KEY ||
