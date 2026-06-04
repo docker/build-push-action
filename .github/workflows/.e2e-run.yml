@@ -1,9 +1,6 @@
 # reusable workflow
 name: .e2e-run
 
-permissions:
-  contents: read
-
 on:
   workflow_call:
     inputs:
@@ -117,8 +114,8 @@ jobs:
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
-          username: ${{ env.REGISTRY_USER || secrets.registry_username }}
-          password: ${{ env.REGISTRY_PASSWORD || secrets.registry_password }}
+          username: ${{ env.REGISTRY_USER || secrets.registry_username || (inputs.registry == 'ghcr.io' && github.actor) || '' }}
+          password: ${{ env.REGISTRY_PASSWORD || secrets.registry_password || (inputs.registry == 'ghcr.io' && secrets.GITHUB_TOKEN) || '' }}
           scope: ${{ inputs.type == 'remote' && inputs.registry == '' && '@push' || '' }}
       -
         name: Build and push

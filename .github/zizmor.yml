@@ -1,0 +1,6 @@
+rules:
+  # rule does not apply to reusable worfklows where permissions are defined by
+  # the caller workflow and not the reusable workflow itself
+  excessive-permissions:
+    ignore:
+      - .e2e-run.yml
