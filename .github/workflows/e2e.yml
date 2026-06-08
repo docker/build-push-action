@@ -35,7 +35,7 @@ jobs:
           -
             name: Docker Hub
             registry: ''
-            slug: ghactionstest/ghactionstest
+            slug: dockereng/build-push-action-test
             auth: dockerhub
             type: remote
           -
@@ -107,7 +107,7 @@ jobs:
       # GHCR uses the called workflow's GITHUB_TOKEN fallback.
       registry_username: >-
         ${{
-          matrix.auth == 'dockerhub' && secrets.DOCKERHUB_USERNAME ||
+          matrix.auth == 'dockerhub' && vars.DOCKERPUBLICBOT_USERNAME ||
           matrix.auth == 'gitlab' && secrets.GITLAB_USERNAME ||
           matrix.auth == 'aws' && secrets.AWS_ACCESS_KEY_ID ||
           matrix.auth == 'gar' && secrets.GAR_USERNAME ||
@@ -118,7 +118,7 @@ jobs:
         }}
       registry_password: >-
         ${{
-          matrix.auth == 'dockerhub' && secrets.DOCKERHUB_TOKEN ||
+          matrix.auth == 'dockerhub' && secrets.DOCKERPUBLICBOT_WRITE_PAT ||
           matrix.auth == 'gitlab' && secrets.GITLAB_TOKEN ||
           matrix.auth == 'aws' && secrets.AWS_SECRET_ACCESS_KEY ||
           matrix.auth == 'gar' && secrets.GAR_JSON_KEY ||
