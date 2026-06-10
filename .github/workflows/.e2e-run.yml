@@ -10,6 +10,9 @@ on:
       type:
         required: true
         type: string
+      provider:
+        required: true
+        type: string
       name:
         required: true
         type: string
@@ -109,8 +112,15 @@ jobs:
             image=${{ matrix.buildkit_image }}
             network=host
       -
+        name: Configure AWS credentials
+        if: inputs.provider == 'aws'
+        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
+        with:
+          role-to-assume: arn:aws:iam::175142243308:role/official_gha_cicd
+          aws-region: us-east-1
+      -
         name: Login to Registry
-        if: github.event_name != 'pull_request' && (inputs.type == 'remote' || env.REGISTRY_USER != '')
+        if: github.event_name != 'pull_request' && (inputs.type == 'remote' || inputs.provider == 'aws' || env.REGISTRY_USER != '')
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ env.REGISTRY_FQDN || inputs.registry }}
