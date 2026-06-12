@@ -17,7 +17,7 @@ FROM base AS deps
 RUN --mount=type=bind,target=.,rw \
   --mount=type=cache,target=/src/.yarn/cache \
   --mount=type=cache,target=/src/node_modules \
-  yarn install && mkdir /vendor && cp yarn.lock /vendor
+  yarn install --immutable && mkdir /vendor && cp yarn.lock /vendor
 
 FROM scratch AS vendor-update
 COPY --from=deps /vendor /
