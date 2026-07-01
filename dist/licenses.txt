@@ -4,7 +4,6 @@ https://www.npmjs.com/package/generate-license-file
 The following npm packages may be included in this product:
 
  - @sigstore/bundle@4.0.0
- - @sigstore/core@3.2.0
  - @sigstore/core@3.2.1
  - @sigstore/protobuf-specs@0.5.0
  - @sigstore/sign@4.1.1
