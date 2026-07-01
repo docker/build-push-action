@@ -1793,7 +1793,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - js-yaml@4.1.1
+ - js-yaml@4.3.0
 
 This package contains the following license:
 
