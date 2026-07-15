@@ -216,7 +216,7 @@ Apache License
 
 The following npm package may be included in this product:
 
- - @docker/actions-toolkit@0.92.0
+ - @docker/actions-toolkit@0.93.0
 
 This package contains the following license:
 
@@ -1792,7 +1792,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - js-yaml@5.2.0
+ - js-yaml@5.2.1
 
 This package contains the following license:
 
@@ -4261,7 +4261,7 @@ THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - csv-parse@7.0.0
+ - csv-parse@7.0.1
 
 This package contains the following license:
 
