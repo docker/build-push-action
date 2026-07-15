@@ -437,9 +437,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.92.0":
-  version: 0.92.0
-  resolution: "@docker/actions-toolkit@npm:0.92.0"
+"@docker/actions-toolkit@npm:0.93.0":
+  version: 0.93.0
+  resolution: "@docker/actions-toolkit@npm:0.93.0"
   dependencies:
     "@actions/artifact": "npm:^6.2.1"
     "@actions/cache": "npm:^6.1.0"
@@ -453,16 +453,16 @@ __metadata:
     "@sigstore/tuf": "npm:^5.0.0"
     "@sigstore/verify": "npm:^4.1.0"
     async-retry: "npm:^1.3.3"
-    csv-parse: "npm:^7.0.0"
+    csv-parse: "npm:^7.0.1"
     gunzip-maybe: "npm:^1.4.2"
     handlebars: "npm:^4.7.9"
     he: "npm:^1.2.0"
-    js-yaml: "npm:^5.2.0"
+    js-yaml: "npm:^5.2.1"
     jwt-decode: "npm:^4.0.0"
     semver: "npm:^7.8.5"
     tar-stream: "npm:^3.2.0"
     tmp: "npm:^0.2.7"
-  checksum: 10/599cea84b897069c53744a2f05371c6d9ad60da18448b4431273529b92fd2d77ddc718ee205cf0bf1da53083d412da90b1067f1e64a5fdac73fe71d486726064
+  checksum: 10/31643db575faf865666247661007d6e5fc8bc2b737001a522879829fcbeeab7b11b886d2cc26d074a26814361ec8427484d7b94ad9155d52c41398a7dc27000e
   languageName: node
   linkType: hard
 
@@ -2767,10 +2767,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csv-parse@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "csv-parse@npm:7.0.0"
-  checksum: 10/53c96e6b4ff80047713bb4d2967d06495890d4b628284a80271860be089fdb5a74cd97c76fd535a00ad26b11cc6e4fc5a243658e5377c0a6334ddd104620d169
+"csv-parse@npm:^7.0.1":
+  version: 7.0.1
+  resolution: "csv-parse@npm:7.0.1"
+  checksum: 10/5c914f01181dbb381068b98e17b49361d853faa95db3e8e82bc96b6a0de5313ecc8325a77db35ff66644d7747099965ba3167ec21bd9ce4500edf21b5bdd49bf
   languageName: node
   linkType: hard
 
@@ -2831,7 +2831,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": "npm:^3.0.1"
-    "@docker/actions-toolkit": "npm:0.92.0"
+    "@docker/actions-toolkit": "npm:0.93.0"
     "@eslint/js": "npm:^9.39.3"
     "@types/node": "npm:^24.11.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.56.1"
@@ -4002,14 +4002,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "js-yaml@npm:5.2.0"
+"js-yaml@npm:^5.2.1":
+  version: 5.2.1
+  resolution: "js-yaml@npm:5.2.1"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.mjs
-  checksum: 10/8a5e55c5d0fcafae4ac02114a99dc070048b8e5a82a056089ce1f69f8a00fd8eb05b622e76ad50aac1f9d409010636c9616c6b2ed4e58dae138379a60d301220
+  checksum: 10/e1eca2d21c15572585bb236d9fde31d6789eb50b9c63e8753fa7e0777bc480f7521cad517bd7a0c66f27dfc27ddcd7100beeefa51c1a50e10e98f2e009633c3d
   languageName: node
   linkType: hard
 

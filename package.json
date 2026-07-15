@@ -25,7 +25,7 @@
   "packageManager": "yarn@4.15.0",
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "@docker/actions-toolkit": "0.92.0",
+    "@docker/actions-toolkit": "0.93.0",
     "handlebars": "^4.7.9"
   },
   "devDependencies": {
