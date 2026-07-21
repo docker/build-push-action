@@ -3289,7 +3289,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm packages may be included in this product:
 
- - brace-expansion@1.1.13
+ - brace-expansion@1.1.16
  - brace-expansion@2.0.2
 
 These packages each contain the following license:
