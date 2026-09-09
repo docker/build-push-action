@@ -216,7 +216,7 @@ Apache License
 
 The following npm package may be included in this product:
 
- - @docker/actions-toolkit@0.92.0
+ - @docker/actions-toolkit@0.98.0
 
 This package contains the following license:
 
@@ -1792,7 +1792,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - js-yaml@5.2.0
+ - js-yaml@5.4.1
 
 This package contains the following license:
 
@@ -2632,7 +2632,7 @@ END OF TERMS AND CONDITIONS
 
 The following npm package may be included in this product:
 
- - @sigstore/verify@4.1.0
+ - @sigstore/verify@4.1.2
 
 This package contains the following license:
 
@@ -4261,7 +4261,7 @@ THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - csv-parse@7.0.0
+ - csv-parse@7.0.2
 
 This package contains the following license:
 
@@ -4387,7 +4387,7 @@ The following npm packages may be included in this product:
  - pump@2.0.1
  - pumpify@1.5.1
  - tar-stream@3.1.7
- - tar-stream@3.2.0
+ - tar-stream@3.2.1
 
 These packages each contain the following license:
 
@@ -4906,7 +4906,7 @@ THE SOFTWARE.
 The following npm packages may be included in this product:
 
  - @actions/artifact@6.2.1
- - @actions/cache@6.1.0
+ - @actions/cache@6.2.0
  - @actions/core@3.0.0
  - @actions/core@3.0.1
  - @actions/exec@3.0.0
