@@ -110,11 +110,11 @@ actionsToolkit.run(
     }).then(res => {
       if (res.exitCode != 0) {
         if (inputs.call && inputs.call === 'check' && res.stdout.length > 0) {
-          // checks warnings are printed to stdout: https://github.com/docker/buildx/pull/2647
-          // take the first line with the message summaryzing the warnings
+          // Check warnings are printed to stdout: https://github.com/docker/buildx/pull/2647
+          // Use the first line as the warning summary.
           err = new Error(res.stdout.split('\n')[0]?.trim());
-        } else if (res.stderr.length > 0) {
-          err = new Error(`buildx failed with: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+        } else {
+          err = new Error(`buildx failed with: ${Buildx.getErrorMessage(res.stderr)}`);
         }
       }
     });
