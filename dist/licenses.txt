@@ -216,7 +216,7 @@ Apache License
 
 The following npm package may be included in this product:
 
- - @docker/actions-toolkit@0.98.0
+ - @docker/actions-toolkit@0.99.0
 
 This package contains the following license:
 
