@@ -11,6 +11,17 @@ with full support of the features provided by [Moby BuildKit](https://github.com
 builder toolkit. This includes multi-platform build, secrets, remote cache, etc.
 and different builder deployment/namespacing options.
 
+> [!TIP]
+> Looking for a Docker-maintained workflow instead of composing individual
+> actions? [Docker GitHub Builder](https://github.com/docker/github-builder#overview)
+> provides reusable workflows for GitHub Actions that combine registry
+> authentication, metadata, builder setup, multi-platform builds, cache,
+> manifest creation, signing, SLSA provenance, and SBOMs. This action remains
+> the flexible Buildx primitive for custom workflows, while GitHub Builder is
+> the recommended path for projects that want Docker's opinionated, secure
+> build pipeline with fewer per-repository CI decisions.
+> See the [GitHub Builder documentation](https://docs.docker.com/build/ci/github-actions/github-builder/).
+
 ![Screenshot](.github/build-push-action.png)
 
 ___
