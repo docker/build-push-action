@@ -137,7 +137,7 @@ actionsToolkit.run(
     if (metadata) {
       await core.group(`Metadata`, async () => {
         const metadatadt = JSON.stringify(metadata, null, 2);
-        core.info(metadatadt);
+        GitHub.printUntrusted(metadatadt);
         core.setOutput('metadata', metadatadt);
       });
     }
