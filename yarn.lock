@@ -437,9 +437,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.100.0":
-  version: 0.100.0
-  resolution: "@docker/actions-toolkit@npm:0.100.0"
+"@docker/actions-toolkit@npm:0.101.0":
+  version: 0.101.0
+  resolution: "@docker/actions-toolkit@npm:0.101.0"
   dependencies:
     "@actions/artifact": "npm:^6.2.1"
     "@actions/cache": "npm:^6.2.0"
@@ -457,12 +457,12 @@ __metadata:
     gunzip-maybe: "npm:^1.4.2"
     handlebars: "npm:^4.7.9"
     he: "npm:^1.2.0"
-    js-yaml: "npm:^5.4.1"
+    js-yaml: "npm:^5.4.2"
     jwt-decode: "npm:^4.0.0"
     semver: "npm:^7.8.5"
     tar-stream: "npm:^3.2.1"
     tmp: "npm:^0.2.7"
-  checksum: 10/74eaa1afb1887ed2974e403870205889844d42eb527550309819fd24b80484b92ebf95ba4ee01eef607b66acd655a8457fc25a6d27ff2f81e842705ff98b1976
+  checksum: 10/7e84b1ae9f515decf6863cb3f6dc67c1a0f83f76cf76d18506232276370cb92234094e657257b9d805f3722be0d6d5f0b871283c12f4889ec5d98f4378d42318
   languageName: node
   linkType: hard
 
@@ -2841,7 +2841,7 @@ __metadata:
   resolution: "docker-build-push@workspace:."
   dependencies:
     "@actions/core": "npm:^3.0.1"
-    "@docker/actions-toolkit": "npm:0.100.0"
+    "@docker/actions-toolkit": "npm:0.101.0"
     "@eslint/js": "npm:^9.39.3"
     "@types/node": "npm:^24.11.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.56.1"
@@ -4012,14 +4012,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^5.4.1":
-  version: 5.4.1
-  resolution: "js-yaml@npm:5.4.1"
+"js-yaml@npm:^5.4.2":
+  version: 5.4.2
+  resolution: "js-yaml@npm:5.4.2"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.mjs
-  checksum: 10/6fff9ee00bd59aeb7e1484b4281f5e927b117cbfbf3ffa6c0fef0c58519317eb61527e93c4aa70f417709229bc1eeed63cba773913577a64405975a72fba7180
+  checksum: 10/f2461abd1d6268fb226733f0a0e0aa48004bb824116e3dfa75f1a1279001936343b672066dfecdb852ac3ca883452706c383a760aa90430cb68ba395aa2cbc84
   languageName: node
   linkType: hard
 
