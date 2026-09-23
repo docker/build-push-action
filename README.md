@@ -43,7 +43,7 @@ In the examples below we are also using 3 other actions:
 
 ### Git context
 
-By default, this action uses the [Git context](https://docs.docker.com/engine/reference/commandline/build/#git-repositories),
+By default, this action uses the [Git context](https://docs.docker.com/build/concepts/context/#git-repositories),
 so you don't need to use the [`actions/checkout`](https://github.com/actions/checkout/)
 action to check out the repository as this will be done directly by [BuildKit](https://github.com/moby/buildkit).
 
