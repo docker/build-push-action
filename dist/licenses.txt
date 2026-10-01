@@ -216,7 +216,7 @@ Apache License
 
 The following npm package may be included in this product:
 
- - @docker/actions-toolkit@0.100.0
+ - @docker/actions-toolkit@0.102.0
 
 This package contains the following license:
 
@@ -1792,7 +1792,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - js-yaml@5.4.1
+ - js-yaml@5.4.2
 
 This package contains the following license:
 
@@ -2092,6 +2092,7 @@ The following npm packages may be included in this product:
 
  - jackspeak@3.4.3
  - minimatch@10.2.5
+ - minimatch@10.2.6
 
 These packages each contain the following license:
 
@@ -3287,12 +3288,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 -----------
 
-The following npm packages may be included in this product:
+The following npm package may be included in this product:
 
- - brace-expansion@1.1.18
  - brace-expansion@2.0.2
 
-These packages each contain the following license:
+This package contains the following license:
 
 MIT License
 
@@ -3752,11 +3752,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 -----------
 
-The following npm package may be included in this product:
+The following npm packages may be included in this product:
 
+ - brace-expansion@5.0.12
  - brace-expansion@5.0.6
 
-This package contains the following license:
+These packages each contain the following license:
 
 MIT License
 
@@ -4139,10 +4140,8 @@ PERFORMANCE OF THIS SOFTWARE.
 The following npm packages may be included in this product:
 
  - isexe@2.0.0
- - minimatch@3.1.5
  - once@1.4.0
  - semver@7.7.3
- - semver@7.8.1
  - semver@7.8.5
  - which@2.0.2
  - wrappy@1.0.2
@@ -4261,7 +4260,7 @@ THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - csv-parse@7.0.2
+ - csv-parse@7.0.3
 
 This package contains the following license:
 
@@ -4906,13 +4905,13 @@ THE SOFTWARE.
 The following npm packages may be included in this product:
 
  - @actions/artifact@6.2.1
- - @actions/cache@6.2.0
+ - @actions/cache@6.3.0
  - @actions/core@3.0.0
  - @actions/core@3.0.1
  - @actions/exec@3.0.0
  - @actions/github@9.0.0
  - @actions/github@9.1.1
- - @actions/glob@0.6.1
+ - @actions/glob@0.7.0
  - @actions/io@3.0.2
  - @actions/tool-cache@4.0.0
 
@@ -5008,7 +5007,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 The following npm packages may be included in this product:
 
- - concat-map@0.0.1
  - minimist@1.2.6
  - minimist@1.2.8
  - wordwrap@1.0.0
