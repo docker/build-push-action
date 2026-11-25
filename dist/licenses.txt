@@ -3242,13 +3242,12 @@ terms above.
 
 The following npm packages may be included in this product:
 
- - @nodable/entities@2.1.0
+ - @nodable/entities@3.1.0
  - binary@0.3.0
  - browserify-zlib@0.1.4
  - eastasianwidth@0.2.0
  - is-gzip@1.0.0
  - isarray@1.0.0
- - xml-naming@0.1.0
 
 These packages each contain the following license:
 
@@ -3381,7 +3380,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - fast-xml-parser@5.8.0
+ - fast-xml-parser@5.12.0
 
 This package contains the following license:
 
@@ -3471,7 +3470,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - strnum@2.3.0
+ - strnum@2.5.1
 
 This package contains the following license:
 
@@ -3596,7 +3595,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - path-expression-matcher@1.5.0
+ - path-expression-matcher@1.6.2
 
 This package contains the following license:
 
@@ -3624,11 +3623,14 @@ SOFTWARE.
 
 -----------
 
-The following npm package may be included in this product:
+The following npm packages may be included in this product:
 
- - fast-xml-builder@1.2.0
+ - anynum@1.0.1
+ - fast-xml-builder@1.3.1
+ - is-unsafe@2.0.3
+ - xml-naming@0.3.0
 
-This package contains the following license:
+These packages each contain the following license:
 
 MIT License
 
