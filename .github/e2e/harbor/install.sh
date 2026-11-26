@@ -47,9 +47,9 @@ echo "::group::Installing Harbor"
 (
   cd /tmp/harbor
   set -x
-  ./install.sh
+  sudo -H ./install.sh
   sleep 10
-  netstat -aptn
+  sudo netstat -aptn
 )
 echo "::endgroup::"
 
@@ -58,7 +58,7 @@ echo "::group::Compose config"
 (
   cd /tmp/harbor
   set -x
-  docker compose config
+  sudo -H docker compose config
 )
 echo "::endgroup::"
 

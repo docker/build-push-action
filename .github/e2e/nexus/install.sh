@@ -36,7 +36,7 @@ EOF
 export NEXUS_VERSION
 
 mkdir -p /tmp/nexus/data
-chown 200:200 /tmp/nexus/data
+sudo chown 200:200 /tmp/nexus/data
 cp "${SCRIPT_DIR}/docker-compose.yml" /tmp/nexus/docker-compose.yml
 
 echo "::group::Pulling Nexus $NEXUS_VERSION"
@@ -82,7 +82,7 @@ echo "::endgroup::"
 echo "::group::Change user's password"
 (
   set -x
-  curl --fail -v -k --max-time 10 -u "$REGISTRY_USER:$(cat /tmp/nexus/data/admin.password)" -X PUT -H 'Content-Type: text/plain' -d "$REGISTRY_PASSWORD" "http://$NEXUS_HOST:$NEXUS_PORT/service/rest/v1/security/users/$REGISTRY_USER/change-password"
+  curl --fail -v -k --max-time 10 -u "$REGISTRY_USER:$(sudo cat /tmp/nexus/data/admin.password)" -X PUT -H 'Content-Type: text/plain' -d "$REGISTRY_PASSWORD" "http://$NEXUS_HOST:$NEXUS_PORT/service/rest/v1/security/users/$REGISTRY_USER/change-password"
 )
 echo "::endgroup::"
 
